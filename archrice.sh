@@ -752,7 +752,7 @@ function exitMsg () {
 #  --------------
 
 while [ $? == 0 ]; do
-	#installDependencies
+	installDependencies
 	welcomeMsg
 	createUser
 	createDirectories
