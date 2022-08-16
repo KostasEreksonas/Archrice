@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# Keyboard layout
+setxkbmap -model pc105 -layout us,lt -option grp:alt_shift_toggle &
+
+# Desktop background image
+feh --bg-fill /usr/share/pixmaps/background.jpg &
+
+# Automatic mount of connected usb devices
+udiskie &
+
+# Add a status bar on top of the screen
+dwmblocks &
+
+# Activate numlock when Xorg session starts
+numlockx &
+
+# Picom compositor for transparency effects
+picom -b --config ~/.config/picom/picom.conf
+
+# Fix for Pycharm blank window on program's startup
+export _JAVA_AWT_WM_NONREPARENTING=1
+
+# Loop for autostarting dwm after quitting with Mod + Shift + Q
+#while true; do
+	#dwm >/dev/null 2>&1
+#done

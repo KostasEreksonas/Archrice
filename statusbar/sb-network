@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# Get network name
+SSID="$(iw dev | awk '/ssid/ {print $2}')"
+
+# Wifi network icon
+icon=
+
+# Get UP network interface
+interface="$(ip addr | grep "state UP" | awk '{print $2}' | cut -d ":" -f 1)"
+
+# Get IP address
+IP="$(ip a | grep $interface | awk 'NR == 2 {print $2}' | cut -d "/" -f 1)"
+
+# Define mouse controls
+case $BUTTON in
+        # Left-click opens a terminal instance showing network interface info
+        1) setsid -f "$TERMINAL" -e watch ip a ;;
+        # Right-click shows notfication with the name of the network
+        3) notify-send "Network details" "Network name: $SSID\nIP address: $IP\nInterface: $interface" ;;
+esac
+
+# Print icon and netowrk name
+echo "$icon $SSID $IP"

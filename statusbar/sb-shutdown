@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Create notification
+notification="Left-click to open shutdown menu"
+
+# Shutdown icon
+icon=
+
+# Define mouse controls
+case $BUTTON in
+        # Left-click opens a terminal instance running a custom locker script
+        1) setsid -f "$TERMINAL" -e locker ;;
+        # Right-click creates a notification about shutdown script
+        3) notify-send "Shutdown" "$notification" ;;
+esac
+
+echo $icon

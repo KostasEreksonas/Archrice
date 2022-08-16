@@ -1,0 +1,43 @@
+#!/bin/sh
+
+# __version__ = 0.1
+
+# Dependencies: slock, dwm, systemctl
+
+# Variables
+Locker="slock"						# Put your screen locker utility there. In my case it is slock.
+Logout="pkill dwm"					# Put a command to logout from DE/WM session here.
+Suspend="systemctl suspend"			# Put a command to suspend DE/WM session here.
+Hibernate="systemctl hibernate"		# Put a command to suspend DE/WM session here.
+Reboot="reboot"						# Put a command to reboot a machine here.
+Shutdown="shutdown now"				# Put a command to shutdown a machine here.
+
+printf "System (l) lock, (e) logout, (s) suspend, (h) hibernate, (r) reboot, (S) shutdown\n"
+
+read key
+
+case $key in
+	l)
+		$Locker
+		;;
+	e)
+		$Logout
+		;;
+	s)
+		$Suspend && $Locker
+		;;
+	h)
+		$Hibernate && $Locker
+		;;
+	r)
+		$Reboot
+		;;
+
+	S)
+		$Shutdown
+		;;
+
+	*)
+		exit 1
+		;;
+esac

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Tux icon
+icon=""
+
+# Grab kernel version
+version=$(uname -r)
+
+# Mouse controls
+case $BUTTON in
+	# Right click creates a notification with a current kernel version
+	3) notify-send "Kernel version: " "$version" ;;
+esac
+
+# Show tux icon and kernel version
+echo $icon $version

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# Dependencies: xclip
+
+xclip -selection clipboard -t image/png -o > ~/Photos/Screenshots/$(date +"%Y-%m-%d_%H-%M-%S").png && notify-send "Screenshot made!" "Screenshot saved at ~/Photos/Screenshots/$(date +"%Y-%m-%d_%H-%M-%S").png"

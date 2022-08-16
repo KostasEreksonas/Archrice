@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Read current time
+time="$(date '+%b %d (%a) %I:%M%p')"
+
+# Calendar icon
+icon=
+
+# Define mouse controls
+case $BUTTON in
+	# Left-click opens an instance of gsimplecal
+	1) gsimplecal ;;
+	# Right-click shows a notification with current time
+	3) notify-send "Current time" "$icon $time" ;;
+esac
+
+# Show calendar icon and current time
+echo "$icon $time"
