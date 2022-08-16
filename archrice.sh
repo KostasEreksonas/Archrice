@@ -514,7 +514,8 @@ function installWM () {
 		done
 	done
 
-	for (( i=0; i<$len; i++ )); do
+	for (( j=0; j<$len; j++ )); do
+		dialog --title "Installing Window Manager" --infobox "Installing ${suckless_utilities[$i]}" 0 0
 		cd ${suckless_utilities[$i]}/
 		make 2>>$logfile 1>&2
 		make clean install 2>>$logfile 1>&2
