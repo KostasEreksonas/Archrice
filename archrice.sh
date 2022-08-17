@@ -280,7 +280,7 @@ function copyConfigs() {
 	len=${#folders[@]}
 	for (( i=0; i<$len; i++ )); do
 		dialog --title "Installing Configuration Files" --infobox "Installing ${folders[$i]}" 0 0
-		cp -r $homedir/Documents/archrice/dotfiles/${folders[$i]}/ $homedir/.config/${folders[$i]}/
+		cp -r $homedir/Documents/Archrice/dotfiles/${folders[$i]}/ $homedir/.config/${folders[$i]}/
 	done
 
 	files=(.newsboat/ .xinitrc .xprofile)
