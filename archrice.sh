@@ -53,6 +53,8 @@ suckless_utilities=(dwm-kostas \
 
 # Tools to extend functionality of dwm window manager
 wm_tools=(feh \
+		xclip \
+		iw \
 		maim \
 		xdotool \
 		picom \
@@ -76,6 +78,7 @@ applications=(xorg-server \
 		xorg-xinit \
 		mesa \
 		vim \
+		openssh \
 		newsboat \
 		pass \
 		passff-host \
@@ -207,7 +210,7 @@ function cloneDotfiles () {
 # Configure bashrc file
 function configureBashrc () {
 	cd $homedir/
-	cp $homedir/Documents/git/archrice/dotfiles/.bashrc $homedir/.bashrc
+	cp $homedir/Documents/git/Archrice/dotfiles/.bashrc $homedir/.bashrc
 
 	dialog --title "Configuring Bashrc" --infobox "Appending a custom script directory at $homedir/bin/ to PATH" 0 0
 	sleep 2
@@ -335,7 +338,7 @@ function configureVim () {
 
 	# Copy .vimrc config file from dotfiles
 	dialog --title "Vim Configuration" --infobox "Copying configuration to the user $username home directory" 0 0
-	cp /home/$username/Documents/git/archrice/dotfiles/.vimrc $homedir/.vimrc
+	cp /home/$username/Documents/git/Archrice/dotfiles/.vimrc $homedir/.vimrc
 
 	rm -f $tempfile
 	return $?
