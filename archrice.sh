@@ -516,14 +516,14 @@ function installWM () {
 	# Install suckless utilities
 	len=${#suckless_utilities[@]}
 	for (( i=0; i<$len; i++ )); do
-		until dialog --title "Installing Window Manager" --infobox "Cloning ${suckless_utilities[$i]}" 0 0 && git clone --quiet https://github.com/KostasEreksonas/${suckless_utilities[$i]}.git 2>>$tempfile; do
+		until dialog --title "Installing Window Manager" --infobox "Cloning ${suckless_utilities[$i]}" 0 0 && git clone --quiet https://github.com/KostasEreksonas/${suckless_utilities[$i]}.git 2>>$tempfile 1>&2; do
 			gitError || break
 		done
 	done
 
 	for (( j=0; j<$len; j++ )); do
 		dialog --title "Installing Window Manager" --infobox "Installing ${suckless_utilities[$i]}" 0 0
-		cd ${suckless_utilities[$i]}/
+		cd ${suckless_utilities[$j]}/
 		make 2>>$logfile 1>&2
 		make clean install 2>>$logfile 1>&2
 		cd ..
