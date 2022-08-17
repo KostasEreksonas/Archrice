@@ -210,38 +210,38 @@ function cloneDotfiles () {
 # Configure bashrc file
 function configureBashrc () {
 	cd $homedir/
-	cp $homedir/Documents/git/Archrice/dotfiles/.bashrc $homedir/.bashrc
+	cp $homedir/Documents/git/Archrice/dotfiles/.bashrc $homedir/.bashrc 2>>$logfile 1>&2
 
 	dialog --title "Configuring Bashrc" --infobox "Appending a custom script directory at $homedir/bin/ to PATH" 0 0
 	sleep 2
-	sed -i "13s/username/$username/" .bashrc
+	sed -i "13s/username/$username/" .bashrc 2>>$logfile 1>&2
 
 	# Create an alias for connecting to Wi-Fi network and add it's password to password store
 	dialog --title "Configuring Bashrc" --yesno "Do you want to keep 'connect_wifi' alias to connect to Wi-Fi? " 0 0
 	if [ $? == 0 ]; then
 		wifi_ssid=$(dialog --stdout --title "Configuring Bashrc" --inputbox "Enter SSID of your Wi-Fi" 0 0)
 		# https://stackoverflow.com/questions/148451/how-to-use-sed-to-replace-only-the-first-occurrence-in-a-file
-		sed -i "0,/SSID/s//$wifi_ssid/" .bashrc
+		sed -i "0,/SSID/s//$wifi_ssid/" .bashrc 2>>$logfile 1>&2
 
 		dialog --title "Configuring Bashrc" --msgbox "Now You will be prompted to enter a password for your Wi-Fi network" 0 0
 		mkdir -p /root/.password-store/wifi/
 		pass add $wifi_ssid
 		mv /root/.password-store/$wifi_ssid.gpg /root/.password-store/wifi/wifi.gpg
 	else
-		sed -i '/connect_wifi/d'
+		sed -i '/connect_wifi/d' 2>>$logfile 1>&2
 	fi
 
 	# Create an alias for connecting to Wi-Fi network and add it's password to password store
 	dialog --title "Configuring Bashrc" --yesno "Do you want to keep 'connect_hotspot' alias to connect to hotspot? " 0 0
 	if [ $? == 0 ]; then
 		hotspot_ssid=$(dialog --stdout --title "Configuring Bashrc" --inputbox "Enter SSID of your hotspot" 0 0)
-		sed -i "s/SSID/$hotspot_ssid/" .bashrc
+		sed -i "s/SSID/$hotspot_ssid/" .bashrc 2>>$logfile 1>&2
 
 		dialog --title "Configuring Bashrc" --msgbox "Now You will be prompted to enter a password for Your hotspot network" 0 0
 		pass add $hotspot_ssid
 		mv /root/.password-store/$hotspot_ssid.gpg /root/.password-store/wifi/hotspot.gpg
 	else
-		sed -i '/connect_hotspot/d'
+		sed -i '/connect_hotspot/d' 2>>$logfile 1>&2
 	fi
 
 	# Move password store to the users' home directory
@@ -249,12 +249,12 @@ function configureBashrc () {
 
 	dialog --title "Configuring Bashrc" --yesno "Do you want to keep aliases to toggle bluetooth on and off?" 0 0
 	if [ $? == 1 ]; then
-		sed -i '/blth/d' .bashrc
+		sed -i '/blth/d' .bashrc 2>>$logfile 1>&2
 	fi
 
 	dialog --title "Configuring Bashrc" --yesno "Do you want to keep aliases for games installed with Wine?" 0 0
 	if [ $? == 1 ]; then
-		sed -i '/Wine/d' .bashrc
+		sed -i '/Wine/d' .bashrc 2>>$logfile 1>&2
 	fi
 
 	return $?
@@ -263,14 +263,14 @@ function configureBashrc () {
 # Configure custom scripts
 function installScripts () {
 	dialog --title "Installing Scripts" --infobox "Copying statusbar scripts to $homedir/bin/" 0 0
-	cp $homedir/Documents/git/Archrice/statusbar/* $homedir/bin/
+	cp $homedir/Documents/git/Archrice/statusbar/* $homedir/bin/ 2>>$logfile 1>&2
 
 	scripts=(locker screenshot screenshot_clipboard paste_clipboard piper)
 	len=${#scripts[@]}
 
 	for (( i=0; i<$len; i++ )); do
 	dialog --title "Installing Scripts" --infobox "Copying ${scripts[$i]} script to /usr/local/bin" 0 0
-		cp $homedir/Documents/git/Archrice/system_scripts/${scripts[$i]} /usr/local/bin/
+		cp $homedir/Documents/git/Archrice/system_scripts/${scripts[$i]} /usr/local/bin/ 2>>$logfile 1>&2
 	done
 
 	return $?
@@ -283,30 +283,30 @@ function copyConfigs() {
 	len=${#folders[@]}
 	for (( i=0; i<$len; i++ )); do
 		dialog --title "Installing Configuration Files" --infobox "Installing ${folders[$i]}" 0 0
-		cp -r $homedir/Documents/Archrice/dotfiles/${folders[$i]}/ $homedir/.config/${folders[$i]}/
+		cp -r $homedir/Documents/Archrice/dotfiles/${folders[$i]}/ $homedir/.config/${folders[$i]}/ 2>>$logfile 1>&2
 	done
 
 	files=(.newsboat/ .xinitrc .xprofile)
 	len=${files[@]}
 	for (( i=0; i<$len; i++ )); do
 		dialog --title "Installing Configuration Files" --infobox "Installing ${files[$i]}"
-		cp -r $homedir/Documents/git/Archrice/dotfiles/${files[$i]} $homedir/${files[$i]}
+		cp -r $homedir/Documents/git/Archrice/dotfiles/${files[$i]} $homedir/${files[$i]} 2>>$logfile 1>&2
 	done
 
 	# Copy X11 configuration to /etc/X11/xorg.conf.d
-	cp $homedir/Documents/git/Archrice/dotfiles//xorg.conf.d/10-monitor.conf /etc/X11/xorg.conf.d/
-	cp $homedir/Documents/git/Archrice/dotfiles/xorg.conf.d/40-libinput.conf /etc/X11/xorg.conf.d/
+	cp $homedir/Documents/git/Archrice/dotfiles//xorg.conf.d/10-monitor.conf /etc/X11/xorg.conf.d/ 2>>$logfile 1>&2
+	cp $homedir/Documents/git/Archrice/dotfiles/xorg.conf.d/40-libinput.conf /etc/X11/xorg.conf.d/ 2>>$logfile 1>&2
 
 	# If Nvidia drivers are installed, copy Nvidia config to /etc/X11/xorg.conf.d
 	pacman -Qi nvidia 2>>$logfile 1>&2
-	if [ $? == 0 ]; then cp $homedir/Documents/git/Archrice/xorg.conf.d/20-nvidia.conf /etc/X11/xorg.conf.d/; fi
+	if [ $? == 0 ]; then cp $homedir/Documents/git/Archrice/xorg.conf.d/20-nvidia.conf /etc/X11/xorg.conf.d/ 2>>$logfile 1>&2; fi
 
 	# If Intel iGPU exists, copy Intel iGPU config to /etc/X11/xorg.conf.d
 	lspci | grep Intel\ Corporation\ HD\ Graphics 2>$logfile 1>&2
-	if [ $? == 0 ]; then cp $homedir/Documents/git/Archrice/xorg.conf.d/20-intel.conf /etc/X11/xorg.conf.d/; fi
+	if [ $? == 0 ]; then cp $homedir/Documents/git/Archrice/xorg.conf.d/20-intel.conf /etc/X11/xorg.conf.d/ 2>>$logfile 1>&2; fi
 
 	# Copy pixmaps to /usr/share/pixmaps
-	cp $homedir/Documents/git/Archrice/dotfiles/pixmaps/* /usr/share/pixmaps/
+	cp $homedir/Documents/git/Archrice/dotfiles/pixmaps/* /usr/share/pixmaps/ 2>>$logfile 1>&2
 
 	return $?
 }
@@ -314,7 +314,7 @@ function copyConfigs() {
 # Configure ownership of users' home directory
 function configureOwnership() {
 	cd /home/
-	chown -R $username:$username $homedir/
+	chown -R $username:$username $homedir/ 2>>$logfile 1>&2
 }
 
 # Customize Vim text editor
@@ -338,7 +338,7 @@ function configureVim () {
 
 	# Copy .vimrc config file from dotfiles
 	dialog --title "Vim Configuration" --infobox "Copying configuration to the user $username home directory" 0 0
-	cp /home/$username/Documents/git/Archrice/dotfiles/.vimrc $homedir/.vimrc
+	cp /home/$username/Documents/git/Archrice/dotfiles/.vimrc $homedir/.vimrc 2>>$logfile 1>&2
 
 	rm -f $tempfile
 	return $?
