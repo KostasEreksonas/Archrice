@@ -285,7 +285,7 @@ function copyConfigs() {
 	len=${#folders[@]}
 	for (( i=0; i<$len; i++ )); do
 		dialog --title "Installing Configuration Files" --infobox "Installing ${folders[$i]}" 0 0
-		cp -r $homedir/Documents/Archrice/dotfiles/${folders[$i]}/ $homedir/.config/${folders[$i]}/ 2>>$logfile 1>&2
+		cp -r $homedir/Documents/git/Archrice/dotfiles/${folders[$i]}/ $homedir/.config/${folders[$i]}/ 2>>$logfile 1>&2
 	done
 
 	files=(.newsboat/ .xinitrc .xprofile)
@@ -296,16 +296,16 @@ function copyConfigs() {
 	done
 
 	# Copy X11 configuration to /etc/X11/xorg.conf.d
-	cp $homedir/Documents/git/Archrice/dotfiles//xorg.conf.d/10-monitor.conf /etc/X11/xorg.conf.d/ 2>>$logfile 1>&2
+	cp $homedir/Documents/git/Archrice/dotfiles/xorg.conf.d/10-monitor.conf /etc/X11/xorg.conf.d/ 2>>$logfile 1>&2
 	cp $homedir/Documents/git/Archrice/dotfiles/xorg.conf.d/40-libinput.conf /etc/X11/xorg.conf.d/ 2>>$logfile 1>&2
 
 	# If Nvidia drivers are installed, copy Nvidia config to /etc/X11/xorg.conf.d
 	pacman -Qi nvidia 2>>$logfile 1>&2
-	if [ $? == 0 ]; then cp $homedir/Documents/git/Archrice/xorg.conf.d/20-nvidia.conf /etc/X11/xorg.conf.d/ 2>>$logfile 1>&2; fi
+	if [ $? == 0 ]; then cp $homedir/Documents/git/Archrice/dotfiles/xorg.conf.d/20-nvidia.conf /etc/X11/xorg.conf.d/ 2>>$logfile 1>&2; fi
 
 	# If Intel iGPU exists, copy Intel iGPU config to /etc/X11/xorg.conf.d
 	lspci | grep Intel\ Corporation\ HD\ Graphics 2>$logfile 1>&2
-	if [ $? == 0 ]; then cp $homedir/Documents/git/Archrice/xorg.conf.d/20-intel.conf /etc/X11/xorg.conf.d/ 2>>$logfile 1>&2; fi
+	if [ $? == 0 ]; then cp $homedir/Documents/git/Archrice/dotfiles/xorg.conf.d/20-intel.conf /etc/X11/xorg.conf.d/ 2>>$logfile 1>&2; fi
 
 	# Copy pixmaps to /usr/share/pixmaps
 	cp $homedir/Documents/git/Archrice/dotfiles/pixmaps/* /usr/share/pixmaps/ 2>>$logfile 1>&2
