@@ -102,7 +102,8 @@ applications=(xorg-server \
 
 aur_packages=(virtualbox-ext-oracle \
 		xurls \
-		vim-youcompleteme-git)
+		vim-youcompleteme-git \
+		ttf-symbola)
 
 fonts=(noto-fonts \
 	noto-fonts-emoji \
