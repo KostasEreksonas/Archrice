@@ -196,8 +196,8 @@ function cloneDotfiles () {
 	tempfile=/tmp/archtemp.txt
 	cd $homedir/Documents/git/
 	dialog --title "Configuring Bashrc" --infobox "Cloning archrice repository" 0 0
-	until git clone --quiet https://github.com/KostasEreksonas/archrice.git 2>>$tempfile; do
-		gitError archrice || break
+	until git clone --quiet https://github.com/KostasEreksonas/Archrice.git 2>>$tempfile; do
+		gitError Archrice || break
 	done
 
 	rm -f $tempfile
@@ -260,14 +260,14 @@ function configureBashrc () {
 # Configure custom scripts
 function installScripts () {
 	dialog --title "Installing Scripts" --infobox "Copying statusbar scripts to $homedir/bin/" 0 0
-	cp $homedir/Documents/git/archrice/statusbar/* $homedir/bin/
+	cp $homedir/Documents/git/Archrice/statusbar/* $homedir/bin/
 
 	scripts=(locker screenshot screenshot_clipboard paste_clipboard piper)
 	len=${#scripts[@]}
 
 	for (( i=0; i<$len; i++ )); do
 	dialog --title "Installing Scripts" --infobox "Copying ${scripts[$i]} script to /usr/local/bin" 0 0
-		cp $homedir/Documents/git/archrice/system_scripts/${scripts[$i]} /usr/local/bin/
+		cp $homedir/Documents/git/Archrice/system_scripts/${scripts[$i]} /usr/local/bin/
 	done
 
 	return $?
