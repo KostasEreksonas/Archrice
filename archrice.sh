@@ -14,6 +14,7 @@ logfile=/var/log/archrice.log
 
 # Directories for the new user
 directories=(.local/share/fonts/ \
+		.config/ \
 		bin/ \
 		Desktop/ \
 		Documents/aur/ \
