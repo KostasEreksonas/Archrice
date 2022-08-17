@@ -89,4 +89,5 @@ Archrice script installs Vim terminal based text editor and `Pathogen` plugin ma
 Other software installed with archrice script include:
 * `firefox` - web browser
 * `mpv` - media player
-* [Optional Installation] `wine` - compatibility layer for Windows applications.
+* `virtualbox` - a hypervisor for x86 virtualization
+* [Optional Installation] `wine` - compatibility layer for Windows applications
