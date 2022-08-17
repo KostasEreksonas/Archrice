@@ -337,6 +337,9 @@ function configureVim () {
 		done
 	done
 
+	# Download solarized8 color scheme by lifepillar from Github and put it to ~/.vim/colors
+	wget https://raw.githubusercontent.com/lifepillar/vim-solarized8/master/colors/solarized8.vim -P $homedir/.vim/colors
+
 	# Copy .vimrc config file from dotfiles
 	dialog --title "Vim Configuration" --infobox "Copying configuration to the user $username home directory" 0 0
 	cp /home/$username/Documents/git/Archrice/dotfiles/.vimrc $homedir/.vimrc 2>>$logfile 1>&2
