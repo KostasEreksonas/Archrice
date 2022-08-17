@@ -55,7 +55,7 @@ set nofoldenable
 :augroup END
 
 "-- THEMING --
-" set cursorline
+set cursorline
 set background=dark
 set guifont=Hack\ Nerd\ Font\ Mono\ 20
 
@@ -68,7 +68,7 @@ let g:airline_section_z = airline#section#create(["\uE0A1" . '%{line(".")}' . "\
 
 let g:airline_theme='solarized'
 let g:material_theme_style = 'darker'
-colorscheme solarized
+colorscheme solarized8
 let g:solarized_termcolors=256
 
 hi Normal       ctermbg=NONE guibg=NONE
