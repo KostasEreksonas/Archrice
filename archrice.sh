@@ -628,12 +628,6 @@ function installError () {
 
 # Display this message when there is an error when creating user
 function userError() {
-	# Empty username error
-	if [ $username == "" ]; then
-		dialog --title "User Creation Error" --msgbox "Username cannot be empty. Please try again." 0 0
-		return 0
-	fi
-
 	# Password creation error
 	dialog --title "User Creation Error" --yesno "Passwords for $username do not match. Do you want to try again?" 0 0
 	if [ $? == 0 ]; then
@@ -682,15 +676,10 @@ function welcomeMsg () {
 # Create and configure a new system user
 function createUser() {
 	# Pick an username
-	while [ "$username" == "" ]; do
-		name=$(dialog --stdout --title "User Creation" --inputbox "User Name:" 0 0)
-		homedir=/home/$name
-		username=$name
-		if [ "$username" == "" ]; then
-			userError || dialog --title "User Creation Error" --msgbox "Failed to create user. Installation aborting" 0 0 && exit 1
-		fi
-		useradd -m $name
-	done
+	name=$(dialog --stdout --title "User Creation" --inputbox "User Name:" 0 0)
+	homedir=/home/$name
+	username=$name
+	useradd -m $name
 	# Choose groups to add the user to
 	groups=$(dialog --stdout --title "User Creation" \
 			--checklist "Choose groups where the user $username should be added to:" 0 0 0 \
