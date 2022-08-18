@@ -293,7 +293,7 @@ function copyConfigs() {
 	done
 
 	files=(.newsboat/ .xinitrc .xprofile)
-	len=${files[@]}
+	len=${#files[@]}
 	for (( i=0; i<$len; i++ )); do
 		dialog --title "Installing Configuration Files" --infobox "Installing ${files[$i]}"
 		cp -r $homedir/Documents/git/Archrice/dotfiles/${files[$i]} $homedir/${files[$i]} 2>>$logfile 1>&2
