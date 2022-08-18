@@ -396,7 +396,7 @@ function installAURPackages () {
 	sleep 1
 
 	# Delete libxft before installing libxft-bgra to avoid conflict
-	pacman -Rdd libxft
+	pacman --noconfirm -Rdd libxft 2>>$logfile 1>&2
 
 	len=${#aur_packages[@]}
 	for (( i=0; i<$len; i++ )); do
