@@ -759,7 +759,7 @@ function exitMsg () {
 	dialog --title "Arch Auto Configuration Script" --infobox "The system is now installed and will be cleaned up and rebooted in 5 seconds" 0 0
 	sleep 5
 	rm -r /root/*
-	rm /var/log/$logfile
+	rm $logfile
 	sleep 2
 	reboot
 
