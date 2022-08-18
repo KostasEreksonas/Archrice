@@ -394,6 +394,10 @@ function installPackage () {
 function installAURPackages () {
 	dialog --title "Installing AUR Packages" --infobox "Installing packages from AUR" 0 0
 	sleep 1
+
+	# Delete libxft before installing libxft-bgra to avoid conflict
+	pacman -Rdd libxft
+
 	len=${#aur_packages[@]}
 	for (( i=0; i<$len; i++ )); do
 		until dialog --title "Installing AUR Packages" --infobox "Installing ${aur_packages[$i]}" 0 0 && yay --noconfirm --needed -S ${aur_packages[$i]} 2>>$logfile 1>&2; do
