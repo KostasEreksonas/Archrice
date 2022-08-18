@@ -101,6 +101,8 @@ applications=(xorg-server \
 		android-udev \
 		transmission-gtk \
 		python-pip \
+		virtualbox-host-modules-arch \
+		virtualbox \
 		discord)
 
 aur_packages=(virtualbox-ext-oracle \
@@ -447,6 +449,9 @@ function installApplications () {
 		done
 	done
 
+	# Add user to vboxusers group
+	usermod -aG vboxusers $username
+
 	dialog --title "Installing Packages" --yesno "Do you want to install virtualbox-guest-utils (necessary if you want to run X sessions within Arch Linux guest in Virtualbox)?" 0 0
 	if [ $? == 0 ]; then
 		until installPackage virtualbox-guest-utils; do
@@ -725,10 +730,10 @@ function createUser() {
 		password=$(dialog --stdout --title "User Creation" --passwordbox "Enter password for user $name:" 0 0)
 		passcheck=$(dialog --stdout --title "User Creation" --passwordbox "Re-enter password for user $name:" 0 0)
 		if [ $password != $passcheck ]; then
-			unset passcheck
+			unset $passcheck
 			userError $name || break
 		else
-			unset passcheck
+			unset $passcheck
 			echo "$name:$password" | chpasswd
 		fi
 	done
