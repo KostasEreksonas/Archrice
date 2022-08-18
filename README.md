@@ -18,7 +18,7 @@ Table of Contents
 Download the archrice shell script from this repo with `curl`, make the script executable and run it.
 
 ```
-curl -LJO https://raw.githubusercontent.com/KostasEreksonas/archrice/main/archrice.sh
+curl -LJO https://raw.githubusercontent.com/KostasEreksonas/Archrice/main/archrice.sh
 chmod +x archrice.sh
 ./archrice.sh
 ```
