@@ -79,11 +79,11 @@ Some useful bash aliases are in a `.bashrc` file. During setup the user is promp
 
 Archrice script installs Vim terminal based text editor and `Pathogen` plugin manager with some plugins.
 
-* `Nerd Tree` - file system explorer for Vim.
-* `Pear Tree` - auto-pair plugin for Vim.
-* `Vim Airline` - status/tabline for Vim.
-* `Vim Solarized` - solarized color theme for Vim.
-* `You Complete Me` - code completion engine for Vim.
+* [Nerd Tree](https://github.com/preservim/nerdtree) - file system explorer for Vim.
+* [Pear Tree](https://github.com/tmsvg/pear-tree) - auto-pair plugin for Vim.
+* [Vim Airline](https://github.com/vim-airline/vim-airline) - status/tabline for Vim.
+* [Vim Solarized](https://github.com/altercation/vim-colors-solarized) - solarized color theme for Vim.
+* [You Complete Me](https://github.com/ycm-core/YouCompleteMe) - code completion engine for Vim.
 
 ## Other Software
 Other software installed with archrice script include:
