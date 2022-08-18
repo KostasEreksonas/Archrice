@@ -190,7 +190,7 @@ function configurePacman () {
 
 # Configure pass utility to store passwords
 function configurePass () {
-	dialog --title "Pass Configuration" --msgbox "Now you will be prompted to create a GPG key. When the GPG key is created, a password store will be initialized with a provided E-mail address." 0 0
+	dialog --title "Pass Configuration" --msgbox "Now you will be prompted to create a GPG key. When the GPG key is created, a password store will be initialized with a provided E-mail address" 0 0
 	gpg --full-gen-key 2>>$logfile 1>&2
 	email=$(grep @ $logfile | cut -d " " -f 25 | tr -d "<>")
 	dialog --title "Pass Configuration" --infobox "Initializing password store for $email" 0 0
@@ -204,7 +204,7 @@ function configurePass () {
 function cloneDotfiles () {
 	tempfile=/tmp/archtemp.txt
 	cd $homedir/Documents/git/
-	dialog --title "Configuring Bashrc" --infobox "Cloning archrice repository" 0 0
+	dialog --title "Configuring Bashrc" --infobox "Cloning Archrice repository" 0 0
 	until git clone --quiet https://github.com/KostasEreksonas/Archrice.git 2>>$tempfile; do
 		gitError Archrice || break
 	done
@@ -225,7 +225,7 @@ function configureBashrc () {
 	# Create an alias for connecting to Wi-Fi network and add it's password to password store
 	dialog --title "Configuring Bashrc" --yesno "Do you want to keep 'connect_wifi' alias to connect to Wi-Fi? " 0 0
 	if [ $? == 0 ]; then
-		wifi_ssid=$(dialog --stdout --title "Configuring Bashrc" --inputbox "Enter SSID of your Wi-Fi" 0 0)
+		wifi_ssid=$(dialog --stdout --title "Configuring Bashrc" --inputbox "Enter SSID of your Wi-Fi:" 0 0)
 		# https://stackoverflow.com/questions/148451/how-to-use-sed-to-replace-only-the-first-occurrence-in-a-file
 		sed -i "0,/SSID/s//$wifi_ssid/" .bashrc 2>>$logfile 1>&2
 
@@ -240,7 +240,7 @@ function configureBashrc () {
 	# Create an alias for connecting to Wi-Fi network and add it's password to password store
 	dialog --title "Configuring Bashrc" --yesno "Do you want to keep 'connect_hotspot' alias to connect to hotspot? " 0 0
 	if [ $? == 0 ]; then
-		hotspot_ssid=$(dialog --stdout --title "Configuring Bashrc" --inputbox "Enter SSID of your hotspot" 0 0)
+		hotspot_ssid=$(dialog --stdout --title "Configuring Bashrc" --inputbox "Enter SSID of your hotspot:" 0 0)
 		sed -i "s/SSID/$hotspot_ssid/" .bashrc 2>>$logfile 1>&2
 
 		dialog --title "Configuring Bashrc" --msgbox "Now You will be prompted to enter a password for Your hotspot network" 0 0
@@ -637,7 +637,7 @@ function userError() {
 	if [ $? == 0 ]; then
 		return 0
 	else
-		dialog --title "User Creation Error" --msgbox "Password for $username was not created." 0 0
+		dialog --title "User Creation Error" --msgbox "Password for $username was not created" 0 0
 		return 1
 	fi
 }
@@ -672,7 +672,7 @@ function gitError () {
 #  -------
 
 function welcomeMsg () {
-	dialog --title "Arch Linux Auto Configuration Script" --msgbox "Welcome to Arch Linux configuration script. This script is created to expand a base Arch Linux system and configure a dwm window manager environment with most of the software necessary for daily usage installed. Press OK to start the configuration process." 0 0
+	dialog --title "Arch Linux Auto Configuration Script" --msgbox "Welcome to Arch Linux configuration script. This script is created to expand a base Arch Linux system and configure a dwm window manager environment with most of the software necessary for daily usage installed. Press OK to start the configuration process" 0 0
 
 	return $?
 }
@@ -749,7 +749,7 @@ function createDirectories () {
 }
 
 function exitMsg () {
-	dialog --title "Arch Auto Configuration Script" --infobox "The system is now installed and will be rebooted in 5 seconds." 0 0
+	dialog --title "Arch Auto Configuration Script" --infobox "The system is now installed and will be rebooted in 5 seconds" 0 0
 	sleep 5
 	reboot
 
