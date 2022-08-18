@@ -108,7 +108,7 @@ applications=(xorg-server \
 aur_packages=(virtualbox-ext-oracle \
 		xurls \
 		vim-youcompleteme-git \
-		libxft_bgra)
+		libxft-bgra)
 
 fonts=(noto-fonts \
 	noto-fonts-emoji \
