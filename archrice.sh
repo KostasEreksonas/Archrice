@@ -99,6 +99,8 @@ applications=(xorg-server \
 		libreoffice-fresh \
 		android-file-transfer \
 		android-udev \
+		transmission-gtk \
+		python-pip \
 		discord)
 
 aur_packages=(virtualbox-ext-oracle \
