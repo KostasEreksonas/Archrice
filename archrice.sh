@@ -679,11 +679,18 @@ function welcomeMsg () {
 
 # Create and configure a new system user
 function createUser() {
-	# Pick an username
-	name=$(dialog --stdout --title "User Creation" --inputbox "User Name:" 0 0)
-	homedir=/home/$name
-	username=$name
-	useradd -m $name
+	# Pick an username (cannot be empty)
+	while [ -z $name ]; do
+		name=$(dialog --stdout --title "User Creation" --inputbox "User Name:" 0 0)
+		if [ -z $name ]; then
+			dialog --title "User Creation" --msgbox "Username cannot be empty. Try again" 0 0
+		else
+			homedir=/home/$name
+			username=$name
+			useradd -m $name
+		fi
+	done
+
 	# Choose groups to add the user to
 	groups=$(dialog --stdout --title "User Creation" \
 			--checklist "Choose groups where the user $username should be added to:" 0 0 0 \
