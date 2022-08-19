@@ -66,7 +66,7 @@ let g:airline_right_sep = "\uE0B6"
 " set the CN (column number) symbol:
 let g:airline_section_z = airline#section#create(["\uE0A1" . '%{line(".")}' . "\uE0A3" . '%{col(".")}'])
 
-let g:airline_theme='solarized'
+let g:airline_theme='solarized_flood'
 let g:material_theme_style = 'darker'
 colorscheme solarized8
 let g:solarized_termcolors=256
