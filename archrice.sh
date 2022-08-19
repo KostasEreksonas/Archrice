@@ -221,6 +221,8 @@ function cloneDotfiles () {
 
 # Configure bashrc file
 function configureBashrc () {
+	alias=""
+	SSID=""
 	cd $homedir/
 	cp $homedir/Documents/git/Archrice/dotfiles/.bashrc $homedir/.bashrc 2>>$logfile 1>&2
 
@@ -231,8 +233,6 @@ function configureBashrc () {
 	# Create an alias for connecting to Wi-Fi network and add it's password to password store
 	dialog --title "Configuring Bashrc" --yesno "Do you want to add an alias command for connecting to Wireless (hotspot) network? " 0 0
 	if [ $? == 0 ]; then
-		alias=""
-		SSID=""
 		printf "#  -------\n# | Wi-Fi |\n#  -------\n\n" >> .bashrc
 		mkdir -p $homedir/.password-store/wifi/
 		chown -R $username:$username $homedir/.password-store/wifi/
@@ -246,7 +246,7 @@ function configureBashrc () {
 			mv $homedir/.password-store/$SSID.gpg $homedir/.password-store/wifi/$SSID.gpg
 			dialog --title "Configuring Bashrc" --infobox "Creating an alias for connecting to $SSID with $alias" 0 0
 			sleep 1
-			printf "alias $alias=\'nmcli device wifi connect $SSID password \`pass wifi/$SSID.gpg\`\'\n" >> .bashrc
+			printf "alias $alias=\'nmcli device wifi connect $SSID password \`pass wifi/$SSID.gpg\`\'\n\n" >> .bashrc
 			dialog --title "Configuring Bashrc" --yesno "Do you want to add an alias for another Wireless network?" 0 0
 			if [ $? != 0 ]; then
 				break
@@ -254,6 +254,12 @@ function configureBashrc () {
 		done
 	fi
 
+	dialog --title "Configuring Bashrc" --yesno "Do you want to add alias to list all available Wireless networks?" 0 0
+	if [ $? == 0 ]; then
+		alias=$(dialog --stdout --title "Configuring Bashrc" --inputbox "Enter name of an alias:" 0 0)
+		printf "$alias=\'nmcli device wifi list\'\n\n" >> .bashrc
+	fi
+		
 	return $?
 }
 
