@@ -256,10 +256,33 @@ function configureBashrc () {
 
 	dialog --title "Configuring Bashrc" --yesno "Do you want to add alias to list all available Wireless networks?" 0 0
 	if [ $? == 0 ]; then
+		unset alias
 		alias=$(dialog --stdout --title "Configuring Bashrc" --inputbox "Enter name of an alias:" 0 0)
 		printf "$alias=\'nmcli device wifi list\'\n\n" >> .bashrc
 	fi
-		
+
+	dialog --title "Configuring Bashrc" --yesno "Do you want to add alias to turn Bluetooth on/off?" 0 0
+	if [ $? == 0 ]; then
+		# Install bluetooth utils
+		bluetooth=(bluez bluez-utils)
+		len=${#bluetooth[@]}
+		for (( i=0; i<$len; i++ )); do
+			until dialog --title "Installing Bluetooth" --infobox "Installing ${bluetooth[$i]}" && installPackage ${bluetooth[$i]}; do
+				installError ${bluetooth[$i]} || break
+			done
+		done
+
+		# Alias to turn bluetooth on
+		unset alias
+		alias=$(dialog --stdout --title "Configuring Bashrc" --inputbox "Enter an alias to turn Bluetooth on:" 0 0)
+		printf "alias $alias=\'systemctl start bluetooth.service\'\n\n" >> .bashrc
+
+		# Alias to turn bluetooth off
+		unset alias
+		alias=$(dialog --stdout --title "Configuring Bashrc" --inputbox "Enter an alias to turn Bluetooth off:" 0 0)
+		printf "alias $alias=\'systemctl stop bluetooth.service\'\n\n" >> .bashrc
+	fi
+
 	return $?
 }
 
