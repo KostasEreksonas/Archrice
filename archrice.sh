@@ -191,12 +191,17 @@ function configurePacman () {
 
 # Configure pass utility to store passwords
 function configurePass () {
-	dialog --title "Pass Configuration" --msgbox "Now you will be prompted to create a GPG key. When the GPG key is created, a password store will be initialized with a provided E-mail address" 0 0
-	gpg --full-gen-key 2>>$logfile 1>&2
-	email=$(grep @ $logfile | cut -d " " -f 25 | tr -d "<>")
+	dialog --title "Pass Configuration" --msgbox "Now you will be prompted to create a GPG keypair." 0 0
+	# Change terminal ownership to $username to get the passphrase for GPG key, as sugessted here:
+	# https://github.com/MISP/MISP/issues/3702#issuecomment-443371431
+	chown -R $username:$username /dev/tty1
+	runuser -u $username -- gpg --full-gen-key 2>>$logfile 1>&2
+	sleep 5
+	email=$(grep @ $logfile | tail -1 | cut -d " " -f 25 | tr -d "<>")
 	dialog --title "Pass Configuration" --infobox "Initializing password store for $email" 0 0
-	sleep 1
-	pass init $email
+	sleep 2
+	runuser -u $username -- pass init $email 2>>$logfile
+	chown -R root:root /dev/tty1
 
 	return $?
 }
@@ -224,44 +229,29 @@ function configureBashrc () {
 	sed -i "13s/username/$username/" .bashrc 2>>$logfile 1>&2
 
 	# Create an alias for connecting to Wi-Fi network and add it's password to password store
-	dialog --title "Configuring Bashrc" --yesno "Do you want to keep 'connect_wifi' alias to connect to Wi-Fi? " 0 0
+	dialog --title "Configuring Bashrc" --yesno "Do you want to add an alias command for connecting to Wireless (hotspot) network? " 0 0
 	if [ $? == 0 ]; then
-		wifi_ssid=$(dialog --stdout --title "Configuring Bashrc" --inputbox "Enter SSID of your Wi-Fi:" 0 0)
-		# https://stackoverflow.com/questions/148451/how-to-use-sed-to-replace-only-the-first-occurrence-in-a-file
-		sed -i "0,/SSID/s//$wifi_ssid/" .bashrc 2>>$logfile 1>&2
-
-		dialog --title "Configuring Bashrc" --msgbox "Now You will be prompted to enter a password for your Wi-Fi network" 0 0
-		mkdir -p /root/.password-store/wifi/
-		pass add $wifi_ssid
-		mv /root/.password-store/$wifi_ssid.gpg /root/.password-store/wifi/wifi.gpg
-	else
-		sed -i '/connect_wifi/d' 2>>$logfile 1>&2
-	fi
-
-	# Create an alias for connecting to Wi-Fi network and add it's password to password store
-	dialog --title "Configuring Bashrc" --yesno "Do you want to keep 'connect_hotspot' alias to connect to hotspot? " 0 0
-	if [ $? == 0 ]; then
-		hotspot_ssid=$(dialog --stdout --title "Configuring Bashrc" --inputbox "Enter SSID of your hotspot:" 0 0)
-		sed -i "s/SSID/$hotspot_ssid/" .bashrc 2>>$logfile 1>&2
-
-		dialog --title "Configuring Bashrc" --msgbox "Now You will be prompted to enter a password for Your hotspot network" 0 0
-		pass add $hotspot_ssid
-		mv /root/.password-store/$hotspot_ssid.gpg /root/.password-store/wifi/hotspot.gpg
-	else
-		sed -i '/connect_hotspot/d' 2>>$logfile 1>&2
-	fi
-
-	# Move password store to the users' home directory
-	mv /root/.password-store/ $homedir/.password-store
-
-	dialog --title "Configuring Bashrc" --yesno "Do you want to keep aliases to toggle bluetooth on and off?" 0 0
-	if [ $? == 1 ]; then
-		sed -i '/blth/d' .bashrc 2>>$logfile 1>&2
-	fi
-
-	dialog --title "Configuring Bashrc" --yesno "Do you want to keep aliases for games installed with Wine?" 0 0
-	if [ $? == 1 ]; then
-		sed -i '/Wine/d' .bashrc 2>>$logfile 1>&2
+		alias=""
+		SSID=""
+		printf "#  -------\n# | Wi-Fi |\n#  -------\n\n" >> .bashrc
+		mkdir -p $homedir/.password-store/wifi/
+		chown -R $username:$username $homedir/.password-store/wifi/
+		while [ $? == 0 ]; do
+			unset alias
+			unset SSID
+			alias=$(dialog --stdout --title "Configuring Bashrc" --inputbox "Enter name of an alias:" 0 0)
+			SSID=$(dialog --stdout --title "Configuring Bashrc" --inputbox "Enter SSID of your Wireless network:" 0 0)
+			dialog --title "Configuring Bashrc" --msgbox "Now You will be prompted to enter a password for $SSID" 0 0
+			chown -R $username:$username /dev/tty1 && runuser -u $username -- pass add $SSID && chown -R root:root /dev/tty1
+			mv $homedir/.password-store/$SSID.gpg $homedir/.password-store/wifi/$SSID.gpg
+			dialog --title "Configuring Bashrc" --infobox "Creating an alias for connecting to $SSID with $alias" 0 0
+			sleep 1
+			printf "alias $alias=\'nmcli device wifi connect $SSID password \`pass wifi/$SSID.gpg\`\'\n" >> .bashrc
+			dialog --title "Configuring Bashrc" --yesno "Do you want to add an alias for another Wireless network?" 0 0
+			if [ $? != 0 ]; then
+				break
+			fi
+		done
 	fi
 
 	return $?
@@ -776,14 +766,14 @@ while [ $? == 0 ]; do
 	welcomeMsg
 	createUser
 	createDirectories
-	configurePacman
-	updateSystem
-	installDrivers
-	installApplications
-	installWine
-	installWM
-	extendWM
-	installFonts
+	#configurePacman
+	#updateSystem
+	#installDrivers
+	#installApplications
+	#installWine
+	#installWM
+	#extendWM
+	#installFonts
 	configurePass
 	cloneDotfiles
 	configureBashrc
