@@ -120,6 +120,7 @@ fonts=(noto-fonts \
 # Plugins for Vim text editor
 vim_plugins=(preservim/nerdtree \
 		vim-airline/vim-airline \
+		vim-airline/vim-airline-themes \
 		altercation/vim-colors-solarized \
 		tmsvg/pear-tree)
 
