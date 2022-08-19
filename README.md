@@ -66,14 +66,7 @@ For dwmblocks statusbar I made several scripts that are used for system monitori
 
 ## Aliases
 
-Some useful bash aliases are in a `.bashrc` file. During setup the user is prompted to choose whether to keep and configure or to delete aliases.
-
-* `blthon` - enable bluetooth service.
-* `blthoff` - disable bluetooth service.
-* `connect_wifi` - connect to a wifi network.
-* `connect_hotspot` - connect to a hotspot network.
-* `list_networks` - list available wireless networks.
-* Aliases for games installed with Wine.
+During the installation of archrice script the user is prompted to create aliases for Wireless and Bluetooth network connections.
 
 ## Vim
 
