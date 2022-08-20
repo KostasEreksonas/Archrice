@@ -334,6 +334,34 @@ function copyConfigs() {
 	# Copy pixmaps to /usr/share/pixmaps
 	cp $homedir/Documents/git/Archrice/dotfiles/pixmaps/* /usr/share/pixmaps/ 2>>$logfile 1>&2
 
+	# If the user has more than one display, ask whether to extend available displays
+	displayCount=$(xrandr | grep -w connected | wc -l)
+	if [ $displayCount -gt 1 ]; then
+		dialog --title "Installing Configuration Files" --yesno "Do you want to extend available displays?" 0 0
+		if [ $? == 0 ]; then
+			printf "\n# Extend displays on WM startup\n" >> $homedir/.xprofile
+			primary=$(xrandr | grep -w primary | cut -d " " -f 1)
+			printf "xrandr --output $primary --auto" >> $homedir/.xprofile # Xrandr command for extending displays
+
+			# Count secondary displays and append them to the xrandr command
+			countSecondary=$(xrandr | grep -w connected | grep -wv primary | wc -l)
+			for (( i=0; i<$countSecondary; i++ )); do
+				secondary=(xrandr | grep -w connected | grep -wv primary | cut -d " " -f 1)
+				dialog --title "Installing Configuration Files" --yes-label "Left of" --no-label "Right of" \
+					--yesno "Do you wan the secondary display left of or right of the primary one?" 0 0
+				if [ $? == 0 ]; then
+					printf " --output $secondary --left-of $primary --auto" >> $homedir/.xprofile
+					unset secondary
+				elif [ $? == 1 ]; then
+					printf " --output $secondary --right-of $primary --auto" >> $homedir/.xprofile
+					unset secondary
+				else
+					break
+				fi
+			done
+		fi
+	fi
+
 	return $?
 }
 
