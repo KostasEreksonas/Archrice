@@ -72,6 +72,8 @@ wm_tools=(feh \
 		perl-image-exiftool \
 		odt2txt \
 		ntfs-3g \
+		yt-dlp \
+		youtube-dl \
 		bash-completion)
 
 # Other applications and drivers
