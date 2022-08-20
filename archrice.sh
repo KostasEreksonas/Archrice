@@ -364,6 +364,11 @@ function copyConfigs() {
 		fi
 	fi
 
+	# Download mpv notification script rom emilazy
+	mkdir -p $homedir/.config/mpv/scripts/
+	cd $homedir/.conig/mpv/scripts/
+	wget https://raw.githubusercontent.com/emilazy/mpv-notify-send/master/notify-send.lua
+
 	return $?
 }
 
