@@ -346,7 +346,7 @@ function copyConfigs() {
 			# Count secondary displays and append them to the xrandr command
 			countSecondary=$(xrandr | grep -w connected | grep -wv primary | wc -l)
 			for (( i=0; i<$countSecondary; i++ )); do
-				secondary=(xrandr | grep -w connected | grep -wv primary | cut -d " " -f 1)
+				secondary=$(xrandr | grep -w connected | grep -wv primary | cut -d " " -f 1)
 				dialog --title "Installing Configuration Files" --yes-label "Left of" --no-label "Right of" \
 					--yesno "Do you wan the secondary display left of or right of the primary one?" 0 0
 				if [ $? == 0 ]; then
