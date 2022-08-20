@@ -78,13 +78,6 @@ hi CursorLineNr ctermbg=NONE guibg=NONE ctermfg=178 guifg=#d7af00
 
 let g:gitgutter_set_sign_backgrounds = 0
 
-"-- Whitespace highlight --
-"match ExtraWhitespace /\s\+$/
-"autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
-"autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
-"autocmd InsertLeave * match ExtraWhitespace /\s\+$/
-"autocmd BufWinLeave * call clearmatches()
-
 "-- ALE --
 hi clear ALEErrorSign
 hi clear ALEWarningSign
@@ -159,3 +152,11 @@ let g:webdevicons_enable_nerdtree = 1
 
 " adding to vim-airline's statusline
 let g:webdevicons_enable_airline_statusline = 1
+
+"-- Whitespace highlight --
+highlight ExtraWhitespace ctermbg=red guibg=red
+match ExtraWhitespace /\s\+$/
+autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
+autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
+autocmd InsertLeave * match ExtraWhitespace /\s\+$/
+autocmd BufWinLeave * call clearmatches()
