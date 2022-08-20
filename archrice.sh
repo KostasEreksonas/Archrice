@@ -823,14 +823,14 @@ while [ $? == 0 ]; do
 	welcomeMsg
 	createUser
 	createDirectories
-	#configurePacman
-	#updateSystem
-	#installDrivers
-	#installApplications
-	#installWine
-	#installWM
-	#extendWM
-	#installFonts
+	configurePacman
+	updateSystem
+	installDrivers
+	installApplications
+	installWine
+	installWM
+	extendWM
+	installFonts
 	configurePass
 	cloneDotfiles
 	configureBashrc
