@@ -248,7 +248,7 @@ function configureBashrc () {
 			mv $homedir/.password-store/$SSID.gpg $homedir/.password-store/wifi/$SSID.gpg
 			dialog --title "Configuring Bashrc" --infobox "Creating an alias for connecting to $SSID with $alias" 0 0
 			sleep 1
-			printf "\n\nalias $alias=\'nmcli device wifi connect $SSID password \`pass wifi/$SSID.gpg\`\'" >> .bashrc
+			printf "\n\nalias $alias=\'nmcli device wifi connect $SSID password \`pass wifi/$SSID\`\'" >> .bashrc
 			dialog --title "Configuring Bashrc" --yesno "Do you want to add an alias for another Wireless network?" 0 0
 			if [ $? != 0 ]; then
 				break
