@@ -260,7 +260,7 @@ function configureBashrc () {
 	if [ $? == 0 ]; then
 		unset alias
 		alias=$(dialog --stdout --title "Configuring Bashrc" --inputbox "Enter name of an alias:" 0 0)
-		printf "$alias=\'nmcli device wifi list\'\n\n" >> .bashrc
+		printf "alias $alias=\'nmcli device wifi list\'\n\n" >> .bashrc
 	fi
 
 	dialog --title "Configuring Bashrc" --yesno "Do you want to add alias to turn Bluetooth on/off?" 0 0
