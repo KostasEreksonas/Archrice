@@ -235,7 +235,7 @@ function configureBashrc () {
 	# Create an alias for connecting to Wi-Fi network and add it's password to password store
 	dialog --title "Configuring Bashrc" --yesno "Do you want to add an alias command for connecting to Wireless (hotspot) network? " 0 0
 	if [ $? == 0 ]; then
-		printf "#  -------\n# | Wi-Fi |\n#  -------\n\n" >> .bashrc
+		printf "\n\n#  -------\n# | Wi-Fi |\n#  -------" >> .bashrc
 		mkdir -p $homedir/.password-store/wifi/
 		chown -R $username:$username $homedir/.password-store/wifi/
 		while [ $? == 0 ]; do
@@ -248,7 +248,7 @@ function configureBashrc () {
 			mv $homedir/.password-store/$SSID.gpg $homedir/.password-store/wifi/$SSID.gpg
 			dialog --title "Configuring Bashrc" --infobox "Creating an alias for connecting to $SSID with $alias" 0 0
 			sleep 1
-			printf "alias $alias=\'nmcli device wifi connect $SSID password \`pass wifi/$SSID.gpg\`\'\n\n" >> .bashrc
+			printf "\n\nalias $alias=\'nmcli device wifi connect $SSID password \`pass wifi/$SSID.gpg\`\'" >> .bashrc
 			dialog --title "Configuring Bashrc" --yesno "Do you want to add an alias for another Wireless network?" 0 0
 			if [ $? != 0 ]; then
 				break
@@ -260,7 +260,7 @@ function configureBashrc () {
 	if [ $? == 0 ]; then
 		unset alias
 		alias=$(dialog --stdout --title "Configuring Bashrc" --inputbox "Enter name of an alias:" 0 0)
-		printf "alias $alias=\'nmcli device wifi list\'\n\n" >> .bashrc
+		printf "\n\nalias $alias=\'nmcli device wifi list\'" >> .bashrc
 	fi
 
 	dialog --title "Configuring Bashrc" --yesno "Do you want to add alias to turn Bluetooth on/off?" 0 0
@@ -274,6 +274,8 @@ function configureBashrc () {
 			done
 		done
 
+		# Add a Bluetooth banner
+		printf "\n\n#  -----------\n# | Bluetooth |\n#  -----------"
 		# Alias to turn bluetooth on
 		unset alias
 		alias=$(dialog --stdout --title "Configuring Bashrc" --inputbox "Enter an alias to turn Bluetooth on:" 0 0)
