@@ -80,7 +80,6 @@ wm_tools=(feh \
 applications=(xorg-server \
 		xorg-xinit \
 		mesa \
-		vim \
 		openssh \
 		newsboat \
 		pass \
