@@ -76,8 +76,6 @@ hi SignColumn   ctermbg=235 guibg=#262626
 hi LineNr       ctermfg=grey guifg=grey ctermbg=NONE guibg=NONE
 hi CursorLineNr ctermbg=NONE guibg=NONE ctermfg=178 guifg=#d7af00
 
-let g:gitgutter_set_sign_backgrounds = 0
-
 "-- ALE --
 hi clear ALEErrorSign
 hi clear ALEWarningSign
