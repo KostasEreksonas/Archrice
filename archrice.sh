@@ -384,13 +384,31 @@ function configureOwnership() {
 # Customize Vim text editor
 function configureVim () {
 	tempfile=/tmp/archtemp.txt
-	cd $homedir/
+	vimdir=""
+	dialog --title "Vim Configuration" --yes-label "Neovim" --no-label "Vim" --yesno "Would you like to install Vim or Neovim?" 0 0
+	choice=$?
+	if [ $choice == 0 ]; then
+		vimdir=$homedir/.config/nvim/
+		until dialog --title "Vim Configuration" --infobox "Installing Vim" 0 0 && installPackage vim; do
+			installError vim || break
+		done
+	elif [ $choice == 1 ]; then
+		vimdir=$homedir/.vim/
+		nvim=(neovim python-neovim)
+		len=${#nvim[@]}
+		for (( i=0; i<$len; i++ )); do
+			until dialog --title "Vim Configuration" --infobox "Installing ${nvim[$i]}" 0 0 && installPackage ${nvim[$i]}; do
+				installError ${nvim[$i]} || break
+			done
+		done
+	fi
+
 	# Install Pathogen plugin manager
 	dialog --title "Vim Configuration" --infobox "Installing Vim plugin manager" 0 0
-	mkdir -p .vim/autoload .vim/bundle && curl -LSso .vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+	mkdir -p $vimdir/autoload $vimdir/bundle && curl -LSso $vimdir/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 
 	# Go into plugin directory
-	cd .vim/bundle/
+	cd $vimdir/bundle/
 
 	# Download Vim plugins
 	len=${#vim_plugins[@]}
@@ -401,11 +419,15 @@ function configureVim () {
 	done
 
 	# Download solarized8 color scheme by lifepillar from Github and put it to ~/.vim/colors
-	wget https://raw.githubusercontent.com/lifepillar/vim-solarized8/master/colors/solarized8.vim -P $homedir/.vim/colors
+	wget https://raw.githubusercontent.com/lifepillar/vim-solarized8/master/colors/solarized8.vim -P $vimdir/colors
 
 	# Copy .vimrc config file from dotfiles
 	dialog --title "Vim Configuration" --infobox "Copying configuration to the user $username home directory" 0 0
-	cp /home/$username/Documents/git/Archrice/dotfiles/.vimrc $homedir/.vimrc 2>>$logfile 1>&2
+	if [ $choice == 0 ]; then
+		cp /home/$username/Documents/git/Archrice/dotfiles/.vimrc $vimdir/init.vim 2>>$logfile 1>&2
+	elif [ $choice == 1 ]; then
+		cp /home/$username/Documents/git/Archrice/dotfiles/.vimrc $homedir/.vimrc 2>>$logfile 1>&2
+	fi
 
 	rm -f $tempfile
 	return $?
