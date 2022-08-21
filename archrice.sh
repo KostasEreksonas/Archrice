@@ -390,17 +390,21 @@ function configureVim () {
 	choice=$?
 	if [ $choice == 0 ]; then
 		vimdir=$homedir/.config/nvim/
-		until dialog --title "Vim Configuration" --infobox "Installing Vim" 0 0 && installPackage vim; do
-			installError vim || break
-		done
-	elif [ $choice == 1 ]; then
-		vimdir=$homedir/.vim/
 		nvim=(neovim python-neovim)
 		len=${#nvim[@]}
 		for (( i=0; i<$len; i++ )); do
 			until dialog --title "Vim Configuration" --infobox "Installing ${nvim[$i]}" 0 0 && installPackage ${nvim[$i]}; do
 				installError ${nvim[$i]} || break
 			done
+		done
+		dialog --title "Vim Configuration" --yesno "Do you want to alias nvim as vim?" 0 0
+		if [ $? == 0 ]; then
+			printf "\n\nalias vim=\'nvim\'" >> $homedir/.bashrc
+		fi
+	elif [ $choice == 1 ]; then
+		vimdir=$homedir/.vim/
+		until dialog --title "Vim Configuration" --infobox "Installing Vim" 0 0 && installPackage vim; do
+			installError vim || break
 		done
 	fi
 
