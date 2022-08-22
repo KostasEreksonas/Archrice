@@ -358,6 +358,7 @@ function configureVim () {
 	choice=$?
 	if [ $choice == 0 ]; then
 		vimdir=$homedir/.config/nvim/
+		printf "\n\nexport EDITOR=nvim" >> $homedir/.bashrc
 		nvim=(neovim python-neovim)
 		len=${#nvim[@]}
 		for (( i=0; i<$len; i++ )); do
