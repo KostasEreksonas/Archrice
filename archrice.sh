@@ -295,7 +295,7 @@ function installScripts () {
 	dialog --title "Installing Scripts" --infobox "Copying statusbar scripts to $homedir/bin/" 0 0
 	cp $homedir/Documents/git/Archrice/statusbar/* $homedir/bin/ 2>>$logfile 1>&2
 
-	scripts=(locker screenshot screenshot_clipboard paste_clipboard piper)
+	scripts=(locker screenshot screenshot_clipboard paste_clipboard piper extendDisplays)
 	len=${#scripts[@]}
 
 	for (( i=0; i<$len; i++ )); do
@@ -338,38 +338,8 @@ function copyConfigs() {
 	# Copy pixmaps to /usr/share/pixmaps
 	cp $homedir/Documents/git/Archrice/dotfiles/pixmaps/* /usr/share/pixmaps/ 2>>$logfile 1>&2
 
-	# If the user has more than one display, ask whether to extend available displays
-	displayCount=$(xrandr | grep -w connected | wc -l)
-	if [ $displayCount -gt 1 ]; then
-		dialog --title "Installing Configuration Files" --yesno "Do you want to extend available displays?" 0 0
-		if [ $? == 0 ]; then
-			printf "\n# Extend displays on WM startup\n" >> $homedir/.xprofile
-			primary=$(xrandr | grep -w primary | cut -d " " -f 1)
-			printf "xrandr --output $primary --auto" >> $homedir/.xprofile # Xrandr command for extending displays
-
-			# Count secondary displays and append them to the xrandr command
-			countSecondary=$(xrandr | grep -w connected | grep -wv primary | wc -l)
-			((countSecondary+=1))
-			for (( i=0; i<$countSecondary; i++ )); do
-				secondary=$(xrandr | grep -w connected | grep -wv primary | cut -d " " -f 1 | sed -n "$i p")
-				dialog --title "Installing Configuration Files" --yes-label "Right of" --no-label "Left of" \
-					--yesno "Do you wan the secondary display right of or left of the primary one?" 0 0
-				if [ $? == 0 ]; then
-					printf " --output $secondary --right-of $primary --auto" >> $homedir/.xprofile
-					unset secondary
-				elif [ $? == 1 ]; then
-					printf " --output $secondary --left-of $primary --auto" >> $homedir/.xprofile
-					unset secondary
-				else
-					break
-				fi
-			done
-			printf "\n" >> $homedir/.xprofile
-		fi
-	fi
-
 	# Download mpv notification script rom emilazy
-	wget https://raw.githubusercontent.com/emilazy/mpv-notify-send/master/notify-send.lua -P $homedir/.config/mpv/scripts/
+	wget https://raw.githubuserconttent.com/emilazy/mpv-notify-send/master/notify-send.lua -P $homedir/.config/mpv/scripts/
 
 	return $?
 }
@@ -839,8 +809,8 @@ function createDirectories () {
 }
 
 function exitMsg () {
-	dialog --title "Arch Auto Configuration Script" --infobox "The system is now installed and will be cleaned up and rebooted in 5 seconds" 0 0
-	sleep 5
+	dialog --title "Arch Auto Configuration Script" --infobox "The system is now installed. It will be cleaned up and rebooted in 10 seconds (Note: If you have multiple displays and want to extend them on startup, run "extendDisplays" command after starting your X session)" 0 0
+	sleep 10
 	rm -r /root/*
 	rm $logfile
 	sleep 2
