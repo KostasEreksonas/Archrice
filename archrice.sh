@@ -54,6 +54,7 @@ suckless_utilities=(dwm-kostas \
 
 # Tools to extend functionality of dwm window manager
 wm_tools=(feh \
+		bmon \
 		xclip \
 		iw \
 		maim \
