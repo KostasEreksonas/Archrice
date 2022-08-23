@@ -11,7 +11,7 @@ case $BUTTON in
 	# Left mouse click opens a terminal instance with bmon bandwith monitoring tool
 	1) setsid -f "$TERMINAL" -e bmon ;;
 	# Right click opens a notification
-	3) notify-send "🌐 Network traffic monitor" "$(printf "$iconDown %4sB $iconUp %4sB\n" $(numfmt --to=iec $RX $TX))"
+	3) notify-send "🌐 Network traffic monitor" "$iconUp: Up traffic $iconDown: Down traffic"
 esac
 
 function traffic() {
