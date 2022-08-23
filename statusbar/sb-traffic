@@ -1,0 +1,35 @@
+#!/bin/sh
+
+# Original script taken from Luke Smith's voidrice repo @ https://github.com/LukeSmithxyz/voidrice/blob/master/.local/bin/statusbar/sb-nettraf
+
+# Define icons
+iconDown=""
+iconUp=""
+
+# Define mouse controls
+case $BUTTON in
+	# Left mouse click opens a terminal instance with bmon bandwith monitoring tool
+	1) setsid -f "$TERMINAL" -e bmon ;;
+	# Right click opens a notification
+	3) notify-send "🌐 Network traffic monitor" "$(printf "$iconDown %4sB $iconUp %4sB\n" $(numfmt --to=iec $RX $TX))"
+esac
+
+function traffic() {
+    read -r current < "$1"
+    cache=/tmp/${1##*/}
+	if [ -f "$cache" ]; then
+		read -r previous < "$cache"
+	else
+		previous=0
+	fi
+
+	printf "%d\n" "$current" > "$cache"
+    printf "%d\n" $(( current - previous ))
+}
+
+UP=$(ip a | grep state\ UP | cut -d " " -f 2 | tr -d ":")
+
+RX=$(traffic /sys/class/net/$UP/statistics/rx_bytes)
+TX=$(traffic /sys/class/net/$UP/statistics/tx_bytes)
+
+printf "$iconDown%4sB $iconUp%4sB\n" $(numfmt --to=iec $RX $TX)
