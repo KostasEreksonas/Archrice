@@ -66,9 +66,8 @@ let g:airline_right_sep = "\uE0B6"
 " set the CN (column number) symbol:
 let g:airline_section_z = airline#section#create(["\uE0A1" . '%{line(".")}' . "\uE0A3" . '%{col(".")}'])
 
-let g:airline_theme='solarized_flood'
+let g:airline_theme='base16_atelierlakeside'
 colorscheme gruvbox8_soft
-let g:solarized_termcolors=256
 
 hi Normal       ctermbg=NONE guibg=NONE
 hi SignColumn   ctermbg=235 guibg=#262626
