@@ -67,8 +67,7 @@ let g:airline_right_sep = "\uE0B6"
 let g:airline_section_z = airline#section#create(["\uE0A1" . '%{line(".")}' . "\uE0A3" . '%{col(".")}'])
 
 let g:airline_theme='solarized_flood'
-let g:material_theme_style = 'darker'
-colorscheme solarized8
+colorscheme gruvbox8
 let g:solarized_termcolors=256
 
 hi Normal       ctermbg=NONE guibg=NONE
