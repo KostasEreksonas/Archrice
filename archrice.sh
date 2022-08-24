@@ -802,7 +802,7 @@ function createDirectories() {
 	sleep 2
 
 	cd $homedir/
-	len=${directories[@]}
+	len=${#directories[@]}
 	for (( i=0; i<$len; i++ )); do
 		mkdir -p ${directories[$i]}
 	done
