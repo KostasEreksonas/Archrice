@@ -797,12 +797,12 @@ function createUser() {
 }
 
 # Creates directories within home directory of the new user
-function createDirectories () {
+function createDirectories() {
 	dialog --title "Directory Creation" --infobox "Creating necessary directories" 0 0
 	sleep 2
 
 	cd $homedir/
-	len=${#directories[@]}
+	len=${directories[@]}
 	for (( i=0; i<$len; i++ )); do
 		mkdir -p ${directories[$i]}
 	done
