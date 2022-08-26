@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# Get network name
-SSID="$(iw dev | awk '/ssid/ {print $2}')"
+# Get network name (https://askubuntu.com/questions/117065/how-do-i-find-out-the-name-of-the-ssid-im-connected-to-from-the-command-line)
+SSID="$(nmcli -t -f active,ssid dev wifi | grep -E '^yes' | cut -d: -f2)"
 
 # Wifi network icon
 icon=
@@ -21,4 +21,4 @@ case $BUTTON in
 esac
 
 # Print icon and netowrk name
-echo "$icon $SSID $IP"
+printf "$icon $SSID $IP"
