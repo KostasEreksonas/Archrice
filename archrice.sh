@@ -30,7 +30,8 @@ directories=(.local/share/fonts/ \
 dependencies=(dialog \
 		git \
 		wget \
-		p7zip)
+		p7zip \
+		networkmanager)
 
 # Intel integrated GPU drivers
 intel_igpu_drivers=(vulkan-intel \
