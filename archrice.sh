@@ -55,12 +55,11 @@ suckless_utilities=(dwm-kostas \
 
 # Tools to extend functionality of dwm window manager
 wm_tools=(feh \
+		picom \
 		bmon \
 		xclip \
-		iw \
 		maim \
 		xdotool \
-		picom \
 		udisks2 \
 		udiskie \
 		numlockx \
