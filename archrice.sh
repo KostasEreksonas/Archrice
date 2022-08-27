@@ -55,7 +55,6 @@ suckless_utilities=(dwm-kostas \
 
 # Tools to extend functionality of dwm window manager
 wm_tools=(feh \
-		picom \
 		bmon \
 		xclip \
 		maim \
@@ -110,7 +109,8 @@ applications=(xorg-server \
 aur_packages=(virtualbox-ext-oracle \
 		xurls \
 		vim-youcompleteme-git \
-		libxft-bgra)
+		libxft-bgra \
+		picom-jonaburg-git)
 
 fonts=(noto-fonts \
 	noto-fonts-emoji \
