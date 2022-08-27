@@ -84,7 +84,6 @@ applications=(xorg-server \
 		newsboat \
 		pass \
 		passff-host \
-		neofetch \
 		htop \
 		nvtop \
 		cmatrix \
@@ -110,7 +109,8 @@ aur_packages=(virtualbox-ext-oracle \
 		xurls \
 		vim-youcompleteme-git \
 		libxft-bgra \
-		picom-jonaburg-git)
+		picom-jonaburg-git \
+		fastfetch-git)
 
 fonts=(noto-fonts \
 	noto-fonts-emoji \
