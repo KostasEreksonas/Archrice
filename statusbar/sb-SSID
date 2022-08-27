@@ -13,4 +13,4 @@ case $BUTTON in
 esac
 
 # Print icon and netowrk name
-echo "$icon $SSID"
+printf "$icon $SSID"

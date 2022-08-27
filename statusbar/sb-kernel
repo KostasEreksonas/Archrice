@@ -13,4 +13,4 @@ case $BUTTON in
 esac
 
 # Show tux icon and kernel version
-echo $icon $version
+printf "$icon $version"

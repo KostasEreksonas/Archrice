@@ -19,7 +19,7 @@ elif [ "$vol" -gt "35" ]; then
 elif [ "$vol" -gt "0" ]; then
 	icon="奄"
 else
-	echo "ﱝ  0%" && exit
+	printf "ﱝ  0%" && exit
 fi
 
 # Output icon and volume

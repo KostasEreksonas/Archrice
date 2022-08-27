@@ -14,4 +14,4 @@ case $BUTTON in
         3) notify-send "Shutdown" "$notification" ;;
 esac
 
-echo $icon
+printf "$icon "

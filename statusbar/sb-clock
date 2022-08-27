@@ -15,4 +15,4 @@ case $BUTTON in
 esac
 
 # Show calendar icon and current time
-echo "$icon $time"
+printf "$icon $time"

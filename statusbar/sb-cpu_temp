@@ -10,7 +10,7 @@ coreCount="$(sensors | grep Core | wc -l)"
 counter=1
 
 # Get temperature of every found core for notification
-notification="$(for ((core = 1; core <= $coreCount; core++)); do eval "echo "Core $counter: "$(sensors | grep Core | awk -v var=$core 'NR == var {print $3}')"; counter=$((counter+1)); done)"
+notification="$(for ((core = 1; core <= $coreCount; core++)); do eval "printf "Core $counter: "$(sensors | grep Core | awk -v var=$core 'NR == var {print $3}')"; counter=$((counter+1)); done)"
 
 # Get CPU package temperature
 package="$(sensors | awk '/^Package/ {print $4}')"
@@ -24,4 +24,4 @@ case $BUTTON in
 esac
 
 # Show icon and CPU package temperature
-echo "$icon $package"
+printf "$icon $package"

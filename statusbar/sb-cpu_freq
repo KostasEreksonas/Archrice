@@ -7,7 +7,7 @@ threadCount="$(grep processor /proc/cpuinfo | wc -l)"
 counter=1
 
 # Get frequencies of all found threads for notification
-notification="$(for (( core = 1; core <= $threadCount; core++ )); do eval "echo "Core $counter: "$(grep MHz /proc/cpuinfo | awk -v var=$core 'NR == var {printf "%.2f", $4/1000}')"" GHz"; counter=$((counter+1)); done)"
+notification="$(for (( core = 1; core <= $threadCount; core++ )); do eval "printf "Core $counter: "$(grep MHz /proc/cpuinfo | awk -v var=$core 'NR == var {printf "%.2f", $4/1000}')"" GHz"; counter=$((counter+1)); done)"
 
 # Icon to display
 icon=
@@ -24,4 +24,4 @@ esac
 frequency="$(grep MHz /proc/cpuinfo | awk 'NR == 1 {printf "%.2f", $4/1000}')"
 
 # Display CPU icon and frequency of first core
-echo "$icon $frequency GHz"
+printf "$icon $frequency GHz"

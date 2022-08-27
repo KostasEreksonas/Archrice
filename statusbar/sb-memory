@@ -12,4 +12,4 @@ case $BUTTON in
 esac
 
 # Output icon and memory stats
-echo "$icon $memory"
+printf "$icon $memory"
