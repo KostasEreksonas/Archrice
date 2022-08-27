@@ -103,6 +103,7 @@ applications=(xorg-server \
 		python-pip \
 		virtualbox-host-modules-arch \
 		virtualbox \
+		darktable \
 		discord)
 
 aur_packages=(virtualbox-ext-oracle \
