@@ -478,6 +478,14 @@ function installDrivers () {
 			done
 		done
 	fi
+
+	dialog --title "Video Driver Installation" --yesno "Do you want to install AMD GPU drivers?" 0 0
+	if [ $? == 0 ]; then
+		until dialog --title "Video Driver Installation" --infobox "Now installing xf86-video-amdgpu" 0 0 && installPackage xf86-video-amdgpu; do
+			installError xf86-video-amdgpu || break
+		done
+	fi
+
 	dialog --title "Video Driver Installation" --yesno "Do you want to install Nvidia GPU drivers?" 0 0
 	if [ $? == 0 ]; then
 		dialog --title "Video Driver Installation" --yes-label "Proprietary" --no-label "Open Source" --yesno "Would you like to install proprietary or open source Nvidia GPU drivers?" 0 0
