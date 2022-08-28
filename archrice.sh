@@ -297,16 +297,8 @@ function configureBashrc () {
 
 # Configure custom scripts
 function installScripts () {
-	dialog --title "Installing Scripts" --infobox "Copying statusbar scripts to $homedir/bin/" 0 0
-	cp $homedir/Documents/git/Archrice/statusbar/* $homedir/.local/bin/ 2>>$logfile 1>&2
-
-	scripts=(locker screenshot screenshot_clipboard paste_clipboard piper extendDisplays openvim openranger)
-	len=${#scripts[@]}
-
-	for (( i=0; i<$len; i++ )); do
-	dialog --title "Installing Scripts" --infobox "Copying ${scripts[$i]} script to /usr/local/bin" 0 0
-		cp $homedir/Documents/git/Archrice/system_scripts/${scripts[$i]} $homedir/.local/bin/ 2>>$logfile 1>&2
-	done
+	dialog --title "Installing Scripts" --infobox "Copying user scripts to $homedir/.local/bin/" 0 0
+	cp $homedir/Documents/git/Archrice/.local/bin/* $homedir/.local/bin/ 2>>$logfile 1>&2
 
 	return $?
 }
