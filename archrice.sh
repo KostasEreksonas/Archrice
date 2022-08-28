@@ -82,6 +82,7 @@ applications=(xorg-server \
 		xorg-xinit \
 		mesa \
 		mesa-utils \
+		vulkan-tools \
 		openssh \
 		newsboat \
 		pass \
