@@ -41,6 +41,7 @@ intel_igpu_drivers=(vulkan-intel \
 nvidia_dgpu_drivers_proprietary=(nvidia \
 		nvidia-prime \
 		nvidia-utils \
+		nvidia-settings \
 		lib32-nvidia-utils)
 
 # Open Source Nvidia GPU drivers
