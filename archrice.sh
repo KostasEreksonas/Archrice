@@ -15,7 +15,7 @@ logfile=/var/log/archrice.log
 # Directories for the new user
 directories=(.local/share/fonts/ \
 		.config/ \
-		bin/ \
+		.local/bin/ \
 		Desktop/ \
 		Documents/aur/ \
 		Documents/git/ \
@@ -298,14 +298,14 @@ function configureBashrc () {
 # Configure custom scripts
 function installScripts () {
 	dialog --title "Installing Scripts" --infobox "Copying statusbar scripts to $homedir/bin/" 0 0
-	cp $homedir/Documents/git/Archrice/statusbar/* $homedir/bin/ 2>>$logfile 1>&2
+	cp $homedir/Documents/git/Archrice/statusbar/* $homedir/.local/bin/ 2>>$logfile 1>&2
 
-	scripts=(locker screenshot screenshot_clipboard paste_clipboard piper extendDisplays)
+	scripts=(locker screenshot screenshot_clipboard paste_clipboard piper extendDisplays openvim openranger)
 	len=${#scripts[@]}
 
 	for (( i=0; i<$len; i++ )); do
 	dialog --title "Installing Scripts" --infobox "Copying ${scripts[$i]} script to /usr/local/bin" 0 0
-		cp $homedir/Documents/git/Archrice/system_scripts/${scripts[$i]} /usr/local/bin/ 2>>$logfile 1>&2
+		cp $homedir/Documents/git/Archrice/system_scripts/${scripts[$i]} $homedir/.local/bin/ 2>>$logfile 1>&2
 	done
 
 	return $?
@@ -338,7 +338,7 @@ function copyConfigs() {
 
 	# If Intel iGPU exists, copy Intel iGPU config to /etc/X11/xorg.conf.d
 	lspci | grep Intel\ Corporation\ HD\ Graphics 2>$logfile 1>&2
-	if [ $? == 0 ]; then cp $homedir/Documents/git/Archrice/dotfiles/xorg.conf.d/20-intel.conf /etc/X11/xorg.conf.d/ 2>>$logfile 1>&2; fi
+	if [ $? == 0 ]; then cp $homedir/Documents/git/Archrice/dotfiles/xorg.conf.d/30-intel.conf /etc/X11/xorg.conf.d/ 2>>$logfile 1>&2; fi
 
 	# Copy pixmaps to /usr/share/pixmaps
 	cp $homedir/Documents/git/Archrice/dotfiles/pixmaps/* /usr/share/pixmaps/ 2>>$logfile 1>&2
