@@ -157,5 +157,6 @@ autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
 autocmd InsertLeave * match ExtraWhitespace /\s\+$/
 autocmd BufWinLeave * call clearmatches()
 
+" Change buffer focus in vim
 nmap , :bp<CR>
 nmap . :bn<CR>
