@@ -75,7 +75,8 @@ wm_tools=(feh \
 		ntfs-3g \
 		yt-dlp \
 		youtube-dl \
-		bash-completion)
+		bash-completion \
+		intel-undervolt)
 
 # Other applications and drivers
 applications=(xorg-server \
