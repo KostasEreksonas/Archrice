@@ -1,7 +1,5 @@
 # Archrice
 
-![Arch Rice](/Arch_Rice.gif)
-
 Archrice is a shell script for installing a window manager based graphical environment with most necessary software on a base Arch Linux install.
 
 Table of Contents
