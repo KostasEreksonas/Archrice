@@ -390,9 +390,11 @@ function configureVim () {
 		done
 	done
 
-	# Download solarized8 color scheme by lifepillar from Github and put it to ~/.vim/colors
-	wget https://raw.githubusercontent.com/lifepillar/vim-solarized8/master/colors/solarized8.vim -P $vimdir/colors
+	# Download solarized8 color scheme by lifepillar from Github and put it to $vimdir/colors/
+	wget https://raw.githubusercontent.com/lifepillar/vim-solarized8/master/colors/solarized8.vim -P $vimdir/colors/
 
+	# Download gruvbox8 color scheme by lifepillar from Github and put it to $vimdir/colors/
+	wget https://raw.githubusercontent.com/lifepillar/vim-gruvbox8/master/colors/gruvbox8.vim -P $vimdir/colors/
 	# Copy .vimrc config file from dotfiles
 	dialog --title "Vim Configuration" --infobox "Copying configuration to the user $username home directory" 0 0
 	if [ $choice == 0 ]; then
