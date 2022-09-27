@@ -113,7 +113,6 @@ applications=(xorg-server \
 aur_packages=(virtualbox-ext-oracle \
 		xurls \
 		vim-youcompleteme-git \
-		libxft-bgra \
 		picom-jonaburg-git \
 		fastfetch-git)
 
@@ -448,9 +447,6 @@ function installPackage () {
 function installAURPackages () {
 	dialog --title "Installing AUR Packages" --infobox "Installing packages from AUR" 0 0
 	sleep 1
-
-	# Delete libxft before installing libxft-bgra to avoid conflict
-	pacman --noconfirm -Rdd libxft 2>>$logfile 1>&2
 
 	len=${#aur_packages[@]}
 	for (( i=0; i<$len; i++ )); do
