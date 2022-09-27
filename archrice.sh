@@ -106,6 +106,7 @@ applications=(xorg-server \
 		transmission-gtk \
 		python-pip \
 		virtualbox-host-modules-arch \
+		virtualbox-guest-iso \
 		virtualbox \
 		darktable \
 		discord)
