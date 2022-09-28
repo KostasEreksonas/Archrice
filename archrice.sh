@@ -301,6 +301,9 @@ function installScripts () {
 	dialog --title "Installing Scripts" --infobox "Copying user scripts to $homedir/.local/bin/" 0 0
 	cp $homedir/Documents/git/Archrice/.local/bin/* $homedir/.local/bin/ 2>>$logfile 1>&2
 
+	dialog --title "Installing Scripts" --infobox "Copying system scripts to /usr/local/bin/" 0 0
+	cp $homedir/Documents/git/Archrice/dotfiles/system_scripts/* /usr/local/bin/ 2>>$logfile 1>&2
+
 	return $?
 }
 
