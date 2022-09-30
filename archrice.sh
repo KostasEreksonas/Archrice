@@ -367,6 +367,7 @@ function configureVim () {
 				installError ${nvim[$i]} || break
 			done
 		done
+		python3 -m pip install --user --upgrade pynvim
 		dialog --title "Vim Configuration" --yesno "Do you want to alias nvim as vim?" 0 0
 		if [ $? == 0 ]; then
 			printf "\n\nalias vim=\'nvim\'" >> $homedir/.bashrc
