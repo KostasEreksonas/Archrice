@@ -357,7 +357,7 @@ function configureVim () {
 	vimdir=""
 	dialog --title "Vim Configuration" --yes-label "Neovim" --no-label "Vim" --yesno "Would you like to install Vim or Neovim?" 0 0
 	choice=$?
-	if [ $choice == 0 ]; then
+	if [ $choice == 0 ]; then # Choice == neovim
 		vimdir=$homedir/.config/nvim/
 		printf "\n\nexport EDITOR=nvim" >> $homedir/.bashrc
 		nvim=(neovim python-neovim)
@@ -367,12 +367,11 @@ function configureVim () {
 				installError ${nvim[$i]} || break
 			done
 		done
-		python3 -m pip install --user --upgrade pynvim
 		dialog --title "Vim Configuration" --yesno "Do you want to alias nvim as vim?" 0 0
 		if [ $? == 0 ]; then
 			printf "\n\nalias vim=\'nvim\'" >> $homedir/.bashrc
 		fi
-	elif [ $choice == 1 ]; then
+	elif [ $choice == 1 ]; then # Choice == vim
 		vimdir=$homedir/.vim/
 		until dialog --title "Vim Configuration" --infobox "Installing Vim" 0 0 && installPackage vim; do
 			installError vim || break
