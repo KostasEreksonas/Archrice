@@ -57,7 +57,7 @@ set nofoldenable
 "-- THEMING --
 set cursorline
 set background=dark
-set guifont=Hack\ Nerd\ Font\ Mono\ 15
+set guifont=Hack\ Nerd\ Font\ Mono\ 14
 
 " testing rounded separators (extra-powerline-symbols):
 let g:airline_left_sep = "\uE0B4"
