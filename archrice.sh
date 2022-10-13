@@ -220,6 +220,7 @@ function cloneDotfiles () {
 	done
 
 	rm -f $tempfile
+
 	return $?
 }
 
@@ -342,6 +343,8 @@ function copyConfigs() {
 function configureOwnership() {
 	cd /home/
 	chown -R $username:$username $homedir/ 2>>$logfile 1>&2
+
+	return $?
 }
 
 # Customize Vim text editor
@@ -405,6 +408,7 @@ function configureVim () {
 	fi
 
 	rm -f $tempfile
+
 	return $?
 }
 
@@ -537,6 +541,7 @@ function installAURHelper() {
 	sleep 1
 
 	rm -f $tempfile
+
 	return $?
 }
 
@@ -592,6 +597,7 @@ function installWM () {
 	done
 
 	rm -f $tempfile
+
 	return $?
 }
 
@@ -661,6 +667,8 @@ function installVirtualization() {
 			usermod -aG libvirt $username
 		fi
 	fi
+
+	return $?
 }
 
 #  --------
