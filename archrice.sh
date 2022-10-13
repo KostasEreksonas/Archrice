@@ -178,6 +178,19 @@ wine_opt_depts_32bit=(lib32-giflib \
 		lib32-vkd3d \
 		lib32-sdl2)
 
+# Packages for QEMU
+qemu=(virt-manager \
+	qemu-desktop \
+	libvirt \
+	edk2-ovmf \
+	dnsmasq \
+	iptables-nft)
+
+# Packages for Virtualbox
+vbox_utils=(virtualbox-host-modules-arch \
+			virtualbox-guest-iso \
+			virtualbox)
+
 #  ---------------
 # | Configuration |
 #  ---------------
@@ -269,12 +282,9 @@ function configureBashrc () {
 	dialog --title "Configuring Bashrc" --yesno "Do you want to add alias to turn Bluetooth on/off?" 0 0
 	if [ $? == 0 ]; then
 		# Install bluetooth utils
+		title="Installing Bluetooth"
 		bluetooth=(bluez bluez-utils)
-		for i in ${bluetooth[@]}; do
-			until dialog --title "Installing Bluetooth" --infobox "Installing $i" && installPackage $i; do
-				installError $i || break
-			done
-		done
+		Install $title "${bluetooth[@]}"
 
 		# Add a Bluetooth banner
 		printf "\n\n#  -----------\n# | Bluetooth |\n#  -----------"
@@ -339,7 +349,7 @@ function copyConfigs() {
 	return $?
 }
 
-# Configure ownership of users' home directory
+# Recursively set 
 function configureOwnership() {
 	cd /home/
 	chown -R $username:$username $homedir/ 2>>$logfile 1>&2
@@ -353,24 +363,19 @@ function configureVim () {
 	vimdir=""
 	dialog --title "Vim Configuration" --yes-label "Neovim" --no-label "Vim" --yesno "Would you like to install Vim or Neovim?" 0 0
 	choice=$?
+	title="Vim Configuration"
 	if [ $choice == 0 ]; then # Choice == neovim
 		vimdir=$homedir/.config/nvim/
 		printf "\n\nexport EDITOR=nvim" >> $homedir/.bashrc
 		nvim=(neovim python-neovim)
-		for i in ${nvim[@]}; do
-			until dialog --title "Vim Configuration" --infobox "Installing $i" 0 0 && installPackage $i; do
-				installError $i || break
-			done
-		done
+		Install $title "${nvim[@]}"
 		dialog --title "Vim Configuration" --yesno "Do you want to alias nvim as vim?" 0 0
 		if [ $? == 0 ]; then
 			printf "\n\nalias vim=\'nvim\'" >> $homedir/.bashrc
 		fi
 	elif [ $choice == 1 ]; then # Choice == vim
 		vimdir=$homedir/.vim/
-		until dialog --title "Vim Configuration" --infobox "Installing Vim" 0 0 && installPackage vim; do
-			installError vim || break
-		done
+		Install $title "vim"
 	fi
 
 	# Install Pathogen plugin manager
@@ -429,10 +434,8 @@ function installDependencies () {
 
 # Synchronize repositories and update existing packages
 function updateSystem () {
-	dialog --title "System Update" --infobox "Updating Arch Linux keyring" 0 0
-	until installPackage archlinux-keyring 2>>$logfile 1>&2; do
-		installError archlinux-keyring || break
-	done
+	title="System Update"
+	Install $title "archlinux-keyring"
 	dialog --title "System Update" --infobox "Synchronizing and updating packages" 0 0
 	until pacman --noconfirm -Syyu 2>>$logfile 1>&2; do
 		updateError || break
@@ -448,53 +451,68 @@ function installPackage () {
 	return $?
 }
 
-# Install a package using pacman
-function installAURPackages () {
-	dialog --title "Installing AUR Packages" --infobox "Installing packages from AUR" 0 0
-	sleep 1
+# Install a package from AUR
+function installAURPackage() {
+	yay --noconfirm --needed -S $1 2>>$logfile 1>&2
 
-	for i in ${aur_packages[@]}; do
-		until dialog --title "Installing AUR Packages" --infobox "Installing $i" 0 0 && yay --noconfirm --needed -S $i 2>>$logfile 1>&2; do
-			installError $i || break
+	return $?
+}
+
+# Install a package using pacman
+function InstallAUR () {
+	title="Installing AUR Package"
+	isAUR="True"
+	dialog --title $title --infobox "Installing packages from AUR" 0 0
+	sleep 1
+	Install $title $isAUR "${aur_packages[@]}"
+
+	return $?
+}
+
+function Install() {
+	arr=("$@")
+	len=${#arr[@]}
+	# If isAUR flag equals true, install a package using yay
+	# Else, install a package using pacman
+	if [ ${arr[1]} == "True" ]; then
+		for (( i=2; i<$len; i++ )); do
+			until dialog --title ${arr[0]} --infobox "Installing ${arr[$i]}" 0 0 && installAURPackage ${arr[$i]}; do
+				installError ${arr[$i]} || break
+			done
 		done
-	done
+	fi
+	if [ ${arr[1]} == "False" ]; then
+		for (( i=2; i<$len; i++ )); do
+			until dialog --title ${arr[0]} --infobox "Installing ${arr[$i]}" 0 0 && installPackage ${arr[$i]}; do
+				installError ${arr[$i]} || break
+			done
+		done
+	fi
 
 	return $?
 }
 
 # Install video card drivers
 function installDrivers () {
-	dialog --title "Video Driver Installation" --yesno "Do you want to install Intel GPU drivers?" 0 0
+	title="Video Driver Installation"
+	isAUR="False"
+	dialog --title $title --yesno "Do you want to install Intel GPU drivers?" 0 0
 	if [ $? == 0 ]; then
-		for i in ${intel_igpu_drivers[@]}; do
-			until dialog --title "Video Driver Installation" --infobox "Now installing $i" 0 0 && installPackage $i; do
-				installError $i || break
-			done
-		done
+		Install $title $isAUR "${intel_igpu_drivers[@]}"
 	fi
 
-	dialog --title "Video Driver Installation" --yesno "Do you want to install AMD GPU drivers?" 0 0
+	dialog --title $title --yesno "Do you want to install AMD GPU drivers?" 0 0
 	if [ $? == 0 ]; then
-		until dialog --title "Video Driver Installation" --infobox "Now installing xf86-video-amdgpu" 0 0 && installPackage xf86-video-amdgpu; do
-			installError xf86-video-amdgpu || break
-		done
+		Install $title $isAUR "xf86-video-amdgpu"
 	fi
 
-	dialog --title "Video Driver Installation" --yesno "Do you want to install Nvidia GPU drivers?" 0 0
+	dialog --title $title --yesno "Do you want to install Nvidia GPU drivers?" 0 0
 	if [ $? == 0 ]; then
-		dialog --title "Video Driver Installation" --yes-label "Proprietary" --no-label "Open Source" --yesno "Would you like to install proprietary or open source Nvidia GPU drivers?" 0 0
+		dialog --title $title --yes-label "Proprietary" --no-label "Open Source" --yesno "Would you like to install proprietary or open source Nvidia GPU drivers?" 0 0
 		if [ $? == 0 ]; then
-			for i in ${nvidia_dgpu_drivers_proprietary[@]}; do
-				until dialog --title "Nvidia Proprietary Driver Installation" --infobox "Now installing $i" 0 0 && installPackage $i; do
-					installError $i || break
-				done
-			done
+			Install $title $isAUR "${nvidia_dgpu_drivers_proprietary[@]}"
 		else
-			for i in ${nvidia_dgpu_drivers_open_source[@]}; do
-				until dialog --title "Nvidia Open Source Driver Installation" --infobox "Now installing $i" 0 0 && installPackage $i; do
-					installError $i || break
-				done
-			done
+			Install $title $isAUR "${nvidia_dgpu_drivers_open_source[@]}"
 		fi
 	fi
 
@@ -503,41 +521,37 @@ function installDrivers () {
 
 # Install system applications
 function installApplications () {
-	dialog --title "Installing Packages" --infobox "Installing base packages" 0 0
+	title="Installing Base Packages"
+	isAUR="False"
+	dialog --title $title --infobox "Installing base packages" 0 0
 	sleep 2
-	for i in ${applications[@]}; do
-		until dialog --title "Installing Packages" --infobox "Now installing $i" 0 0 && installPackage $i; do
-			installError $i || break
-		done
-	done
+	Install $title $isAUR "${applications[@]}"
 
-	# Add user to vboxusers group
-	usermod -aG vboxusers $username
+	usermod -aG vboxusers $username		# Add user to vboxusers group
 
-	dialog --title "Installing Packages" --yesno "Do you want to install virtualbox-guest-utils (necessary if you want to run X sessions within Arch Linux guest in Virtualbox)?" 0 0
+	dialog --title $title --yesno "Do you want to install virtualbox-guest-utils (necessary if you want to run X sessions within Arch Linux guest in Virtualbox)?" 0 0
 	if [ $? == 0 ]; then
-		until installPackage virtualbox-guest-utils; do
-			installError virtualbox-guest-utils || break
-		done
+		Install $title $isAUR "virtualbox-guest-utils"
 	fi
 
 	return $?
 }
 
 function installAURHelper() {
+	title="Installing AUR Helper"
 	tempfile=/tmp/archtemp.txt
 	cd $homedir/Documents/aur/
-	until dialog --title "Installing AUR Helper" --infobox "Downloading yay AUR helper" 0 0 && git clone --quiet https://aur.archlinux.org/yay.git 2>>$tempfile; do
+	until dialog --title $title --infobox "Downloading yay AUR helper" 0 0 && git clone --quiet https://aur.archlinux.org/yay.git 2>>$tempfile; do
 		gitError yay || break
 	done
 
 	chown -R $username:$username $homedir/Documents/aur/yay
-	dialog --title "Installing AUR Helper" --infobox "Installing yay AUR helper" 0 0
+	dialog --title $title --infobox "Installing yay AUR helper" 0 0
 	cd $homedir/Documents/aur/yay/
 	until sudo -u $username makepkg --noconfirm -si 2>>$logfile 1>&2; do
 		installError yay || break
 	done
-	dialog --title "Installing AUR Helper" --infobox "AUR helper installed" 0 0
+	dialog --title $title --infobox "AUR helper installed" 0 0
 	sleep 1
 
 	rm -f $tempfile
@@ -547,28 +561,18 @@ function installAURHelper() {
 
 # Install Wine compatibility layer
 function installWine () {
-	dialog --title "Installing Wine" --yesno "Do You want to install Wine?" 0 0
+	title="Installing Wine"
+	isAUR="False"
+	dialog --title $title --yesno "Do You want to install Wine?" 0 0
 	if [ $? == 0 ]; then
-		for i in ${wine_main[@]}; do
-			until dialog --title "Wine" --infobox "Now installing $i" 0 0 && installPackage $i; do
-				installError $i || break
-			done
-		done
-		dialog --title "Installing Wine" --yesno "Do You want to install optional 64-bit dependencies for Wine?" 0 0
+		Install $title $isAUR "${wine_main[@]}"
+		dialog --title $title --yesno "Do You want to install optional 64-bit dependencies for Wine?" 0 0
 		if [ $? == 0 ]; then
-			for i in ${wine_opt_depts[@]}; do
-				until dialog --title "Wine" --infobox "Now installing $i" 0 0 && installPackage $i; do
-					installError $i || break
-				done
-			done
+			Install $title $isAUR "${wine_opt_depts[@]}"
 		fi
-		dialog --title "Installing Wine" --yesno "Do You want to install optional 32-bit dependencies for Wine?" 0 0
+		dialog --title $title --yesno "Do You want to install optional 32-bit dependencies for Wine?" 0 0
 		if [ $? == 0 ]; then
-			for i in ${wine_opt_depts_32bit[@]}; do
-				until dialog --title "Wine" --infobox "Now installing $i" 0 0 && installPackage $i; do
-					installError $i || break
-				done
-			done
+			Install $title $isAUR "${wine_opt_depts_32bit[@]}"
 		fi
 	fi
 
@@ -577,19 +581,20 @@ function installWine () {
 
 # Downloads and installs dwm and other suckless utilities
 function installWM () {
-	dialog --title "Installing Window Manager" --infobox "Install suckless window manager and it's utilities" 0 0
+	title="Installing Window Manager"
+	dialog --title $title --infobox "Install suckless window manager and it's utilities" 0 0
 	sleep 2
 	tempfile=/tmp/archtemp.txt
 	cd $homedir/Documents/git/ 2>>$logfile 1>&2
 	# Install suckless utilities
 	for i in ${suckless_utilities[@]}; do
-		until dialog --title "Installing Window Manager" --infobox "Cloning $i" 0 0 && git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$tempfile 1>&2; do
+		until dialog --title $title --infobox "Cloning $i" 0 0 && git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$tempfile 1>&2; do
 			gitError || break
 		done
 	done
 
 	for j in ${suckless_utilities[@]}; do
-		dialog --title "Installing Window Manager" --infobox "Installing $j" 0 0
+		dialog --title $title --infobox "Installing $j" 0 0
 		cd $j/
 		make 2>>$logfile 1>&2
 		make clean install 2>>$logfile 1>&2
@@ -603,68 +608,49 @@ function installWM () {
 
 # Install additional software to extend window manager functionality
 function extendWM () {
-	dialog --title "Install Additional WM Tools" --infobox "Installing additional packages for window manager" 0 0
+	title="Install WM Tools"
+	isAUR="False"
+	dialog --title $title --infobox "Installing additional packages for window manager" 0 0
 	sleep 2
-	for i in ${wm_tools[@]}; do
-		until dialog --title "Install Additional WM Tools" --infobox "Installing $i" 0 0 && installPackage $i; do
-			installError $i || break
-		done
-	done
+	Install $title $isAUR "${wm_tools[@]}"
 
 	return $?
 }
 
 # Install system fonts
 function installFonts () {
-	dialog --title "Font Configuration" --infobox "Installing all necessary fonts" 0 0
+	title="Font Configuration"
+	isAUR="False"
+	dialog --title $title --infobox "Installing all necessary fonts" 0 0
 	sleep 2
 	cd $homedir/.local/share/fonts
-	dialog --title "Font Configuration" --infobox "Downloading Hack Nerd font" 0 0
+	dialog --title $title --infobox "Downloading Hack Nerd font" 0 0
 	wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/Hack.zip 2>>$logfile 1>&2
-	dialog --title "Font Configuration" --infobox "Extracting Hack Nerd font" 0 0
+	dialog --title $title --infobox "Extracting Hack Nerd font" 0 0
 	7z x Hack.zip 2>>$logfile 1>&2
 	rm Hack.zip
 
 	# Install some more fonts with pacman
-	for i in ${fonts[@]}; do
-		until dialog --title "Font Configuration" --infobox "Installing $i" 0 0 && installPackage $i; do
-			installError $i || break
-		done
-	done
+	Install $title $isAUR "${fonts[@]}"
 
 	return $?
 }
 
 function installVirtualization() {
-	dialog --title "Virtualization Software Installation" --yesno "Do you want to install software for virtualization?" 0 0
+	title="Virtualization Software Installation"
+	isAUR="False"
+	dialog --title $title --yesno "Do you want to install software for virtualization?" 0 0
 	if [ $? == 0 ]; then
-		dialog --title "Virtualization Software Installation" --yes-label "Virtualbox" --no-label "QEMU" --yesno "Which software do you want to install?" 0 0
+		dialog --title $title --yes-label "Virtualbox" --no-label "QEMU" --yesno "Which software do you want to install?" 0 0
 		if [ $? == 0 ]; then
-			vbox=(virtualbox-host-modules-arch \
-					virtualbox-guest-iso \
-					virtualbox)
-			for i in ${vbox[@]}; do
-				until dialog --title "Virtualization Software Installation" --infobox "Installing $i" 0 0 && installPackage $i; do
-					installError $i || break
-				done
-			done
-			until dialog --title "Virtualization Software Installation" --infobox "Installing virtualbox-ext-oracle" 0 0 && yay --noconfirm --needed -S virtualbox-ext-oracle 2>>$logfile 1>&2; do
-				installError virtualbox-ext-oracle || break
-			done
+			Install $title $isAUR "${vbox_utils[@]}"
+			isAUR="True"
+			Install $title $isAUR "virtualbox-ext-oracle"
 		fi
 		if [ $? == 1 ]; then
-			qemu = (virt-manager \
-					qemu-desktop \
-					libvirt \
-					edk2-ovmf \
-					dnsmasq \
-					iptables-nft)
-			for i in ${qemu[@]}; do
-				until dialog --title "Virtualization Software Installation" --infobox "Installing $i" 0 0 && installPackage $i; do
-					installError $i || break
-				done
-			done
-			usermod -aG libvirt $username
+			isAUR="False"
+			Install $title $isAUR "${qemu[@]}"
+			usermod -aG libvirt $username # Add user to libvirt group
 		fi
 	fi
 
@@ -881,6 +867,6 @@ while [ $? == 0 ]; do
 	configureOwnership
 	installAURHelper
 	installVirtualization
-	installAURPackages
+	InstallAUR
 	exitMsg
 done
