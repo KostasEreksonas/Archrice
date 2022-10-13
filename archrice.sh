@@ -651,7 +651,7 @@ function installVirtualization() {
 	if [ $? == 0 ]; then
 		dialog --title "Virtualization Software Installation" --yes-label "Virtualbox" --no-label "QEMU" --yesno "Which software do you want to install?" 0 0
 		if [ $? == 0 ]; then
-			vbox = (virtualbox-host-modules-arch \
+			vbox=(virtualbox-host-modules-arch \
 					virtualbox-guest-iso \
 					virtualbox)
 			len=${#vbox[@]}
