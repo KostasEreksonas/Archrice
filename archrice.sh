@@ -579,18 +579,6 @@ function installWine () {
 				done
 			done
 		fi
-		dialog --title "Installing Wine" --yesno "Do you want to create a separate account for Wine?" 0 0
-		if [ $? == 0 ]; then
-			createUser
-			createDirectories
-			installFonts
-			cloneDotfiles
-			configureBashrc
-			installScripts
-			configureVim
-			copyConfigs
-			configureOwnership
-		fi
 	fi
 
 	return $?
