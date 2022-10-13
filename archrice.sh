@@ -677,6 +677,7 @@ function installVirtualization() {
 					installError ${qemu[$i]} || break
 				done
 			done
+			usermod -aG libvirt $username
 		fi
 	fi
 }
