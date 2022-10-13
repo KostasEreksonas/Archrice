@@ -105,14 +105,10 @@ applications=(xorg-server \
 		android-udev \
 		transmission-gtk \
 		python-pip \
-		virtualbox-host-modules-arch \
-		virtualbox-guest-iso \
-		virtualbox \
 		darktable \
 		discord)
 
-aur_packages=(virtualbox-ext-oracle \
-		xurls \
+aur_packages=(xurls \
 		vim-youcompleteme-git \
 		picom-jonaburg-git \
 		fastfetch-git)
@@ -662,6 +658,41 @@ function installFonts () {
 	return $?
 }
 
+function installVirtualization() {
+	dialog --title "Virtualization Software Installation" --yesno "Do you want to install software for virtualization?" 0 0
+	if [ $? == 0 ]; then
+		dialog --title "Virtualization Software Installation" --yes-label "Virtualbox" --no-label "QEMU" --yesno "Which software do you want to install?" 0 0
+		if [ $? == 0 ]; then
+			vbox = (virtualbox-host-modules-arch \
+					virtualbox-guest-iso \
+					virtualbox)
+			len=${#vbox[@]}
+			for (( i=0; i<$len; i++ )); do
+				until dialog --title "Virtualization Software Installation" --infobox "Installing ${vbox[$i]}" 0 0 && installPackage ${vbox[$i]}; do
+					installError ${vbox[$i]} || break
+				done
+			done
+			until dialog --title "Virtualization Software Installation" --infobox "Installing virtualbox-ext-oracle" 0 0 && yay --noconfirm --needed -S virtualbox-ext-oracle 2>>$logfile 1>&2; do
+				installError virtualbox-ext-oracle || break
+			done
+		fi
+		if [ $? == 1 ]; then
+			qemu = (virt-manager \
+					qemu-desktop \
+					libvirt \
+					edk2-ovmf \
+					dnsmasq \
+					iptables-nft)
+			len=${#qemu[@]}
+			for (( i=0; i<$len; i++ )); do
+				until dialog --title "Virtualization Software Installation" --infobox "Installing ${qemu[$i]}" 0 0 && installPackage ${qemu[$i]}; do
+					installError ${qemu[$i]} || break
+				done
+			done
+		fi
+	fi
+}
+
 #  --------
 # | Errors |
 #  --------
@@ -872,6 +903,7 @@ while [ $? == 0 ]; do
 	copyConfigs
 	configureOwnership
 	installAURHelper
+	installVirtualization
 	installAURPackages
 	exitMsg
 done
