@@ -269,10 +269,9 @@ function configureBashrc () {
 	if [ $? == 0 ]; then
 		# Install bluetooth utils
 		bluetooth=(bluez bluez-utils)
-		len=${#bluetooth[@]}
-		for (( i=0; i<$len; i++ )); do
-			until dialog --title "Installing Bluetooth" --infobox "Installing ${bluetooth[$i]}" && installPackage ${bluetooth[$i]}; do
-				installError ${bluetooth[$i]} || break
+		for i in ${bluetooth[@]}; do
+			until dialog --title "Installing Bluetooth" --infobox "Installing $i" && installPackage $i; do
+				installError $i || break
 			done
 		done
 
@@ -307,17 +306,15 @@ function installScripts () {
 function copyConfigs() {
 
 	folders=(dunst gsimplecal picom ranger)
-	len=${#folders[@]}
-	for (( i=0; i<$len; i++ )); do
-		dialog --title "Installing Configuration Files" --infobox "Installing ${folders[$i]}" 0 0
-		cp -r $homedir/Documents/git/Archrice/dotfiles/${folders[$i]}/ $homedir/.config/${folders[$i]}/ 2>>$logfile 1>&2
+	for i in "${folders[@]}"; do
+		dialog --title "Installing Configuration Files" --infobox "Installing $i" 0 0
+		cp -r $homedir/Documents/git/Archrice/dotfiles/$i/ $homedir/.config/$i/ 2>>$logfile 1>&2
 	done
 
 	files=(.newsboat/ .xinitrc .xprofile)
-	len=${#files[@]}
-	for (( i=0; i<$len; i++ )); do
-		dialog --title "Installing Configuration Files" --infobox "Installing ${files[$i]}" 0 0
-		cp -r $homedir/Documents/git/Archrice/dotfiles/${files[$i]} $homedir/${files[$i]} 2>>$logfile 1>&2
+	for i in ${files[@]}; do
+		dialog --title "Installing Configuration Files" --infobox "Installing $i" 0 0
+		cp -r $homedir/Documents/git/Archrice/dotfiles/$i $homedir/$i 2>>$logfile 1>&2
 	done
 
 	# Copy X11 configuration to /etc/X11/xorg.conf.d
@@ -357,10 +354,9 @@ function configureVim () {
 		vimdir=$homedir/.config/nvim/
 		printf "\n\nexport EDITOR=nvim" >> $homedir/.bashrc
 		nvim=(neovim python-neovim)
-		len=${#nvim[@]}
-		for (( i=0; i<$len; i++ )); do
-			until dialog --title "Vim Configuration" --infobox "Installing ${nvim[$i]}" 0 0 && installPackage ${nvim[$i]}; do
-				installError ${nvim[$i]} || break
+		for i in ${nvim[@]}; do
+			until dialog --title "Vim Configuration" --infobox "Installing $i" 0 0 && installPackage $i; do
+				installError $i || break
 			done
 		done
 		dialog --title "Vim Configuration" --yesno "Do you want to alias nvim as vim?" 0 0
@@ -382,10 +378,9 @@ function configureVim () {
 	cd $vimdir/bundle/
 
 	# Download Vim plugins
-	len=${#vim_plugins[@]}
-	for (( i=0; i<$len; i++ )); do
-		until dialog --title "Vim Configuration" --infobox "Installing ${vim_plugins[$i]} plugin" 0 0 && git clone --quiet https://github.com/${vim_plugins[$i]}.git 2>>$tempfile 1>&2; do
-			gitError ${vim_plugins[$i]} || break
+	for i in ${vim_plugins[@]}; do
+		until dialog --title "Vim Configuration" --infobox "Installing $i plugin" 0 0 && git clone --quiet https://github.com/$i.git 2>>$tempfile 1>&2; do
+			gitError $i || break
 		done
 	done
 
@@ -419,10 +414,9 @@ function configureVim () {
 
 # Install necessary utilities
 function installDependencies () {
-	len=${#dependencies[@]}
-	for (( i=0; i<$len; i++ )); do
-		until echo "Installing package ${dependencies[$i]}" && installPackage ${dependencies[$i]}; do
-		   	dependencyError ${dependencies[$i]} || break
+	for i in ${dependencies[@]}; do
+		until echo "Installing package $i" && installPackage $i; do
+		   	dependencyError $i || break
 		done
 	done
 
@@ -455,10 +449,9 @@ function installAURPackages () {
 	dialog --title "Installing AUR Packages" --infobox "Installing packages from AUR" 0 0
 	sleep 1
 
-	len=${#aur_packages[@]}
-	for (( i=0; i<$len; i++ )); do
-		until dialog --title "Installing AUR Packages" --infobox "Installing ${aur_packages[$i]}" 0 0 && yay --noconfirm --needed -S ${aur_packages[$i]} 2>>$logfile 1>&2; do
-			installError ${aur_packages[$i]} || break
+	for i in ${aur_packages[@]}; do
+		until dialog --title "Installing AUR Packages" --infobox "Installing $i" 0 0 && yay --noconfirm --needed -S $i 2>>$logfile 1>&2; do
+			installError $i || break
 		done
 	done
 
@@ -469,10 +462,9 @@ function installAURPackages () {
 function installDrivers () {
 	dialog --title "Video Driver Installation" --yesno "Do you want to install Intel GPU drivers?" 0 0
 	if [ $? == 0 ]; then
-		len=${#intel_igpu_drivers[@]}
-		for (( i=0; i<$len; i++ )); do
-			until dialog --title "Video Driver Installation" --infobox "Now installing ${intel_igpu_drivers[$i]}" 0 0 && installPackage ${intel_igpu_drivers[$i]}; do
-				installError ${intel_igpu_drivers[$i]} || break
+		for i in ${intel_igpu_drivers[@]}; do
+			until dialog --title "Video Driver Installation" --infobox "Now installing $i" 0 0 && installPackage $i; do
+				installError $i || break
 			done
 		done
 	fi
@@ -488,17 +480,15 @@ function installDrivers () {
 	if [ $? == 0 ]; then
 		dialog --title "Video Driver Installation" --yes-label "Proprietary" --no-label "Open Source" --yesno "Would you like to install proprietary or open source Nvidia GPU drivers?" 0 0
 		if [ $? == 0 ]; then
-			len=${#nvidia_dgpu_drivers_proprietary[@]}
-			for (( i=0; i<$len; i++ )); do
-				until dialog --title "Nvidia Proprietary Driver Installation" --infobox "Now installing ${nvidia_dgpu_drivers_proprietary[$i]}" 0 0 && installPackage ${nvidia_dgpu_drivers_proprietary[$i]}; do
-					installError ${nvidia_dgpu_drivers_proprietary[$i]} || break
+			for i in ${nvidia_dgpu_drivers_proprietary[@]}; do
+				until dialog --title "Nvidia Proprietary Driver Installation" --infobox "Now installing $i" 0 0 && installPackage $i; do
+					installError $i || break
 				done
 			done
 		else
-			len=${#nvidia_dgpu_drivers_open_source[@]}
-			for (( i=0; i<$len; i++ )); do
-				until dialog --title "Nvidia Open Source Driver Installation" --infobox "Now installing ${nvidia_dgpu_drivers_open_source[$i]}" 0 0 && installPackage ${nvidia_dgpu_drivers_open_source[$i]}; do
-					installError ${nvidia_dgpu_drivers_open_source[$i]} || break
+			for i in ${nvidia_dgpu_drivers_open_source[@]}; do
+				until dialog --title "Nvidia Open Source Driver Installation" --infobox "Now installing $i" 0 0 && installPackage $i; do
+					installError $i || break
 				done
 			done
 		fi
@@ -511,10 +501,9 @@ function installDrivers () {
 function installApplications () {
 	dialog --title "Installing Packages" --infobox "Installing base packages" 0 0
 	sleep 2
-	len=${#applications[@]}
-	for (( i=0; i<$len; i++ )); do
-		until dialog --title "Installing Packages" --infobox "Now installing ${applications[$i]}" 0 0 && installPackage ${applications[$i]}; do
-			installError ${applications[$i]} || break
+	for i in ${applications[@]}; do
+		until dialog --title "Installing Packages" --infobox "Now installing $i" 0 0 && installPackage $i; do
+			installError $i || break
 		done
 	done
 
@@ -555,27 +544,24 @@ function installAURHelper() {
 function installWine () {
 	dialog --title "Installing Wine" --yesno "Do You want to install Wine?" 0 0
 	if [ $? == 0 ]; then
-		len=${#wine_main[@]}
-		for (( i=0; i<$len; i++ )); do
-			until dialog --title "Wine" --infobox "Now installing ${wine_main[$i]}" 0 0 && installPackage ${wine_main[$i]}; do
-				installError ${wine_main[$i]} || break
+		for i in ${wine_main[@]}; do
+			until dialog --title "Wine" --infobox "Now installing $i" 0 0 && installPackage $i; do
+				installError $i || break
 			done
 		done
 		dialog --title "Installing Wine" --yesno "Do You want to install optional 64-bit dependencies for Wine?" 0 0
 		if [ $? == 0 ]; then
-			len=${#wine_opt_depts[@]}
-			for (( i=0; i<$len; i++ )); do
-				until dialog --title "Wine" --infobox "Now installing ${wine_opt_depts[$i]}" 0 0 && installPackage ${wine_opt_depts[$i]}; do
-					installError ${wine_opt_depts[$i]} || break
+			for i in ${wine_opt_depts[@]}; do
+				until dialog --title "Wine" --infobox "Now installing $i" 0 0 && installPackage $i; do
+					installError $i || break
 				done
 			done
 		fi
 		dialog --title "Installing Wine" --yesno "Do You want to install optional 32-bit dependencies for Wine?" 0 0
 		if [ $? == 0 ]; then
-			len=${#wine_opt_depts_32bit[@]}
-			for (( i=0; i<$len; i++ )); do
-				until dialog --title "Wine" --infobox "Now installing ${wine_opt_depts_32bit[$i]}" 0 0 && installPackage ${wine_opt_depts_32bit[$i]}; do
-					installError ${wine_opt_depts_32bit[$i]} || break
+			for i in ${wine_opt_depts_32bit[@]}; do
+				until dialog --title "Wine" --infobox "Now installing $i" 0 0 && installPackage $i; do
+					installError $i || break
 				done
 			done
 		fi
@@ -591,16 +577,15 @@ function installWM () {
 	tempfile=/tmp/archtemp.txt
 	cd $homedir/Documents/git/ 2>>$logfile 1>&2
 	# Install suckless utilities
-	len=${#suckless_utilities[@]}
-	for (( i=0; i<$len; i++ )); do
-		until dialog --title "Installing Window Manager" --infobox "Cloning ${suckless_utilities[$i]}" 0 0 && git clone --quiet https://github.com/KostasEreksonas/${suckless_utilities[$i]}.git 2>>$tempfile 1>&2; do
+	for i in ${suckless_utilities[@]}; do
+		until dialog --title "Installing Window Manager" --infobox "Cloning $i" 0 0 && git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$tempfile 1>&2; do
 			gitError || break
 		done
 	done
 
-	for (( j=0; j<$len; j++ )); do
-		dialog --title "Installing Window Manager" --infobox "Installing ${suckless_utilities[$j]}" 0 0
-		cd ${suckless_utilities[$j]}/
+	for j in ${suckless_utilities[@]}; do
+		dialog --title "Installing Window Manager" --infobox "Installing $j" 0 0
+		cd $j/
 		make 2>>$logfile 1>&2
 		make clean install 2>>$logfile 1>&2
 		cd ..
@@ -614,10 +599,9 @@ function installWM () {
 function extendWM () {
 	dialog --title "Install Additional WM Tools" --infobox "Installing additional packages for window manager" 0 0
 	sleep 2
-	len=${#wm_tools[@]}
-	for (( i=0; i<$len; i++ )); do
-		until dialog --title "Install Additional WM Tools" --infobox "Installing ${wm_tools[$i]}" 0 0 && installPackage ${wm_tools[$i]}; do
-			installError ${wm_tools[$i]} || break
+	for i in ${wm_tools[@]}; do
+		until dialog --title "Install Additional WM Tools" --infobox "Installing $i" 0 0 && installPackage $i; do
+			installError $i || break
 		done
 	done
 
@@ -636,10 +620,9 @@ function installFonts () {
 	rm Hack.zip
 
 	# Install some more fonts with pacman
-	len=${#fonts[@]}
-	for (( i=0; i<$len; i++ )); do
-		until dialog --title "Font Configuration" --infobox "Installing ${fonts[$i]}" 0 0 && installPackage ${fonts[$i]}; do
-			installError ${fonts[$i]} || break
+	for i in ${fonts[@]}; do
+		until dialog --title "Font Configuration" --infobox "Installing $i" 0 0 && installPackage $i; do
+			installError $i || break
 		done
 	done
 
@@ -654,10 +637,9 @@ function installVirtualization() {
 			vbox=(virtualbox-host-modules-arch \
 					virtualbox-guest-iso \
 					virtualbox)
-			len=${#vbox[@]}
-			for (( i=0; i<$len; i++ )); do
-				until dialog --title "Virtualization Software Installation" --infobox "Installing ${vbox[$i]}" 0 0 && installPackage ${vbox[$i]}; do
-					installError ${vbox[$i]} || break
+			for i in ${vbox[@]}; do
+				until dialog --title "Virtualization Software Installation" --infobox "Installing $i" 0 0 && installPackage $i; do
+					installError $i || break
 				done
 			done
 			until dialog --title "Virtualization Software Installation" --infobox "Installing virtualbox-ext-oracle" 0 0 && yay --noconfirm --needed -S virtualbox-ext-oracle 2>>$logfile 1>&2; do
@@ -671,10 +653,9 @@ function installVirtualization() {
 					edk2-ovmf \
 					dnsmasq \
 					iptables-nft)
-			len=${#qemu[@]}
-			for (( i=0; i<$len; i++ )); do
-				until dialog --title "Virtualization Software Installation" --infobox "Installing ${qemu[$i]}" 0 0 && installPackage ${qemu[$i]}; do
-					installError ${qemu[$i]} || break
+			for i in ${qemu[@]}; do
+				until dialog --title "Virtualization Software Installation" --infobox "Installing $i" 0 0 && installPackage $i; do
+					installError $i || break
 				done
 			done
 			usermod -aG libvirt $username
@@ -848,9 +829,8 @@ function createDirectories() {
 	sleep 2
 
 	cd $homedir/
-	len=${#directories[@]}
-	for (( i=0; i<$len; i++ )); do
-		mkdir -p ${directories[$i]}
+	for i in ${directories[@]}; do
+		mkdir -p $i
 	done
 
 	return $?
