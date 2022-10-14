@@ -435,7 +435,8 @@ function installDependencies () {
 # Synchronize repositories and update existing packages
 function updateSystem () {
 	title="System Update"
-	Install $title "archlinux-keyring"
+	isAUR="False"
+	Install $title $isAUR "archlinux-keyring"
 	dialog --title "System Update" --infobox "Synchronizing and updating packages" 0 0
 	until pacman --noconfirm -Syyu 2>>$logfile 1>&2; do
 		updateError || break
