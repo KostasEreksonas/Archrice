@@ -283,8 +283,10 @@ function configureBashrc () {
 	if [ $? == 0 ]; then
 		# Install bluetooth utils
 		title="Installing Bluetooth"
+		isAUR="False"
+
 		bluetooth=(bluez bluez-utils)
-		Install $title "${bluetooth[@]}"
+		Install $title $isAUR "${bluetooth[@]}"
 
 		# Add a Bluetooth banner
 		printf "\n\n#  -----------\n# | Bluetooth |\n#  -----------"
@@ -349,7 +351,7 @@ function copyConfigs() {
 	return $?
 }
 
-# Recursively set 
+# Recursively set ownership of users' home directory
 function configureOwnership() {
 	cd /home/
 	chown -R $username:$username $homedir/ 2>>$logfile 1>&2
@@ -359,38 +361,38 @@ function configureOwnership() {
 
 # Customize Vim text editor
 function configureVim () {
+	title="Vim Configuration"
+	isAUR="False"
+	isGIT="False"
+
 	tempfile=/tmp/archtemp.txt
 	vimdir=""
 	dialog --title "Vim Configuration" --yes-label "Neovim" --no-label "Vim" --yesno "Would you like to install Vim or Neovim?" 0 0
 	choice=$?
-	title="Vim Configuration"
 	if [ $choice == 0 ]; then # Choice == neovim
 		vimdir=$homedir/.config/nvim/
 		printf "\n\nexport EDITOR=nvim" >> $homedir/.bashrc
 		nvim=(neovim python-neovim)
-		Install $title "${nvim[@]}"
-		dialog --title "Vim Configuration" --yesno "Do you want to alias nvim as vim?" 0 0
+		Install $title $isAUR $isGIT "${nvim[@]}"
+		dialog --title $title --yesno "Do you want to alias nvim as vim?" 0 0
 		if [ $? == 0 ]; then
 			printf "\n\nalias vim=\'nvim\'" >> $homedir/.bashrc
 		fi
 	elif [ $choice == 1 ]; then # Choice == vim
 		vimdir=$homedir/.vim/
-		Install $title "vim"
+		Install $title $isAUR $isGIT "vim"
 	fi
 
 	# Install Pathogen plugin manager
-	dialog --title "Vim Configuration" --infobox "Installing Vim plugin manager" 0 0
+	dialog --title $title --infobox "Installing Vim plugin manager" 0 0
 	mkdir -p $vimdir/autoload $vimdir/bundle && curl -LSso $vimdir/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 
 	# Go into plugin directory
 	cd $vimdir/bundle/
 
 	# Download Vim plugins
-	for i in ${vim_plugins[@]}; do
-		until dialog --title "Vim Configuration" --infobox "Installing $i plugin" 0 0 && git clone --quiet https://github.com/$i.git 2>>$tempfile 1>&2; do
-			gitError $i || break
-		done
-	done
+	isGIT="True"
+	Install $title $isAUR $isGIT ${vim_plugins[@]}
 
 	# Download solarized8 color scheme by lifepillar from Github and put it to $vimdir/colors/
 	wget https://raw.githubusercontent.com/lifepillar/vim-solarized8/master/colors/solarized8.vim -P $vimdir/colors/
@@ -405,7 +407,7 @@ function configureVim () {
 	wget https://raw.githubusercontent.com/lifepillar/vim-gruvbox8/master/colors/gruvbox8_soft.vim
 
 	# Copy .vimrc config file from dotfiles
-	dialog --title "Vim Configuration" --infobox "Copying configuration to the user $username home directory" 0 0
+	dialog --title $title --infobox "Copying configuration to the user $username home directory" 0 0
 	if [ $choice == 0 ]; then
 		cp /home/$username/Documents/git/Archrice/dotfiles/.vimrc $vimdir/init.vim 2>>$logfile 1>&2
 	elif [ $choice == 1 ]; then
@@ -436,7 +438,9 @@ function installDependencies () {
 function updateSystem () {
 	title="System Update"
 	isAUR="False"
-	Install $title $isAUR "archlinux-keyring"
+	isGIT="False"
+
+	Install $title $isAUR $isGIT "archlinux-keyring"
 	dialog --title "System Update" --infobox "Synchronizing and updating packages" 0 0
 	until pacman --noconfirm -Syyu 2>>$logfile 1>&2; do
 		updateError || break
@@ -463,29 +467,42 @@ function installAURPackage() {
 function InstallAUR () {
 	title="Installing AUR Package"
 	isAUR="True"
+	isGIT="False"
+
 	dialog --title $title --infobox "Installing packages from AUR" 0 0
 	sleep 1
-	Install $title $isAUR "${aur_packages[@]}"
+	Install $title $isAUR $isGIT "${aur_packages[@]}"
 
 	return $?
 }
 
+# Takes 4 arguments:
+# ${arr[0]} - title of a dialog window
+# ${arr[1]} - isAUR flag, "True" is passed if a package from AUR needs to be installed
+# ${arr[2]} - isGIT flag, "True" is passed if a package from git repo needs to be installed
+# ${arr[3++]} - array of packages to install with this function
 function Install() {
-	arr=("$@")
-	len=${#arr[@]}
-	# If isAUR flag equals true, install a package using yay
-	# Else, install a package using pacman
-	if [ ${arr[1]} == "True" ]; then
-		for (( i=2; i<$len; i++ )); do
+	arr=("$@")			# Get given arguments
+	len=${#arr[@]}		# Get array length
+
+	if [ ${arr[1]} == "False" && ${arr[2]} == "False" ]; then
+		for (( i=3; i<$len; i++ )); do
+			until dialog --title ${arr[0]} --infobox "Installing ${arr[$i]}" 0 0 && installPackage ${arr[$i]}; do
+				installError ${arr[$i]} || break
+			done
+		done
+	fi
+	if [ ${arr[1]} == "True" && ${arr[2]} == "False" ]; then
+		for (( i=3; i<$len; i++ )); do
 			until dialog --title ${arr[0]} --infobox "Installing ${arr[$i]}" 0 0 && installAURPackage ${arr[$i]}; do
 				installError ${arr[$i]} || break
 			done
 		done
 	fi
-	if [ ${arr[1]} == "False" ]; then
-		for (( i=2; i<$len; i++ )); do
-			until dialog --title ${arr[0]} --infobox "Installing ${arr[$i]}" 0 0 && installPackage ${arr[$i]}; do
-				installError ${arr[$i]} || break
+	if [ ${arr[1]} == "False" && ${arr[2]} == "True" ]; then
+		for (( i=3; i<$len; i++ )); do
+			until dialog --title $title --infobox "Cloning $i" 0 0 && git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$tempfile 1>&2; do
+				gitError || break
 			done
 		done
 	fi
@@ -497,23 +514,24 @@ function Install() {
 function installDrivers () {
 	title="Video Driver Installation"
 	isAUR="False"
+	isGIT="False"
 	dialog --title $title --yesno "Do you want to install Intel GPU drivers?" 0 0
 	if [ $? == 0 ]; then
-		Install $title $isAUR "${intel_igpu_drivers[@]}"
+		Install $title $isAUR $isGIT "${intel_igpu_drivers[@]}"
 	fi
 
 	dialog --title $title --yesno "Do you want to install AMD GPU drivers?" 0 0
 	if [ $? == 0 ]; then
-		Install $title $isAUR "xf86-video-amdgpu"
+		Install $title $isAUR $isGIT "xf86-video-amdgpu"
 	fi
 
 	dialog --title $title --yesno "Do you want to install Nvidia GPU drivers?" 0 0
 	if [ $? == 0 ]; then
 		dialog --title $title --yes-label "Proprietary" --no-label "Open Source" --yesno "Would you like to install proprietary or open source Nvidia GPU drivers?" 0 0
 		if [ $? == 0 ]; then
-			Install $title $isAUR "${nvidia_dgpu_drivers_proprietary[@]}"
+			Install $title $isAUR $isGIT "${nvidia_dgpu_drivers_proprietary[@]}"
 		else
-			Install $title $isAUR "${nvidia_dgpu_drivers_open_source[@]}"
+			Install $title $isAUR $isGIT "${nvidia_dgpu_drivers_open_source[@]}"
 		fi
 	fi
 
@@ -524,15 +542,16 @@ function installDrivers () {
 function installApplications () {
 	title="Installing Base Packages"
 	isAUR="False"
+	isGIT="False"
 	dialog --title $title --infobox "Installing base packages" 0 0
 	sleep 2
-	Install $title $isAUR "${applications[@]}"
+	Install $title $isAUR $isGIT "${applications[@]}"
 
 	usermod -aG vboxusers $username		# Add user to vboxusers group
 
 	dialog --title $title --yesno "Do you want to install virtualbox-guest-utils (necessary if you want to run X sessions within Arch Linux guest in Virtualbox)?" 0 0
 	if [ $? == 0 ]; then
-		Install $title $isAUR "virtualbox-guest-utils"
+		Install $title $isAUR $isGIT "virtualbox-guest-utils"
 	fi
 
 	return $?
@@ -540,11 +559,12 @@ function installApplications () {
 
 function installAURHelper() {
 	title="Installing AUR Helper"
+	isAUR="False"
+	isGIT="True"
+
 	tempfile=/tmp/archtemp.txt
 	cd $homedir/Documents/aur/
-	until dialog --title $title --infobox "Downloading yay AUR helper" 0 0 && git clone --quiet https://aur.archlinux.org/yay.git 2>>$tempfile; do
-		gitError yay || break
-	done
+	InstallAUR $title $isAUR $isGIT "vim"
 
 	chown -R $username:$username $homedir/Documents/aur/yay
 	dialog --title $title --infobox "Installing yay AUR helper" 0 0
@@ -564,16 +584,17 @@ function installAURHelper() {
 function installWine () {
 	title="Installing Wine"
 	isAUR="False"
+	isGIT="False"
 	dialog --title $title --yesno "Do You want to install Wine?" 0 0
 	if [ $? == 0 ]; then
-		Install $title $isAUR "${wine_main[@]}"
+		Install $title $isAUR $isGIT "${wine_main[@]}"
 		dialog --title $title --yesno "Do You want to install optional 64-bit dependencies for Wine?" 0 0
 		if [ $? == 0 ]; then
-			Install $title $isAUR "${wine_opt_depts[@]}"
+			Install $title $isAUR $isGIT "${wine_opt_depts[@]}"
 		fi
 		dialog --title $title --yesno "Do You want to install optional 32-bit dependencies for Wine?" 0 0
 		if [ $? == 0 ]; then
-			Install $title $isAUR "${wine_opt_depts_32bit[@]}"
+			Install $title $isAUR $isGIT "${wine_opt_depts_32bit[@]}"
 		fi
 	fi
 
@@ -583,20 +604,18 @@ function installWine () {
 # Downloads and installs dwm and other suckless utilities
 function installWM () {
 	title="Installing Window Manager"
+	isAUR="False"
+	isGIT="True"
 	dialog --title $title --infobox "Install suckless window manager and it's utilities" 0 0
 	sleep 2
 	tempfile=/tmp/archtemp.txt
 	cd $homedir/Documents/git/ 2>>$logfile 1>&2
 	# Install suckless utilities
-	for i in ${suckless_utilities[@]}; do
-		until dialog --title $title --infobox "Cloning $i" 0 0 && git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$tempfile 1>&2; do
-			gitError || break
-		done
-	done
+	Install $title $isAUR $isGIT ${suckless_utilities[@]}
 
-	for j in ${suckless_utilities[@]}; do
+	for i in ${suckless_utilities[@]}; do
 		dialog --title $title --infobox "Installing $j" 0 0
-		cd $j/
+		cd $i/
 		make 2>>$logfile 1>&2
 		make clean install 2>>$logfile 1>&2
 		cd ..
@@ -611,9 +630,10 @@ function installWM () {
 function extendWM () {
 	title="Install WM Tools"
 	isAUR="False"
+	isGIT="False"
 	dialog --title $title --infobox "Installing additional packages for window manager" 0 0
 	sleep 2
-	Install $title $isAUR "${wm_tools[@]}"
+	Install $title $isAUR $isGIT "${wm_tools[@]}"
 
 	return $?
 }
@@ -622,6 +642,8 @@ function extendWM () {
 function installFonts () {
 	title="Font Configuration"
 	isAUR="False"
+	isGIT="False"
+
 	dialog --title $title --infobox "Installing all necessary fonts" 0 0
 	sleep 2
 	cd $homedir/.local/share/fonts
@@ -632,7 +654,7 @@ function installFonts () {
 	rm Hack.zip
 
 	# Install some more fonts with pacman
-	Install $title $isAUR "${fonts[@]}"
+	Install $title $isAUR $isGIT "${fonts[@]}"
 
 	return $?
 }
@@ -640,17 +662,19 @@ function installFonts () {
 function installVirtualization() {
 	title="Virtualization Software Installation"
 	isAUR="False"
+	isGIT="False"
+
 	dialog --title $title --yesno "Do you want to install software for virtualization?" 0 0
 	if [ $? == 0 ]; then
 		dialog --title $title --yes-label "Virtualbox" --no-label "QEMU" --yesno "Which software do you want to install?" 0 0
 		if [ $? == 0 ]; then
-			Install $title $isAUR "${vbox_utils[@]}"
+			Install $title $isAUR $isGIT "${vbox_utils[@]}"
 			isAUR="True"
-			Install $title $isAUR "virtualbox-ext-oracle"
+			Install $title $isAUR $isGIT "virtualbox-ext-oracle"
 		fi
 		if [ $? == 1 ]; then
 			isAUR="False"
-			Install $title $isAUR "${qemu[@]}"
+			Install $title $isAUR $isGIT "${qemu[@]}"
 			usermod -aG libvirt $username # Add user to libvirt group
 		fi
 	fi
