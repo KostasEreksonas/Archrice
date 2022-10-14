@@ -321,13 +321,13 @@ function copyConfigs() {
 
 	folders=(dunst gsimplecal picom ranger)
 	for folder in "${folders[@]}"; do
-		dialog --title "Installing Configuration Files" --infobox "Installing $i" 0 0
+		dialog --title "Installing Configuration Files" --infobox "Installing $file" 0 0
 		cp -r $homedir/Documents/git/Archrice/dotfiles/$folder/ $homedir/.config/$folder/ 2>>$logfile 1>&2
 	done
 
 	files=(.newsboat/ .xinitrc .xprofile)
 	for file in ${files[@]}; do
-		dialog --title "Installing Configuration Files" --infobox "Installing $i" 0 0
+		dialog --title "Installing Configuration Files" --infobox "Installing $file" 0 0
 		cp -r $homedir/Documents/git/Archrice/dotfiles/$file $homedir/$file 2>>$logfile 1>&2
 	done
 
@@ -368,7 +368,7 @@ function configureVim () {
 
 	tempfile=/tmp/archtemp.txt
 	vimdir=""
-	dialog --title "Vim Configuration" --yes-label "Neovim" --no-label "Vim" --yesno "Would you like to install Vim or Neovim?" 0 0
+	dialog --title $title --yes-label "Neovim" --no-label "Vim" --yesno "Which editor to install?" 0 0
 	choice=$?
 	if [ $choice == 0 ]; then # Choice == neovim
 		vimdir=$homedir/.config/nvim/
