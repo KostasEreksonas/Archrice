@@ -225,12 +225,13 @@ function configurePass () {
 
 # Clone dotfiles repository
 function cloneDotfiles () {
+	title="Cloning Dotfiles"
+	isAUR="False"
+	isGIT="True"
+
 	tempfile=/tmp/archtemp.txt
 	cd $homedir/Documents/git/
-	dialog --title "Configuring Bashrc" --infobox "Cloning Archrice repository" 0 0
-	until git clone --quiet https://github.com/KostasEreksonas/Archrice.git 2>>$tempfile; do
-		gitError Archrice || break
-	done
+	Install $title $isAUR $isGIT "Archrice"
 
 	rm -f $tempfile
 
