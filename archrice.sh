@@ -720,21 +720,19 @@ function userError() {
 
 # Display this message when a package fails to install via make
 function gitError () {
+	title="Error Cloning Git Repository"
 	error=$(grep "Could not resolve host: github.com" $tempfile)
 	if [ $? == 0 ]; then
-		dialog --title "Error Cloning Git Repository" \
-			--yesno "Failed to clone repository $1. Error message: $error Do you want to retry?" 0 0
+		dialog --title $title --yesno "Failed to clone $1. Error message: $error Do you want to retry?" 0 0
 		choice=$?
 		if [ $choice == 0 ]; then
-			dialog --title "Error Cloning Git Repository" \
-				--infobox "Retrying to download $1 in 5 seconds" 0 0
+			dialog --title $title --infobox "Retrying to clone $1 in 5 seconds" 0 0
 			cat $tempfile >> $logfile
 			> $tempfile
 			sleep 5
 			return $choice
 		else
-			dialog --title "Error Cloning Git Repository" \
-			--msgbox "Failed to clone repository $1. Some features will not be installed" 0 0
+			dialog --title $title --msgbox "Failed to clone $1. Some features will not be installed" 0 0
 			cat $tempfile >> $logfile
 			> $tempfile
 			return $choice
