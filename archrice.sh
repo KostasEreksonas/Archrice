@@ -191,6 +191,12 @@ vbox_utils=(virtualbox-host-modules-arch \
 			virtualbox-guest-iso \
 			virtualbox)
 
+# Additional themes for Vim
+themes=(solarized8 \
+		gruvbox8 \
+		gruvbox8_hard \
+		gruvbox8_soft)
+
 #  ---------------
 # | Configuration |
 #  ---------------
@@ -395,17 +401,14 @@ function configureVim () {
 	isGIT="True"
 	Install $title $isAUR $isGIT ${vim_plugins[@]}
 
-	# Download solarized8 color scheme by lifepillar from Github and put it to $vimdir/colors/
-	wget https://raw.githubusercontent.com/lifepillar/vim-solarized8/master/colors/solarized8.vim -P $vimdir/colors/
+	# Create a directory in $vimdir to store color themes
+	mkdir $vimdir/colors/
+	cd $vimdir/colors/
 
-	# Download gruvbox8 color scheme by lifepillar from Github and put it to $vimdir/colors/
-	wget https://raw.githubusercontent.com/lifepillar/vim-gruvbox8/master/colors/gruvbox8.vim -P $vimdir/colors/
-
-	# Download gruvbox8 hard color scheme by lifepillar from Github and put it to $vimdir/colors/
-	wget https://raw.githubusercontent.com/lifepillar/vim-gruvbox8/master/colors/gruvbox8_hard.vim
-
-	# Download gruvbox8 soft color scheme by lifepillar from Github and put it to $vimdir/colors/
-	wget https://raw.githubusercontent.com/lifepillar/vim-gruvbox8/master/colors/gruvbox8_soft.vim
+	# Install additional themes for Vim
+	for theme in ${themes[@]}; do
+		wget https://raw.githubusercontent.com/lifepillar/vim-solarized8/master/colors/$theme.vim
+	done
 
 	# Copy .vimrc config file from dotfiles
 	dialog --title $title --infobox "Copying configuration to the user $username home directory" 0 0
