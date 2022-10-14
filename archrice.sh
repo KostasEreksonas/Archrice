@@ -319,15 +319,15 @@ function installScripts () {
 function copyConfigs() {
 
 	folders=(dunst gsimplecal picom ranger)
-	for i in "${folders[@]}"; do
+	for folder in "${folders[@]}"; do
 		dialog --title "Installing Configuration Files" --infobox "Installing $i" 0 0
-		cp -r $homedir/Documents/git/Archrice/dotfiles/$i/ $homedir/.config/$i/ 2>>$logfile 1>&2
+		cp -r $homedir/Documents/git/Archrice/dotfiles/$folder/ $homedir/.config/$folder/ 2>>$logfile 1>&2
 	done
 
 	files=(.newsboat/ .xinitrc .xprofile)
-	for i in ${files[@]}; do
+	for file in ${files[@]}; do
 		dialog --title "Installing Configuration Files" --infobox "Installing $i" 0 0
-		cp -r $homedir/Documents/git/Archrice/dotfiles/$i $homedir/$i 2>>$logfile 1>&2
+		cp -r $homedir/Documents/git/Archrice/dotfiles/$file $homedir/$file 2>>$logfile 1>&2
 	done
 
 	# Copy X11 configuration to /etc/X11/xorg.conf.d
@@ -425,9 +425,9 @@ function configureVim () {
 
 # Install necessary utilities
 function installDependencies () {
-	for i in ${dependencies[@]}; do
-		until echo "Installing package $i" && installPackage $i; do
-		   	dependencyError $i || break
+	for dependency in ${dependencies[@]}; do
+		until echo "Installing package $dependency" && installPackage $dependency; do
+		   	dependencyError $dependency || break
 		done
 	done
 
@@ -613,9 +613,9 @@ function installWM () {
 	# Install suckless utilities
 	Install $title $isAUR $isGIT ${suckless_utilities[@]}
 
-	for i in ${suckless_utilities[@]}; do
-		dialog --title $title --infobox "Installing $j" 0 0
-		cd $i/
+	for utility in ${suckless_utilities[@]}; do
+		dialog --title $title --infobox "Installing $utility" 0 0
+		cd $utility/
 		make 2>>$logfile 1>&2
 		make clean install 2>>$logfile 1>&2
 		cd ..
@@ -846,8 +846,8 @@ function createDirectories() {
 	sleep 2
 
 	cd $homedir/
-	for i in ${directories[@]}; do
-		mkdir -p $i
+	for directory in ${directories[@]}; do
+		mkdir -p $directory
 	done
 
 	return $?
