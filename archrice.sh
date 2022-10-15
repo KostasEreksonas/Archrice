@@ -231,8 +231,7 @@ function configurePass () {
 
 # Clone dotfiles repository
 function cloneDotfiles () {
-	title="Cloning Dotfiles"
-	isAUR="False" && isGIT="True" && MAKE="False"
+	title="Cloning Dotfiles" && isAUR="False" && isGIT="True" && MAKE="False"
 
 	tempfile=/tmp/archtemp.txt
 	cd $homedir/Documents/git/
@@ -287,8 +286,7 @@ function configureBashrc () {
 
 	dialog --title "Configuring Bashrc" --yesno "Do you want to add alias to turn Bluetooth on/off?" 0 0
 	if [ $? == 0 ]; then
-		title="Installing Bluetooth"
-		isAUR="False" && isGIT="False" && MAKE="False"
+		title="Installing Bluetooth" && isAUR="False" && isGIT="False" && MAKE="False"
 
 		# Install bluetooth utils
 		bluetooth=(bluez bluez-utils)
@@ -367,8 +365,7 @@ function configureOwnership() {
 
 # Customize Vim text editor
 function configureVim () {
-	title="Vim Configuration"
-	isAUR="False" && isGIT="False" && MAKE="False"
+	title="Vim Configuration" && isAUR="False" && isGIT="False" && MAKE="False"
 
 	tempfile=/tmp/archtemp.txt
 	vimdir=""
@@ -436,8 +433,7 @@ function installDependencies () {
 
 # Synchronize repositories and update existing packages
 function updateSystem () {
-	title="System Update"
-	isAUR="False" && isGIT="False" && MAKE="False"
+	title="System Update" && isAUR="False" && isGIT="False" && MAKE="False"
 
 	Install $title $isAUR $isGIT $MAKE "archlinux-keyring"
 	dialog --title "System Update" --infobox "Synchronizing and updating packages" 0 0
@@ -464,8 +460,7 @@ function installAURPackage() {
 
 # Install a package using pacman
 function InstallAUR () {
-	title="Installing AUR Package"
-	isAUR="True" && isGIT="False" && MAKE="False"
+	title="Installing AUR Package" && isAUR="True" && isGIT="False" && MAKE="False"
 
 	dialog --title $title --infobox "Installing packages from AUR" 0 0
 	sleep 1
@@ -500,14 +495,14 @@ function Install() {
 	fi
 	if [ ${arr[1]} == "False" && ${arr[2]} == "True" && ${arr[3]} == "False" ]; then
 		for (( i=4; i<$len; i++ )); do
-			until dialog --title $title --infobox "Cloning $i" 0 0 && git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$tempfile 1>&2; do
+			until dialog --title ${arr[0]} --infobox "Cloning $i" 0 0 && git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$tempfile 1>&2; do
 				gitError || break
 			done
 		done
 	fi
 	if [ ${arr[1]} == "False" && ${arr[2]} == "False" && ${arr[3]} == "True" ]; then
 		for (( i=4; i<$len; i++ )); do
-			dialog --title $title --infobox "Installing $i" 0 0
+			dialog --title ${arr[0]} --infobox "Installing $i" 0 0
 			cd $i/
 			make 2>>$logfile 1>&2
 			make clean install 2>>$logfile 1>&2
@@ -520,8 +515,7 @@ function Install() {
 
 # Install video card drivers
 function installDrivers () {
-	title="Video Driver Installation"
-	isAUR="False" && isGIT="False" && MAKE="False"
+	title="Video Driver Installation" && isAUR="False" && isGIT="False" && MAKE="False"
 
 	dialog --title $title --yesno "Do you want to install Intel GPU drivers?" 0 0
 	if [ $? == 0 ]; then
@@ -548,8 +542,7 @@ function installDrivers () {
 
 # Install system applications
 function installApplications () {
-	title="Installing Base Packages"
-	isAUR="False" && isGIT="False" && MAKE="False"
+	title="Installing Base Packages" && isAUR="False" && isGIT="False" && MAKE="False"
 
 	dialog --title $title --infobox "Installing base packages" 0 0 && sleep 2
 	Install $title $isAUR $isGIT $MAKE "${applications[@]}"
@@ -565,8 +558,7 @@ function installApplications () {
 }
 
 function installAURHelper() {
-	title="Installing AUR Helper"
-	isAUR="False" && isGIT="True" && MAKE="False"
+	title="Installing AUR Helper" && isAUR="False" && isGIT="True" && MAKE="False"
 
 	tempfile=/tmp/archtemp.txt
 	cd $homedir/Documents/aur/
@@ -588,8 +580,7 @@ function installAURHelper() {
 
 # Install Wine compatibility layer
 function installWine () {
-	title="Installing Wine"
-	isAUR="False" && isGIT="False" && MAKE="False"
+	title="Installing Wine" && isAUR="False" && isGIT="False" && MAKE="False"
 
 	dialog --title $title --yesno "Do You want to install Wine?" 0 0
 	if [ $? == 0 ]; then
@@ -609,8 +600,7 @@ function installWine () {
 
 # Downloads and installs dwm and other suckless utilities
 function installWM () {
-	title="Installing Window Manager"
-	isAUR="False" && isGIT="True" && MAKE="False"
+	title="Installing Window Manager" && isAUR="False" && isGIT="True" && MAKE="False"
 
 	dialog --title $title --infobox "Install suckless window manager and it's utilities" 0 0
 	sleep 2
@@ -630,8 +620,7 @@ function installWM () {
 
 # Install additional software to extend window manager functionality
 function extendWM () {
-	title="Install WM Tools"
-	isAUR="False" && isGIT="False" && MAKE="False"
+	title="Install WM Tools" && isAUR="False" && isGIT="False" && MAKE="False"
 
 	dialog --title $title --infobox "Installing additional packages for window manager" 0 0
 	sleep 2
@@ -642,8 +631,7 @@ function extendWM () {
 
 # Install system fonts
 function installFonts () {
-	title="Font Configuration"
-	isAUR="False" && isGIT="False" && MAKE="False"
+	title="Font Configuration" && isAUR="False" && isGIT="False" && MAKE="False"
 
 	dialog --title $title --infobox "Installing all necessary fonts" 0 0
 	sleep 2
@@ -661,16 +649,14 @@ function installFonts () {
 }
 
 function installVirtualization() {
-	title="Virtualization Software Installation"
-	isAUR="False" && isGIT="False" && MAKE="False"
+	title="Virtualization Software Installation" && isAUR="False" && isGIT="False" && MAKE="False"
 
 	dialog --title $title --yesno "Do you want to install software for virtualization?" 0 0
 	if [ $? == 0 ]; then
 		dialog --title $title --yes-label "Virtualbox" --no-label "QEMU" --yesno "Which software do you want to install?" 0 0
 		if [ $? == 0 ]; then
 			Install $title $isAUR $isGIT $MAKE "${vbox_utils[@]}"
-			isAUR="True"
-			Install $title $isAUR $isGIT $MAKE "virtualbox-ext-oracle"
+			isAUR="True" && Install $title $isAUR $isGIT $MAKE "virtualbox-ext-oracle"
 		fi
 		if [ $? == 1 ]; then
 			Install $title $isAUR $isGIT $MAKE "${qemu[@]}"
