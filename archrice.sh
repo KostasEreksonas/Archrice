@@ -234,10 +234,11 @@ function cloneDotfiles () {
 	title="Cloning Dotfiles"
 	isAUR="False"
 	isGIT="True"
+	MAKE="False"
 
 	tempfile=/tmp/archtemp.txt
 	cd $homedir/Documents/git/
-	Install $title $isAUR $isGIT "Archrice"
+	Install $title $isAUR $isGIT $MAKE "Archrice"
 
 	rm -f $tempfile
 
