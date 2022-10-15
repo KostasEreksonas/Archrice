@@ -677,7 +677,6 @@ function installVirtualization() {
 			Install $title $isAUR $isGIT "virtualbox-ext-oracle"
 		fi
 		if [ $? == 1 ]; then
-			isAUR="False"
 			Install $title $isAUR $isGIT "${qemu[@]}"
 			usermod -aG libvirt $username # Add user to libvirt group
 		fi
