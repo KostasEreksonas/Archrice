@@ -858,7 +858,7 @@ function createDirectories() {
 }
 
 function exitMsg () {
-	dialog --title "Arch Auto Configuration Script" --infobox "The system is now installed. It will be cleaned up and rebooted in 10 seconds (Note: If you have multiple displays and want to extend them on startup, run "extendDisplays" command after starting your X session)" 0 0
+	dialog --title "Arch Auto Configuration Script" --infobox "The system is now installed. It will be cleaned up and rebooted in 10 seconds (Note: If you have multiple displays and want to extend them on startup, run extendDisplays command after starting your X session)" 0 0
 	sleep 10
 	rm -r /root/*
 	rm $logfile
