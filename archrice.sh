@@ -480,34 +480,44 @@ function InstallAUR () {
 	return $?
 }
 
-# Takes 4 arguments:
+# Takes 5 arguments:
 # ${arr[0]} - title of a dialog window
 # ${arr[1]} - isAUR flag, "True" is passed if a package from AUR needs to be installed
 # ${arr[2]} - isGIT flag, "True" is passed if a package from git repo needs to be installed
-# ${arr[3++]} - array of packages to install with this function
+# ${arr[3]} - MAKE flag, "True" is passed if a package needs to be installed using make
+# ${arr[4++]} - array of packages to install with this function
 function Install() {
 	arr=("$@")			# Get given arguments
 	len=${#arr[@]}		# Get array length
 
-	if [ ${arr[1]} == "False" && ${arr[2]} == "False" ]; then
-		for (( i=3; i<$len; i++ )); do
+	if [ ${arr[1]} == "False" && ${arr[2]} == "False" && ${arr[3]} == "False" ]; then
+		for (( i=4; i<$len; i++ )); do
 			until dialog --title ${arr[0]} --infobox "Installing ${arr[$i]}" 0 0 && installPackage ${arr[$i]}; do
 				installError ${arr[$i]} || break
 			done
 		done
 	fi
-	if [ ${arr[1]} == "True" && ${arr[2]} == "False" ]; then
-		for (( i=3; i<$len; i++ )); do
+	if [ ${arr[1]} == "True" && ${arr[2]} == "False" && ${arr[3]} == "False" ]; then
+		for (( i=4; i<$len; i++ )); do
 			until dialog --title ${arr[0]} --infobox "Installing ${arr[$i]}" 0 0 && installAURPackage ${arr[$i]}; do
 				installError ${arr[$i]} || break
 			done
 		done
 	fi
-	if [ ${arr[1]} == "False" && ${arr[2]} == "True" ]; then
-		for (( i=3; i<$len; i++ )); do
+	if [ ${arr[1]} == "False" && ${arr[2]} == "True" && ${arr[3]} == "False" ]; then
+		for (( i=4; i<$len; i++ )); do
 			until dialog --title $title --infobox "Cloning $i" 0 0 && git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$tempfile 1>&2; do
 				gitError || break
 			done
+		done
+	fi
+	if [ ${arr[1]} == "False" && ${arr[2]} == "False" && ${arr[3]} == "True" ]; then
+		for (( i=4; i<$len; i++ )); do
+			dialog --title $title --infobox "Installing $i" 0 0
+			cd $i/
+			make 2>>$logfile 1>&2
+			make clean install 2>>$logfile 1>&2
+			cd ..
 		done
 	fi
 
@@ -519,23 +529,25 @@ function installDrivers () {
 	title="Video Driver Installation"
 	isAUR="False"
 	isGIT="False"
+	MAKE="False"
+
 	dialog --title $title --yesno "Do you want to install Intel GPU drivers?" 0 0
 	if [ $? == 0 ]; then
-		Install $title $isAUR $isGIT "${intel_igpu_drivers[@]}"
+		Install $title $isAUR $isGIT $MAKE "${intel_igpu_drivers[@]}"
 	fi
 
 	dialog --title $title --yesno "Do you want to install AMD GPU drivers?" 0 0
 	if [ $? == 0 ]; then
-		Install $title $isAUR $isGIT "xf86-video-amdgpu"
+		Install $title $isAUR $isGIT $MAKE "xf86-video-amdgpu"
 	fi
 
 	dialog --title $title --yesno "Do you want to install Nvidia GPU drivers?" 0 0
 	if [ $? == 0 ]; then
 		dialog --title $title --yes-label "Proprietary" --no-label "Open Source" --yesno "Would you like to install proprietary or open source Nvidia GPU drivers?" 0 0
 		if [ $? == 0 ]; then
-			Install $title $isAUR $isGIT "${nvidia_dgpu_drivers_proprietary[@]}"
+			Install $title $isAUR $isGIT $MAKE "${nvidia_dgpu_drivers_proprietary[@]}"
 		else
-			Install $title $isAUR $isGIT "${nvidia_dgpu_drivers_open_source[@]}"
+			Install $title $isAUR $isGIT $MAKE "${nvidia_dgpu_drivers_open_source[@]}"
 		fi
 	fi
 
@@ -547,15 +559,17 @@ function installApplications () {
 	title="Installing Base Packages"
 	isAUR="False"
 	isGIT="False"
+	MAKE="False"
+
 	dialog --title $title --infobox "Installing base packages" 0 0
 	sleep 2
-	Install $title $isAUR $isGIT "${applications[@]}"
+	Install $title $isAUR $isGIT $MAKE "${applications[@]}"
 
 	usermod -aG vboxusers $username		# Add user to vboxusers group
 
 	dialog --title $title --yesno "Do you want to install virtualbox-guest-utils (necessary if you want to run X sessions within Arch Linux guest in Virtualbox)?" 0 0
 	if [ $? == 0 ]; then
-		Install $title $isAUR $isGIT "virtualbox-guest-utils"
+		Install $title $isAUR $isGIT $MAKE "virtualbox-guest-utils"
 	fi
 
 	return $?
@@ -565,10 +579,11 @@ function installAURHelper() {
 	title="Installing AUR Helper"
 	isAUR="False"
 	isGIT="True"
+	MAKE="False"
 
 	tempfile=/tmp/archtemp.txt
 	cd $homedir/Documents/aur/
-	InstallAUR $title $isAUR $isGIT "yay"
+	InstallAUR $title $isAUR $isGIT $MAKE "yay"
 
 	chown -R $username:$username $homedir/Documents/aur/yay
 	dialog --title $title --infobox "Installing yay AUR helper" 0 0
@@ -589,16 +604,18 @@ function installWine () {
 	title="Installing Wine"
 	isAUR="False"
 	isGIT="False"
+	MAKE="False"
+
 	dialog --title $title --yesno "Do You want to install Wine?" 0 0
 	if [ $? == 0 ]; then
-		Install $title $isAUR $isGIT "${wine_main[@]}"
+		Install $title $isAUR $isGIT $MAKE "${wine_main[@]}"
 		dialog --title $title --yesno "Do You want to install optional 64-bit dependencies for Wine?" 0 0
 		if [ $? == 0 ]; then
-			Install $title $isAUR $isGIT "${wine_opt_depts[@]}"
+			Install $title $isAUR $isGIT $MAKE "${wine_opt_depts[@]}"
 		fi
 		dialog --title $title --yesno "Do You want to install optional 32-bit dependencies for Wine?" 0 0
 		if [ $? == 0 ]; then
-			Install $title $isAUR $isGIT "${wine_opt_depts_32bit[@]}"
+			Install $title $isAUR $isGIT $MAKE "${wine_opt_depts_32bit[@]}"
 		fi
 	fi
 
@@ -610,20 +627,19 @@ function installWM () {
 	title="Installing Window Manager"
 	isAUR="False"
 	isGIT="True"
+	MAKE="False"
+
 	dialog --title $title --infobox "Install suckless window manager and it's utilities" 0 0
 	sleep 2
 	tempfile=/tmp/archtemp.txt
 	cd $homedir/Documents/git/ 2>>$logfile 1>&2
-	# Install suckless utilities
-	Install $title $isAUR $isGIT ${suckless_utilities[@]}
 
-	for utility in ${suckless_utilities[@]}; do
-		dialog --title $title --infobox "Installing $utility" 0 0
-		cd $utility/
-		make 2>>$logfile 1>&2
-		make clean install 2>>$logfile 1>&2
-		cd ..
-	done
+	# Clone suckless utilities
+	Install $title $isAUR $isGIT $MAKE ${suckless_utilities[@]}
+
+	# Install suckless utilities
+	MAKE="True"
+	Install $title $isAUR $isGIT $MAKE ${suckless_utilities[@]}
 
 	rm -f $tempfile
 
@@ -635,9 +651,11 @@ function extendWM () {
 	title="Install WM Tools"
 	isAUR="False"
 	isGIT="False"
+	MAKE="False"
+
 	dialog --title $title --infobox "Installing additional packages for window manager" 0 0
 	sleep 2
-	Install $title $isAUR $isGIT "${wm_tools[@]}"
+	Install $title $isAUR $isGIT $MAKE "${wm_tools[@]}"
 
 	return $?
 }
@@ -647,6 +665,7 @@ function installFonts () {
 	title="Font Configuration"
 	isAUR="False"
 	isGIT="False"
+	MAKE="False"
 
 	dialog --title $title --infobox "Installing all necessary fonts" 0 0
 	sleep 2
@@ -658,7 +677,7 @@ function installFonts () {
 	rm Hack.zip
 
 	# Install some more fonts with pacman
-	Install $title $isAUR $isGIT "${fonts[@]}"
+	Install $title $isAUR $isGIT $MAKE "${fonts[@]}"
 
 	return $?
 }
@@ -667,17 +686,18 @@ function installVirtualization() {
 	title="Virtualization Software Installation"
 	isAUR="False"
 	isGIT="False"
+	MAKE="False"
 
 	dialog --title $title --yesno "Do you want to install software for virtualization?" 0 0
 	if [ $? == 0 ]; then
 		dialog --title $title --yes-label "Virtualbox" --no-label "QEMU" --yesno "Which software do you want to install?" 0 0
 		if [ $? == 0 ]; then
-			Install $title $isAUR $isGIT "${vbox_utils[@]}"
+			Install $title $isAUR $isGIT $MAKE "${vbox_utils[@]}"
 			isAUR="True"
-			Install $title $isAUR $isGIT "virtualbox-ext-oracle"
+			Install $title $isAUR $isGIT $MAKE "virtualbox-ext-oracle"
 		fi
 		if [ $? == 1 ]; then
-			Install $title $isAUR $isGIT "${qemu[@]}"
+			Install $title $isAUR $isGIT $MAKE "${qemu[@]}"
 			usermod -aG libvirt $username # Add user to libvirt group
 		fi
 	fi
