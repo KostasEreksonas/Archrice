@@ -232,9 +232,7 @@ function configurePass () {
 # Clone dotfiles repository
 function cloneDotfiles () {
 	title="Cloning Dotfiles"
-	isAUR="False"
-	isGIT="True"
-	MAKE="False"
+	isAUR="False" && isGIT="True" && MAKE="False"
 
 	tempfile=/tmp/archtemp.txt
 	cd $homedir/Documents/git/
@@ -289,12 +287,10 @@ function configureBashrc () {
 
 	dialog --title "Configuring Bashrc" --yesno "Do you want to add alias to turn Bluetooth on/off?" 0 0
 	if [ $? == 0 ]; then
-		# Install bluetooth utils
 		title="Installing Bluetooth"
-		isAUR="False"
-		isGIT="False"
-		MAKE="False"
+		isAUR="False" && isGIT="False" && MAKE="False"
 
+		# Install bluetooth utils
 		bluetooth=(bluez bluez-utils)
 		Install $title $isAUR $isGIT $MAKE "${bluetooth[@]}"
 
@@ -330,7 +326,7 @@ function copyConfigs() {
 
 	folders=(dunst gsimplecal picom ranger)
 	for folder in "${folders[@]}"; do
-		dialog --title "Installing Configuration Files" --infobox "Installing $file" 0 0
+		dialog --title "Installing Configuration Files" --infobox "Installing $folder" 0 0
 		cp -r $homedir/Documents/git/Archrice/dotfiles/$folder/ $homedir/.config/$folder/ 2>>$logfile 1>&2
 	done
 
@@ -372,8 +368,7 @@ function configureOwnership() {
 # Customize Vim text editor
 function configureVim () {
 	title="Vim Configuration"
-	isAUR="False"
-	isGIT="False"
+	isAUR="False" && isGIT="False" && MAKE="False"
 
 	tempfile=/tmp/archtemp.txt
 	vimdir=""
@@ -383,7 +378,7 @@ function configureVim () {
 		vimdir=$homedir/.config/nvim/
 		printf "\n\nexport EDITOR=nvim" >> $homedir/.bashrc
 		nvim=(neovim python-neovim)
-		Install $title $isAUR $isGIT "${nvim[@]}"
+		Install $title $isAUR $isGIT $MAKE "${nvim[@]}"
 		dialog --title $title --yesno "Do you want to alias nvim as vim?" 0 0
 		if [ $? == 0 ]; then
 			printf "\n\nalias vim=\'nvim\'" >> $homedir/.bashrc
@@ -401,12 +396,10 @@ function configureVim () {
 	cd $vimdir/bundle/
 
 	# Download Vim plugins
-	isGIT="True"
-	Install $title $isAUR $isGIT ${vim_plugins[@]}
+	isGIT="True" && Install $title $isAUR $isGIT ${vim_plugins[@]}
 
 	# Create a directory in $vimdir to store color themes
-	mkdir $vimdir/colors/
-	cd $vimdir/colors/
+	mkdir $vimdir/colors/ && cd $vimdir/colors/
 
 	# Install additional themes for Vim
 	for theme in ${themes[@]}; do
@@ -444,10 +437,9 @@ function installDependencies () {
 # Synchronize repositories and update existing packages
 function updateSystem () {
 	title="System Update"
-	isAUR="False"
-	isGIT="False"
+	isAUR="False" && isGIT="False" && MAKE="False"
 
-	Install $title $isAUR $isGIT "archlinux-keyring"
+	Install $title $isAUR $isGIT $MAKE "archlinux-keyring"
 	dialog --title "System Update" --infobox "Synchronizing and updating packages" 0 0
 	until pacman --noconfirm -Syyu 2>>$logfile 1>&2; do
 		updateError || break
@@ -473,12 +465,11 @@ function installAURPackage() {
 # Install a package using pacman
 function InstallAUR () {
 	title="Installing AUR Package"
-	isAUR="True"
-	isGIT="False"
+	isAUR="True" && isGIT="False" && MAKE="False"
 
 	dialog --title $title --infobox "Installing packages from AUR" 0 0
 	sleep 1
-	Install $title $isAUR $isGIT "${aur_packages[@]}"
+	Install $title $isAUR $isGIT $MAKE "${aur_packages[@]}"
 
 	return $?
 }
@@ -490,7 +481,7 @@ function InstallAUR () {
 # ${arr[3]} - MAKE flag, "True" is passed if a package needs to be installed using make
 # ${arr[4++]} - array of packages to install with this function
 function Install() {
-	arr=("$@")			# Get given arguments
+	arr=("$@")			# Get given arguments (First 4 arguments get prepended to the array)
 	len=${#arr[@]}		# Get array length
 
 	if [ ${arr[1]} == "False" && ${arr[2]} == "False" && ${arr[3]} == "False" ]; then
@@ -530,9 +521,7 @@ function Install() {
 # Install video card drivers
 function installDrivers () {
 	title="Video Driver Installation"
-	isAUR="False"
-	isGIT="False"
-	MAKE="False"
+	isAUR="False" && isGIT="False" && MAKE="False"
 
 	dialog --title $title --yesno "Do you want to install Intel GPU drivers?" 0 0
 	if [ $? == 0 ]; then
@@ -560,12 +549,9 @@ function installDrivers () {
 # Install system applications
 function installApplications () {
 	title="Installing Base Packages"
-	isAUR="False"
-	isGIT="False"
-	MAKE="False"
+	isAUR="False" && isGIT="False" && MAKE="False"
 
-	dialog --title $title --infobox "Installing base packages" 0 0
-	sleep 2
+	dialog --title $title --infobox "Installing base packages" 0 0 && sleep 2
 	Install $title $isAUR $isGIT $MAKE "${applications[@]}"
 
 	usermod -aG vboxusers $username		# Add user to vboxusers group
@@ -580,9 +566,7 @@ function installApplications () {
 
 function installAURHelper() {
 	title="Installing AUR Helper"
-	isAUR="False"
-	isGIT="True"
-	MAKE="False"
+	isAUR="False" && isGIT="True" && MAKE="False"
 
 	tempfile=/tmp/archtemp.txt
 	cd $homedir/Documents/aur/
@@ -605,9 +589,7 @@ function installAURHelper() {
 # Install Wine compatibility layer
 function installWine () {
 	title="Installing Wine"
-	isAUR="False"
-	isGIT="False"
-	MAKE="False"
+	isAUR="False" && isGIT="False" && MAKE="False"
 
 	dialog --title $title --yesno "Do You want to install Wine?" 0 0
 	if [ $? == 0 ]; then
@@ -628,9 +610,7 @@ function installWine () {
 # Downloads and installs dwm and other suckless utilities
 function installWM () {
 	title="Installing Window Manager"
-	isAUR="False"
-	isGIT="True"
-	MAKE="False"
+	isAUR="False" && isGIT="True" && MAKE="False"
 
 	dialog --title $title --infobox "Install suckless window manager and it's utilities" 0 0
 	sleep 2
@@ -641,8 +621,7 @@ function installWM () {
 	Install $title $isAUR $isGIT $MAKE ${suckless_utilities[@]}
 
 	# Install suckless utilities
-	MAKE="True"
-	Install $title $isAUR $isGIT $MAKE ${suckless_utilities[@]}
+	MAKE="True" && Install $title $isAUR $isGIT $MAKE ${suckless_utilities[@]}
 
 	rm -f $tempfile
 
@@ -652,9 +631,7 @@ function installWM () {
 # Install additional software to extend window manager functionality
 function extendWM () {
 	title="Install WM Tools"
-	isAUR="False"
-	isGIT="False"
-	MAKE="False"
+	isAUR="False" && isGIT="False" && MAKE="False"
 
 	dialog --title $title --infobox "Installing additional packages for window manager" 0 0
 	sleep 2
@@ -666,9 +643,7 @@ function extendWM () {
 # Install system fonts
 function installFonts () {
 	title="Font Configuration"
-	isAUR="False"
-	isGIT="False"
-	MAKE="False"
+	isAUR="False" && isGIT="False" && MAKE="False"
 
 	dialog --title $title --infobox "Installing all necessary fonts" 0 0
 	sleep 2
@@ -687,9 +662,7 @@ function installFonts () {
 
 function installVirtualization() {
 	title="Virtualization Software Installation"
-	isAUR="False"
-	isGIT="False"
-	MAKE="False"
+	isAUR="False" && isGIT="False" && MAKE="False"
 
 	dialog --title $title --yesno "Do you want to install software for virtualization?" 0 0
 	if [ $? == 0 ]; then
