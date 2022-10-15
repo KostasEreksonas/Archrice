@@ -568,7 +568,7 @@ function installAURHelper() {
 
 	tempfile=/tmp/archtemp.txt
 	cd $homedir/Documents/aur/
-	InstallAUR $title $isAUR $isGIT "vim"
+	InstallAUR $title $isAUR $isGIT "yay"
 
 	chown -R $username:$username $homedir/Documents/aur/yay
 	dialog --title $title --infobox "Installing yay AUR helper" 0 0
