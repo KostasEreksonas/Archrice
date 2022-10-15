@@ -291,9 +291,11 @@ function configureBashrc () {
 		# Install bluetooth utils
 		title="Installing Bluetooth"
 		isAUR="False"
+		isGIT="False"
+		MAKE="False"
 
 		bluetooth=(bluez bluez-utils)
-		Install $title $isAUR "${bluetooth[@]}"
+		Install $title $isAUR $isGIT $MAKE "${bluetooth[@]}"
 
 		# Add a Bluetooth banner
 		printf "\n\n#  -----------\n# | Bluetooth |\n#  -----------"
