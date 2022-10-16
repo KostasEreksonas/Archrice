@@ -443,11 +443,11 @@ function InstallAUR () {
 
 # Source: https://askubuntu.com/questions/674333/how-to-pass-an-array-as-function-argument
 # Takes 5 arguments:
-# ${arr[0]} - title of a dialog window
-# ${arr[1]} - isAUR flag, "True" is passed if a package from AUR needs to be installed
-# ${arr[2]} - isGIT flag, "True" is passed if a package from git repo needs to be installed
-# ${arr[3]} - MAKE flag, "True" is passed if a package needs to be installed using make
-# ${arr[4++]} - array of packages to install with this function
+# $title - title of a dialog window
+# $isAUR - isAUR flag, "True" is passed if a package from AUR needs to be installed
+# $isGIT - isGIT flag, "True" is passed if a package from git repo needs to be installed
+# $MAKE - MAKE flag, "True" is passed if a package needs to be installed using make
+# ${arr[@]} - array of packages to install with this function
 function Install() {
 	# Grab first arguments and shift the remaining ones to the left
 	local title="$1" && local isAUR="$2" && local isGIT="$3" && local MAKE="$4" && shift 4
