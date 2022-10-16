@@ -520,7 +520,7 @@ function installAURHelper() {
 	title="Installing AUR Helper" && isAUR="False" && isGIT="True" && MAKE="False"
 
 	tempfile=/tmp/archtemp.txt
-	cd $homedir/Documents/aur/ && InstallAUR $title $isAUR $isGIT $MAKE "yay"
+	cd $homedir/Documents/aur/ && Install $title $isAUR $isGIT $MAKE "yay"
 
 	chown -R $username:$username $homedir/Documents/aur/yay
 	dialog --title $title --infobox "Installing yay AUR helper" 0 0
