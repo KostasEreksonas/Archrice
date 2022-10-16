@@ -441,6 +441,7 @@ function InstallAUR () {
 	return $?
 }
 
+# Source: https://askubuntu.com/questions/674333/how-to-pass-an-array-as-function-argument
 # Takes 5 arguments:
 # ${arr[0]} - title of a dialog window
 # ${arr[1]} - isAUR flag, "True" is passed if a package from AUR needs to be installed
@@ -448,27 +449,28 @@ function InstallAUR () {
 # ${arr[3]} - MAKE flag, "True" is passed if a package needs to be installed using make
 # ${arr[4++]} - array of packages to install with this function
 function Install() {
-	arr=("$@")			# Get given arguments (First 4 arguments get prepended to the array)
-	len=${#arr[@]}		# Get array length
+	# Grab first arguments and shift the remaining ones to the left
+	local title="$1" && local isAUR="$2" && local isGIT="$3" && local MAKE="$4" && shift 4
+	local arr=("$@") && local len=${#arr[@]} # Grab elements of an array and it's length
 
-	if [[ ${arr[1]} == "False" && ${arr[2]} == "False" && ${arr[3]} == "False" ]]; then
-		for (( i=4; i<$len; i++ )); do
-			until dialog --title ${arr[0]} --infobox "Installing ${arr[$i]}" 0 0 && installPackage ${arr[$i]}; do installError ${arr[$i]} || break; done
+	if [[ "$isAUR" == "False" && "$isGIT" == "False" && "$MAKE" == "False" ]]; then
+		for i in ${arr[@]}; do
+			until dialog --title $title --infobox "Installing ${arr[$i]}" 0 0 && installPackage ${arr[$i]}; do installError ${arr[$i]} || break; done
 		done
 	fi
-	if [[ ${arr[1]} == "True" && ${arr[2]} == "False" && ${arr[3]} == "False" ]]; then
-		for (( i=4; i<$len; i++ )); do
-			until dialog --title ${arr[0]} --infobox "Installing ${arr[$i]}" 0 0 && installAURPackage ${arr[$i]}; do installError ${arr[$i]} || break; done
+	if [[ "$isAUR" == "True" && "$isGIT" == "False" && "$MAKE" == "False" ]]; then
+		for i in ${arr[@]}; do
+			until dialog --title $title --infobox "Installing ${arr[$i]}" 0 0 && installAURPackage ${arr[$i]}; do installError ${arr[$i]} || break; done
 		done
 	fi
-	if [[ ${arr[1]} == "False" && ${arr[2]} == "True" && ${arr[3]} == "False" ]]; then
-		for (( i=4; i<$len; i++ )); do
-			until dialog --title ${arr[0]} --infobox "Cloning $i" 0 0 && git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$tempfile 1>&2; do gitError || break; done
+	if [[ "$isAUR" == "False" && "$isGIT" == "True" && "$MAKE" == "False" ]]; then
+		for i in ${arr[@]}; do
+			until dialog --title $title --infobox "Cloning $i" 0 0 && git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$tempfile 1>&2; do gitError || break; done
 		done
 	fi
-	if [[ ${arr[1]} == "False" && ${arr[2]} == "False" && ${arr[3]} == "True" ]]; then
-		for (( i=4; i<$len; i++ )); do
-			dialog --title ${arr[0]} --infobox "Installing $i" 0 0
+	if [[ "$isAUR" == "False" && "$isGIT" == "False" && "$MAKE" == "True" ]]; then
+		for i in ${arr[@]}; do
+			dialog --title $title --infobox "Installing $i" 0 0
 			cd $i/ && make 2>>$logfile 1>&2 && make clean install 2>>$logfile 1>&2 && cd ..
 		done
 	fi
