@@ -451,22 +451,22 @@ function Install() {
 	arr=("$@")			# Get given arguments (First 4 arguments get prepended to the array)
 	len=${#arr[@]}		# Get array length
 
-	if [ ${arr[1]} == "False" && ${arr[2]} == "False" && ${arr[3]} == "False" ]; then
+	if [[ ${arr[1]} == "False" && ${arr[2]} == "False" && ${arr[3]} == "False" ]]; then
 		for (( i=4; i<$len; i++ )); do
 			until dialog --title ${arr[0]} --infobox "Installing ${arr[$i]}" 0 0 && installPackage ${arr[$i]}; do installError ${arr[$i]} || break; done
 		done
 	fi
-	if [ ${arr[1]} == "True" && ${arr[2]} == "False" && ${arr[3]} == "False" ]; then
+	if [[ ${arr[1]} == "True" && ${arr[2]} == "False" && ${arr[3]} == "False" ]]; then
 		for (( i=4; i<$len; i++ )); do
 			until dialog --title ${arr[0]} --infobox "Installing ${arr[$i]}" 0 0 && installAURPackage ${arr[$i]}; do installError ${arr[$i]} || break; done
 		done
 	fi
-	if [ ${arr[1]} == "False" && ${arr[2]} == "True" && ${arr[3]} == "False" ]; then
+	if [[ ${arr[1]} == "False" && ${arr[2]} == "True" && ${arr[3]} == "False" ]]; then
 		for (( i=4; i<$len; i++ )); do
 			until dialog --title ${arr[0]} --infobox "Cloning $i" 0 0 && git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$tempfile 1>&2; do gitError || break; done
 		done
 	fi
-	if [ ${arr[1]} == "False" && ${arr[2]} == "False" && ${arr[3]} == "True" ]; then
+	if [[ ${arr[1]} == "False" && ${arr[2]} == "False" && ${arr[3]} == "True" ]]; then
 		for (( i=4; i<$len; i++ )); do
 			dialog --title ${arr[0]} --infobox "Installing $i" 0 0
 			cd $i/ && make 2>>$logfile 1>&2 && make clean install 2>>$logfile 1>&2 && cd ..
