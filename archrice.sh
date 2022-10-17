@@ -238,36 +238,36 @@ function configureBashrc () {
 	alias="" && SSID="" && title="Configuring Bashrc"
 	cd $homedir/ && cp $homedir/Documents/git/Archrice/dotfiles/.bashrc $homedir/.bashrc 2>>$logfile 1>&2
 
-	dialog --title $title --infobox "Appending $homedir/.local/bin/ to PATH" 0 0 && sleep 2
+	dialog --title "$title" --infobox "Appending $homedir/.local/bin/ to PATH" 0 0 && sleep 2
 	sed -i "13s/username/$username/" .bashrc 2>>$logfile 1>&2
 
 	# Create an alias for connecting to Wi-Fi network and add it's password to password store
-	dialog --title $title --yesno "Should an alias for connecting to wireless/hotspot network be added? " 0 0
+	dialog --title "$title" --yesno "Add an alias for connecting to wireless/hotspot network? " 0 0
 	if [ $? == 0 ]; then
 		printf "\n\n#  -------\n# | Wi-Fi |\n#  -------" >> .bashrc
 		mkdir -p $homedir/.password-store/wifi/ && chown -R $username:$username $homedir/.password-store/wifi/
 		while [ $? == 0 ]; do
 			unset alias && unset SSID
-			alias=$(dialog --stdout --title $title --inputbox "Enter name of an alias:" 0 0)
-			SSID=$(dialog --stdout --title $title --inputbox "Enter SSID of your Wireless network:" 0 0)
-			dialog --title $title --msgbox "Now You will be prompted to enter a password for $SSID" 0 0
+			alias=$(dialog --stdout --title "$title" --inputbox "Enter name of an alias:" 0 0)
+			SSID=$(dialog --stdout --title "$title" --inputbox "Enter SSID of your Wireless network:" 0 0)
+			dialog --title "$title" --msgbox "Now You will be prompted to enter a password for $SSID" 0 0
 			chown -R $username:$username /dev/tty1 && runuser -u $username -- pass add $SSID && chown -R root:root /dev/tty1
 			mv $homedir/.password-store/$SSID.gpg $homedir/.password-store/wifi/$SSID.gpg
-			dialog --title $title --infobox "Creating an $alias alias for $SSID" 0 0 && sleep 1
+			dialog --title "$title" --infobox "Creating an $alias alias for $SSID" 0 0 && sleep 1
 			printf "\n\nalias $alias=\'nmcli device wifi connect $SSID password \`pass wifi/$SSID\`\'" >> .bashrc
-			dialog --title $title --yesno "Do you want to add an alias for another Wireless network?" 0 0
+			dialog --title "$title" --yesno "Do you want to add an alias for another Wireless network?" 0 0
 			if [ $? != 0 ]; then break; fi
 		done
 	fi
 
-	dialog --title $title --yesno "Do you want to add alias to list all available Wireless networks?" 0 0
+	dialog --title "$title" --yesno "Do you want to add alias to list all available Wireless networks?" 0 0
 	if [ $? == 0 ]; then
 		unset alias
-		alias=$(dialog --stdout --title $title --inputbox "Enter name of an alias:" 0 0)
+		alias=$(dialog --stdout --title "$title" --inputbox "Enter name of an alias:" 0 0)
 		printf "\n\nalias $alias=\'nmcli device wifi list\'" >> .bashrc
 	fi
 
-	dialog --title $title --yesno "Do you want to add alias to turn Bluetooth on/off?" 0 0
+	dialog --title "$title" --yesno "Do you want to add alias to turn Bluetooth on/off?" 0 0
 	if [ $? == 0 ]; then
 		title="Installing Bluetooth" && isAUR="False" && isGIT="False" && MAKE="False"
 		bluetooth=(bluez bluez-utils)
@@ -278,12 +278,12 @@ function configureBashrc () {
 		printf "\n\n#  -----------\n# | Bluetooth |\n#  -----------"
 		# Alias to turn bluetooth on
 		unset alias
-		alias=$(dialog --stdout --title $title --inputbox "Enter an alias to turn Bluetooth on:" 0 0)
+		alias=$(dialog --stdout --title "$title" --inputbox "Enter an alias to turn Bluetooth on:" 0 0)
 		printf "alias $alias=\'systemctl start bluetooth.service\'\n\n" >> .bashrc
 
 		# Alias to turn bluetooth off
 		unset alias
-		alias=$(dialog --stdout --title $title --inputbox "Enter an alias to turn Bluetooth off:" 0 0)
+		alias=$(dialog --stdout --title "$title" --inputbox "Enter an alias to turn Bluetooth off:" 0 0)
 		printf "alias $alias=\'systemctl stop bluetooth.service\'\n\n" >> .bashrc
 	fi
 
@@ -354,23 +354,23 @@ function configureVim () {
 		vimdir=$homedir/.config/nvim/
 		printf "\n\nexport EDITOR=nvim" >> $homedir/.bashrc
 		nvim=(neovim python-neovim)
-		Install $title $isAUR $isGIT $MAKE "${nvim[@]}"
-		dialog --title $title --yesno "Do you want to alias nvim as vim?" 0 0
+		Install "$title" "$isAUR" "$isGIT" "$MAKE" "${nvim[@]}"
+		dialog --title "$title" --yesno "Do you want to alias nvim as vim?" 0 0
 		if [ $? == 0 ]; then printf "\n\nalias vim=\'nvim\'" >> $homedir/.bashrc; fi
 	elif [ $choice == 1 ]; then # Choice == vim
 		vimdir=$homedir/.vim/
-		Install $title $isAUR $isGIT "vim"
+		Install "$title" "$isAUR" "$isGIT" "$MAKE" "vim"
 	fi
 
 	# Install Pathogen plugin manager
-	dialog --title $title --infobox "Installing Vim plugin manager" 0 0
+	dialog --title "$title" --infobox "Installing Vim plugin manager" 0 0
 	mkdir -p $vimdir/autoload $vimdir/bundle && curl -LSso $vimdir/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 
 	# Go into plugin directory
 	cd $vimdir/bundle/
 
 	# Download Vim plugins
-	isGIT="True" && Install "$title" "$isAUR" "$isGIT" ${vim_plugins[@]}
+	isGIT="True" && Install "$title" "$isAUR" "$isGIT" "$MAKE" ${vim_plugins[@]}
 
 	# Create a directory in $vimdir to store color themes
 	mkdir $vimdir/colors/ && cd $vimdir/colors/
@@ -381,7 +381,7 @@ function configureVim () {
 	done
 
 	# Copy .vimrc config file from dotfiles
-	dialog --title $title --infobox "Copying configuration to the user $username home directory" 0 0
+	dialog --title "$title" --infobox "Copying configuration to the user $username home directory" 0 0
 	if [ $choice == 0 ]; then
 		cp /home/$username/Documents/git/Archrice/dotfiles/.vimrc $vimdir/init.vim 2>>$logfile 1>&2
 	elif [ $choice == 1 ]; then
@@ -412,7 +412,7 @@ function installDependencies () {
 function updateSystem () {
 	title="System Update" && isAUR="False" && isGIT="False" && MAKE="False"
 	Install "$title" "$isAUR" "$isGIT" "$MAKE" "archlinux-keyring"
-	dialog --title "System Update" --infobox "Synchronizing and updating packages" 0 0
+	dialog --title "$title" --infobox "Synchronizing and updating packages" 0 0
 	until pacman --noconfirm -Syyu 2>>$logfile 1>&2; do updateError || break; done
 
 	return $?
@@ -435,7 +435,7 @@ function installAURPackage() {
 # Install a package using pacman
 function InstallAUR () {
 	title="Installing AUR Package" && isAUR="True" && isGIT="False" && MAKE="False"
-	dialog --title $title --infobox "Installing packages from AUR" 0 0 && sleep 1
+	dialog --title "$title" --infobox "Installing packages from AUR" 0 0 && sleep 1
 	Install "$title" "$isAUR" "$isGIT" "$MAKE" "${aur_packages[@]}"
 
 	return $?
@@ -455,22 +455,22 @@ function Install() {
 
 	if [[ "$isAUR" == "False" && "$isGIT" == "False" && "$MAKE" == "False" ]]; then
 		for i in ${arr[@]}; do
-			until dialog --title $title --infobox "Installing ${arr[$i]}" 0 0 && installPackage ${arr[$i]}; do installError ${arr[$i]} || break; done
+			until dialog --title "$title" --infobox "Installing ${arr[$i]}" 0 0 && installPackage ${arr[$i]}; do installError ${arr[$i]} || break; done
 		done
 	fi
 	if [[ "$isAUR" == "True" && "$isGIT" == "False" && "$MAKE" == "False" ]]; then
 		for i in ${arr[@]}; do
-			until dialog --title $title --infobox "Installing ${arr[$i]}" 0 0 && installAURPackage ${arr[$i]}; do installError ${arr[$i]} || break; done
+			until dialog --title "$title" --infobox "Installing ${arr[$i]}" 0 0 && installAURPackage ${arr[$i]}; do installError ${arr[$i]} || break; done
 		done
 	fi
 	if [[ "$isAUR" == "False" && "$isGIT" == "True" && "$MAKE" == "False" ]]; then
 		for i in ${arr[@]}; do
-			until dialog --title $title --infobox "Cloning $i" 0 0 && git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$tempfile 1>&2; do gitError || break; done
+			until dialog --title "$title" --infobox "Cloning $i" 0 0 && git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$tempfile 1>&2; do gitError || break; done
 		done
 	fi
 	if [[ "$isAUR" == "False" && "$isGIT" == "False" && "$MAKE" == "True" ]]; then
 		for i in ${arr[@]}; do
-			dialog --title $title --infobox "Installing $i" 0 0
+			dialog --title "$title" --infobox "Installing $i" 0 0
 			cd $i/ && make 2>>$logfile 1>&2 && make clean install 2>>$logfile 1>&2 && cd ..
 		done
 	fi
@@ -482,15 +482,15 @@ function Install() {
 function installDrivers () {
 	title="Video Driver Installation" && isAUR="False" && isGIT="False" && MAKE="False"
 
-	dialog --title $title --yesno "Do you want to install Intel GPU drivers?" 0 0
+	dialog --title "$title" --yesno "Do you want to install Intel GPU drivers?" 0 0
 	if [ $? == 0 ]; then Install "$title" "$isAUR" "$isGIT" "$MAKE" "${intel_igpu_drivers[@]}"; fi
 
-	dialog --title $title --yesno "Do you want to install AMD GPU drivers?" 0 0
+	dialog --title "$title" --yesno "Do you want to install AMD GPU drivers?" 0 0
 	if [ $? == 0 ]; then Install "$title" "$isAUR" "$isGIT" "$MAKE" "xf86-video-amdgpu"; fi
 
-	dialog --title $title --yesno "Do you want to install Nvidia GPU drivers?" 0 0
+	dialog --title "$title" --yesno "Do you want to install Nvidia GPU drivers?" 0 0
 	if [ $? == 0 ]; then
-		dialog --title $title --yes-label "Proprietary" --no-label "Open Source" --yesno "Would you like to install proprietary or open source Nvidia GPU drivers?" 0 0
+		dialog --title "$title" --yes-label "Proprietary" --no-label "Open Source" --yesno "Would you like to install proprietary or open source Nvidia GPU drivers?" 0 0
 		if [ $? == 0 ]; then
 			Install "$title" "$isAUR" "$isGIT" "$MAKE" "${nvidia_dgpu_drivers_proprietary[@]}"
 		else
@@ -505,12 +505,12 @@ function installDrivers () {
 function installApplications () {
 	title="Installing Base Packages" && isAUR="False" && isGIT="False" && MAKE="False"
 
-	dialog --title $title --infobox "Installing base packages" 0 0 && sleep 2
+	dialog --title "$title" --infobox "Installing base packages" 0 0 && sleep 2
 	Install "$title" "$isAUR" "$isGIT" "$MAKE" "${applications[@]}"
 
 	usermod -aG vboxusers $username		# Add user to vboxusers group
 
-	dialog --title $title --yesno "Do you want to install virtualbox-guest-utils (necessary if you want to run X sessions within Arch Linux guest in Virtualbox)?" 0 0
+	dialog --title "$title" --yesno "Do you want to install virtualbox-guest-utils (necessary if you want to run X sessions within Arch Linux guest in Virtualbox)?" 0 0
 	if [ $? == 0 ]; then Install "$title" "$isAUR" "$isGIT" "$MAKE" "virtualbox-guest-utils"; fi
 
 	return $?
@@ -523,10 +523,10 @@ function installAURHelper() {
 	cd $homedir/Documents/aur/ && Install "$title" "$isAUR" "$isGIT" "$MAKE" "yay"
 
 	chown -R $username:$username $homedir/Documents/aur/yay
-	dialog --title $title --infobox "Installing yay AUR helper" 0 0
+	dialog --title "$title" --infobox "Installing yay AUR helper" 0 0
 	cd $homedir/Documents/aur/yay/
 	until sudo -u $username makepkg --noconfirm -si 2>>$logfile 1>&2; do installError yay || break; done
-	dialog --title $title --infobox "AUR helper installed" 0 0 && sleep 1
+	dialog --title "$title" --infobox "AUR helper installed" 0 0 && sleep 1
 
 	rm -f $tempfile
 
@@ -537,12 +537,12 @@ function installAURHelper() {
 function installWine () {
 	title="Installing Wine" && isAUR="False" && isGIT="False" && MAKE="False"
 
-	dialog --title $title --yesno "Do You want to install Wine?" 0 0
+	dialog --title "$title" --yesno "Do You want to install Wine?" 0 0
 	if [ $? == 0 ]; then
 		Install "$title" "$isAUR" "$isGIT" "$MAKE" "${wine_main[@]}"
-		dialog --title $title --yesno "Do You want to install optional 64-bit dependencies for Wine?" 0 0
+		dialog --title "$title" --yesno "Do You want to install optional 64-bit dependencies for Wine?" 0 0
 		if [ $? == 0 ]; then Install "$title" "$isAUR" "$isGIT" "$MAKE" "${wine_opt_depts[@]}"; fi
-		dialog --title $title --yesno "Do You want to install optional 32-bit dependencies for Wine?" 0 0
+		dialog --title "$title" --yesno "Do You want to install optional 32-bit dependencies for Wine?" 0 0
 		if [ $? == 0 ]; then Install "$title" "$isAUR" "$isGIT" "$MAKE" "${wine_opt_depts_32bit[@]}"; fi
 	fi
 
@@ -553,9 +553,8 @@ function installWine () {
 function installWM () {
 	title="Installing Window Manager" && isAUR="False" && isGIT="True" && MAKE="False"
 
-	dialog --title $title --infobox "Install suckless window manager and it's utilities" 0 0 && sleep 2
-	tempfile=/tmp/archtemp.txt
-	cd $homedir/Documents/git/ 2>>$logfile 1>&2
+	dialog --title "$title" --infobox "Install suckless window manager and it's utilities" 0 0 && sleep 2
+	tempfile=/tmp/archtemp.txt && cd $homedir/Documents/git/ 2>>$logfile 1>&2
 
 	# Clone suckless utilities
 	Install "$title" "$isAUR" "$isGIT" "$MAKE" ${suckless_utilities[@]}
@@ -572,7 +571,7 @@ function installWM () {
 function extendWM () {
 	title="Install WM Tools" && isAUR="False" && isGIT="False" && MAKE="False"
 
-	dialog --title $title --infobox "Installing additional packages for window manager" 0 0 && sleep 2
+	dialog --title "$title" --infobox "Installing additional packages for window manager" 0 0 && sleep 2
 	Install "$title" "$isAUR" "$isGIT" "$MAKE" "${wm_tools[@]}"
 
 	return $?
@@ -582,16 +581,14 @@ function extendWM () {
 function installFonts () {
 	title="Font Configuration" && isAUR="False" && isGIT="False" && MAKE="False"
 
-	dialog --title $title --infobox "Installing all necessary fonts" 0 0 && sleep 2
+	dialog --title "$title" --infobox "Installing all necessary fonts" 0 0 && sleep 2
 	cd $homedir/.local/share/fonts
-	dialog --title $title --infobox "Downloading Hack Nerd font" 0 0
+	dialog --title "$title" --infobox "Downloading Hack Nerd font" 0 0
 	wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/Hack.zip 2>>$logfile 1>&2
-	dialog --title $title --infobox "Extracting Hack Nerd font" 0 0
-	7z x Hack.zip 2>>$logfile 1>&2
-	rm Hack.zip
+	dialog --title "$title" --infobox "Extracting Hack Nerd font" 0 0
+	7z x Hack.zip 2>>$logfile 1>&2 && rm Hack.zip
 
-	# Install some more fonts with pacman
-	Install "$title" "$isAUR" "$isGIT" "$MAKE" "${fonts[@]}"
+	Install "$title" "$isAUR" "$isGIT" "$MAKE" "${fonts[@]}"	# Install some more fonts with pacman
 
 	return $?
 }
@@ -599,9 +596,9 @@ function installFonts () {
 function installVirtualization() {
 	title="Virtualization Software Installation" && isAUR="False" && isGIT="False" && MAKE="False"
 
-	dialog --title $title --yesno "Do you want to install software for virtualization?" 0 0
+	dialog --title "$title" --yesno "Do you want to install software for virtualization?" 0 0
 	if [ $? == 0 ]; then
-		dialog --title $title --yes-label "Virtualbox" --no-label "QEMU" --yesno "Which software do you want to install?" 0 0
+		dialog --title "$title" --yes-label "Virtualbox" --no-label "QEMU" --yesno "Which software do you want to install?" 0 0
 		if [ $? == 0 ]; then
 			Install "$title" "$isAUR" "$isGIT" "$MAKE" "${vbox_utils[@]}"
 			isAUR="True" && Install "$title" "$isAUR" "$isGIT" "$MAKE" "virtualbox-ext-oracle"
@@ -625,11 +622,9 @@ function dependencyError () {
 	printf "Failed to install package $1. Error message: $(grep $1 $logfile | tail -1). Do you want to retry downloading package $1?\nChoice (Yes/No): "
 	read choice
 	if [ $choice == "Yes" ]; then
-		printf "Retrying to install $1 in 5 seconds\n" && sleep 5
-		return 0
+		printf "Retrying to install $1 in 5 seconds\n" && sleep 5 && return 0
 	else
-		printf "Failed to install script dependecy $1. Installation aborting.\n"
-		exit 1
+		printf "Failed to install script dependecy $1. Installation aborting.\n" && exit 1
 	fi
 }
 
@@ -651,12 +646,12 @@ function updateError() {
 function installError () {
 	sleep 1 && title="Package Installation Error"
 	error=$(grep $1 $logfile | tail -1)
-	dialog --title $title --yesno "Could not install $1. Error message: $error. Do you want to retry the installation process? (Warning: if you choose No, some packages will not be installed)" 0 0
+	dialog --title "$title" --yesno "Could not install $1. Error message: $error. Do you want to retry the installation process? (Warning: if you choose No, some packages will not be installed)" 0 0
 	if [ $? == 0 ]; then
-		dialog --title $title --infobox "Retrying to install $1 in 5 seconds" 0 0 && sleep 5
+		dialog --title "$title" --infobox "Retrying to install $1 in 5 seconds" 0 0 && sleep 5
 		return 0
 	else
-		dialog --title $title --msgbox "Package $1 not installed" 0 0
+		dialog --title "$title" --msgbox "Package $1 not installed" 0 0
 		return 1
 	fi
 }
@@ -664,12 +659,11 @@ function installError () {
 # Display this message when there is an error when creating user
 function userError() {
 	title="User Creation Error"
-	dialog --title $title --yesno "Passwords for $username do not match. Do you want to try again?" 0 0
+	dialog --title "$title" --yesno "Passwords for $username do not match. Do you want to try again?" 0 0
 	if [ $? == 0 ]; then
 		return 0
 	else
-		dialog --title $title --msgbox "Password for $username was not created" 0 0
-		return 1
+		dialog --title $title --msgbox "Password for $username was not created" 0 0 && return 1
 	fi
 }
 
@@ -678,15 +672,15 @@ function gitError () {
 	title="Error Cloning Git Repository"
 	error=$(grep "Could not resolve host: github.com" $tempfile)
 	if [ $? == 0 ]; then
-		dialog --title $title --yesno "Failed to clone $1. Error message: $error Do you want to retry?" 0 0
+		dialog --title "$title" --yesno "Failed to clone $1. Error message: $error Do you want to retry?" 0 0
 		choice=$?
 		if [ $choice == 0 ]; then
-			dialog --title $title --infobox "Retrying to clone $1 in 5 seconds" 0 0
+			dialog --title "$title" --infobox "Retrying to clone $1 in 5 seconds" 0 0
 			cat $tempfile >> $logfile
 			> $tempfile && sleep 5
 			return $choice
 		else
-			dialog --title $title --msgbox "Failed to clone $1. Some features will not be installed" 0 0
+			dialog --title "$title" --msgbox "Failed to clone $1. Some features will not be installed" 0 0
 			cat $tempfile >> $logfile
 			> $tempfile
 			return $choice
@@ -714,8 +708,7 @@ function createUser() {
 		if [ -z $name ]; then
 			dialog --title "User Creation" --msgbox "Username cannot be empty. Try again" 0 0
 		else
-			homedir=/home/$name
-			username=$name && useradd -m $name
+			homedir=/home/$name && username=$name && useradd -m $name
 		fi
 	done
 
@@ -757,11 +750,9 @@ function createUser() {
 		password=$(dialog --stdout --title "User Creation" --passwordbox "Enter password for user $name:" 0 0)
 		passcheck=$(dialog --stdout --title "User Creation" --passwordbox "Re-enter password for user $name:" 0 0)
 		if [ $password != $passcheck ]; then
-			unset $passcheck
-			userError $name || break
+			unset $passcheck && userError $name || break
 		else
-			unset $passcheck
-			echo "$name:$password" | chpasswd
+			unset $passcheck && echo "$name:$password" | chpasswd
 		fi
 	done
 
