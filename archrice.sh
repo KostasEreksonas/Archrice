@@ -663,7 +663,7 @@ function userError() {
 	if [ $? == 0 ]; then
 		return 0
 	else
-		dialog --title $title --msgbox "Password for $username was not created" 0 0 && return 1
+		dialog --title "$title" --msgbox "Password for $username was not created" 0 0 && return 1
 	fi
 }
 
