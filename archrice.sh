@@ -454,22 +454,22 @@ function Install() {
 	local arr=("$@") && local len=${#arr[@]} # Grab elements of an array and it's length
 
 	if [[ "$isAUR" == "False" && "$isGIT" == "False" && "$MAKE" == "False" ]]; then
-		for i in ${arr[@]}; do
+		for i in "${arr[@]}"; do
 			until dialog --title "$title" --infobox "Installing ${arr[$i]}" 0 0 && installPackage ${arr[$i]}; do installError ${arr[$i]} || break; done
 		done
 	fi
 	if [[ "$isAUR" == "True" && "$isGIT" == "False" && "$MAKE" == "False" ]]; then
-		for i in ${arr[@]}; do
+		for i in "${arr[@]}"; do
 			until dialog --title "$title" --infobox "Installing ${arr[$i]}" 0 0 && installAURPackage ${arr[$i]}; do installError ${arr[$i]} || break; done
 		done
 	fi
 	if [[ "$isAUR" == "False" && "$isGIT" == "True" && "$MAKE" == "False" ]]; then
-		for i in ${arr[@]}; do
+		for i in "${arr[@]}"; do
 			until dialog --title "$title" --infobox "Cloning $i" 0 0 && git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$tempfile 1>&2; do gitError || break; done
 		done
 	fi
 	if [[ "$isAUR" == "False" && "$isGIT" == "False" && "$MAKE" == "True" ]]; then
-		for i in ${arr[@]}; do
+		for i in "${arr[@]}"; do
 			dialog --title "$title" --infobox "Installing $i" 0 0
 			cd $i/ && make 2>>$logfile 1>&2 && make clean install 2>>$logfile 1>&2 && cd ..
 		done
