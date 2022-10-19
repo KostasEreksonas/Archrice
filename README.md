@@ -52,6 +52,10 @@ For my custom build of dwm, I made a few scripts to enhance it's functionality.
 
 For dwmblocks statusbar I made several scripts that are used for system monitoring.
 
+* [extendDisplays](.local/bin/extendDisplays) - a script to extend multi-displays and make it permanent.
+* [openmutt](.local/bin/openmutt) - a script to open mutt with a dwm shortcut.
+* [openranger](.local/bin/openranger) - a script to open ranger with a dwm shortcut.
+* [openvim](.local/bin/openvim) - a script to open vim with a dwm shortcut.
 * [sb-battery](.local/bin/sb-battery) - display battery status and charge level.
 * [sb-brightness](.local/bin/sb-brightness) - display screen brightness percentage.
 * [sb-clock](.local/bin/sb-clock) - show current date and time.
