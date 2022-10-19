@@ -442,7 +442,7 @@ function InstallAUR () {
 }
 
 # Source: https://askubuntu.com/questions/674333/how-to-pass-an-array-as-function-argument
-# Takes 5 arguments:
+# This function takes 5 arguments:
 # $title - title of a dialog window
 # $isAUR - isAUR flag, "True" is passed if a package from AUR needs to be installed
 # $isGIT - isGIT flag, "True" is passed if a package from git repo needs to be installed
