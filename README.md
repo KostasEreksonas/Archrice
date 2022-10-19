@@ -44,7 +44,7 @@ For my custom build of dwm, I made a few scripts to enhance it's functionality.
 * [locker](system_scripts/locker) -	terminal based menu with power management options.
 ![Locker script](/images/locker_script.png)
 * [screenshot](system_scripts/screenshot) - a simple script for taking a screenshot of an active window.
-* [screenshot clipboard](system_scripts/screenshot_clipboard) - a script to choose a part of the screen and save it to clipboard. 
+* [screenshot clipboard](system_scripts/screenshot_clipboard) - a script to choose a part of the screen and save it to clipboard.
 * [paste clipboard](system_scripts/paste_clipboard) - paste the clipboard contents to an image file at ~/Photos/Screenshots.
 * [piper](system_scripts/piper) - a script I got from [a paste in arza[.]us](http://arza.us/paste/piper) and is used to open links from dmenu with predefined software.
 
@@ -52,17 +52,17 @@ For my custom build of dwm, I made a few scripts to enhance it's functionality.
 
 For dwmblocks statusbar I made several scripts that are used for system monitoring.
 
-* [sb-battery](statusbar/sb-battery) - display battery status and charge level.
-* [sb-brightness](statusbar/sb-brightness) - display screen brightness percentage.
-* [sb-clock](statusbar/sb-clock) - show current date and time.
-* [sb-cpu_freq](statusbar/sb-cpu_freq) - show current CPU frequency.
-* [sb-cpu_temp](statusbar/sb-cpu_temp) - show current CPU temperature.
-* [sb-cpu_usage](statusbar/sb-cpu_usage) - show current CPU usage.
-* [sb-kernel](statusbar/sb-kernel) - show current kernel version.
-* [sb-memory](statusbar/sb-memory) - show memory usage.
-* [sb-network](statusbar/sb-network) - show SSID and IP address of last connected wireless network.
-* [sb-shutdown](statusbar/sb-shutdown) - open a terminal with a locker script terminal-based menu with power options.
-* [sb-volume](statusbar/sb-volume) - show volume level.
+* [sb-battery](.local/bin/sb-battery) - display battery status and charge level.
+* [sb-brightness](.local/bin/sb-brightness) - display screen brightness percentage.
+* [sb-clock](.local/bin/sb-clock) - show current date and time.
+* [sb-cpu_freq](.local/bin/sb-cpu_freq) - show current CPU frequency.
+* [sb-cpu_temp](.local/bin/sb-cpu_temp) - show current CPU temperature.
+* [sb-cpu_usage](.local/bin/sb-cpu_usage) - show current CPU usage.
+* [sb-kernel](.local/bin/sb-kernel) - show current kernel version.
+* [sb-memory](.local/bin/sb-memory) - show memory usage.
+* [sb-network](.local/bin/sb-network) - show SSID and IP address of last connected wireless network.
+* [sb-shutdown](.local/bin/sb-shutdown) - open a terminal with a locker script terminal-based menu with power options.
+* [sb-volume](.local/bin/sb-volume) - show volume level.
 
 ## Aliases
 
