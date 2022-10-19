@@ -456,19 +456,30 @@ function Install() {
 	if [[ "$isAUR" == "False" && "$isGIT" == "False" && "$MAKE" == "False" ]]; then
 		for i in "${arr[@]}"; do
 			until dialog --title "$title" --infobox "Installing $i" 0 0 && installPackage $i; do
-				installError $i || break; done
+				installError $i || break
+			done
 		done
 	fi
 	if [[ "$isAUR" == "True" && "$isGIT" == "False" && "$MAKE" == "False" ]]; then
 		for i in "${arr[@]}"; do
 			until dialog --title "$title" --infobox "Installing $i" 0 0 && installAURPackage $i; do
-				installError $i || break; done
+				installError $i || break
+			done
 		done
 	fi
 	if [[ "$isAUR" == "False" && "$isGIT" == "True" && "$MAKE" == "False" ]]; then
 		for i in "${arr[@]}"; do
-			until dialog --title "$title" --infobox "Cloning $i" 0 0 && git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$tempfile 1>&2; do
-				gitError || break; done
+			if [ "$i" == "preservim/nerdtree" ]; then
+				until dialog --title "$title" --infobox "Cloning $i" 0 0 && \
+					git clone --quiet https://github.com/$i.git 2>>$tempfile 1>&2; do
+					gitError || break
+				done
+			else
+				until dialog --title "$title" --infobox "Cloning $i" 0 0 && \
+					git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$tempfile 1>&2; do
+					gitError || break
+				done
+			fi
 		done
 	fi
 	if [[ "$isAUR" == "False" && "$isGIT" == "False" && "$MAKE" == "True" ]]; then
