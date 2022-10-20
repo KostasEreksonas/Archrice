@@ -16,11 +16,9 @@ if [ $displayCount -gt 1 ]; then
 			dialog --title "Display Configuration" --yes-label "Right of" --no-label "Left of" \
 				--yesno "Do you wan the secondary display right of or left of the primary one?" 0 0
 			if [ $? == 0 ]; then
-				printf " --output $secondary --right-of $primary --auto" >> ~/.xprofile
-				unset secondary
+				printf " --output $secondary --right-of $primary --auto" >> ~/.xprofile && unset secondary
 			elif [ $? == 1 ]; then
-				printf " --output $secondary --left-of $primary --auto" >> ~/.xprofile
-				unset secondary
+				printf " --output $secondary --left-of $primary --auto" >> ~/.xprofile && unset secondary
 			else
 				break
 			fi
