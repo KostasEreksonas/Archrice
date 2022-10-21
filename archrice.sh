@@ -366,11 +366,7 @@ function configureVim () {
 	dialog --title "$title" --infobox "Installing Vim plugin manager" 0 0
 	mkdir -p $vimdir/autoload $vimdir/bundle && curl -LSso $vimdir/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 
-	# Go into plugin directory
-	cd $vimdir/bundle/
-
-	# Download Vim plugins
-	isGIT="True" && Install "$title" "$isAUR" "$isGIT" "$MAKE" ${vim_plugins[@]}
+	cd $vimdir/bundle/ && isGIT="True" && Install "$title" "$isAUR" "$isGIT" "$MAKE" ${vim_plugins[@]}
 
 	# Create a directory in $vimdir to store color themes
 	mkdir $vimdir/colors/ && cd $vimdir/colors/
@@ -445,7 +441,7 @@ function InstallAUR () {
 function Install() {
 	# Grab first arguments and shift the remaining ones to the left
 	local title="$1" && local isAUR="$2" && local isGIT="$3" && local MAKE="$4" && shift 4
-	local arr=("$@") && local len=${#arr[@]} # Grab elements of an array and it's length
+	local arr=("$@") && local len=${#arr[@]} # Grab elements of an array and get it's length
 
 	if [[ "$isAUR" == "False" && "$isGIT" == "False" && "$MAKE" == "False" ]]; then
 		for i in "${arr[@]}"; do
@@ -462,19 +458,21 @@ function Install() {
 		done
 	fi
 	if [[ "$isAUR" == "False" && "$isGIT" == "True" && "$MAKE" == "False" ]]; then
-		for i in "${arr[@]}"; do
-			if [ "$i" == "preservim/nerdtree" ]; then
+		if [ "${arr[0]}" == "preservim/nerdtree" ]; then
+			for i in "${arr[@]}"; do
 				until dialog --title "$title" --infobox "Cloning $i" 0 0 && \
 					git clone --quiet https://github.com/$i.git 2>>$tempfile 1>&2; do
 					gitError || break
 				done
-			else
+			done
+		else
+			for i in "${arr[@]}"; do
 				until dialog --title "$title" --infobox "Cloning $i" 0 0 && \
 					git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$tempfile 1>&2; do
 					gitError || break
 				done
-			fi
-		done
+			done
+		fi
 	fi
 	if [[ "$isAUR" == "False" && "$isGIT" == "False" && "$MAKE" == "True" ]]; then
 		for i in "${arr[@]}"; do
