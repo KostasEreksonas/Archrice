@@ -388,9 +388,7 @@ function configureVim () {
 		cp /home/$username/Documents/git/Archrice/dotfiles/.vimrc $homedir/.vimrc 2>>$logfile 1>&2
 	fi
 
-	rm -f $tempfile
-
-	return $?
+	rm -f $tempfile && return $?
 }
 
 #  --------------
@@ -420,16 +418,12 @@ function updateSystem () {
 
 # Install a package using pacman
 function installPackage () {
-	pacman --noconfirm --needed -S $1 2>>$logfile 1>&2
-
-	return $?
+	pacman --noconfirm --needed -S $1 2>>$logfile 1>&2 && return $?
 }
 
 # Install a package from AUR
 function installAURPackage() {
-	yay --noconfirm --needed -S $1 2>>$logfile 1>&2
-
-	return $?
+	yay --noconfirm --needed -S $1 2>>$logfile 1>&2 && return $?
 }
 
 # Install a package using pacman
