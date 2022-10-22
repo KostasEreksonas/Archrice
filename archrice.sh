@@ -697,9 +697,7 @@ function gitError () {
 #  -------
 
 function welcomeMsg () {
-	dialog --title "Arch Linux Auto Configuration Script" --msgbox "Welcome to Arch Linux configuration script. Purpose of this script is to expand a base Arch Linux install and configure a dwm window manager environment with most of the software necessary for daily usage installed. Press OK to start the configuration process" 0 0
-
-	return $?
+	dialog --title "Arch Linux Auto Configuration Script" --msgbox "Welcome to Arch Linux configuration script. Purpose of this script is to expand a base Arch Linux install and configure a dwm window manager environment with most of the software necessary for daily usage installed. Press OK to start the configuration process" 0 0 && return $?
 }
 
 # Create and configure a new system user
@@ -764,16 +762,12 @@ function createUser() {
 # Creates directories within home directory of the new user
 function createDirectories() {
 	dialog --title "Directory Creation" --infobox "Creating necessary directories" 0 0 && sleep 2
-	cd $homedir/ && for directory in ${directories[@]}; do mkdir -p $directory; done
-
-	return $?
+	cd $homedir/ && for directory in ${directories[@]}; do mkdir -p $directory; done && return $?
 }
 
 function exitMsg () {
 	dialog --title "Arch Auto Configuration Script" --infobox "The system is now installed. It will be cleaned up and rebooted in 10 seconds (Note: If you have multiple displays and want to extend them on startup, run extendDisplays command after starting your X session)" 0 0 && sleep 10
-	rm -r /root/* && rm $logfile && sleep 2 && reboot
-
-	return 1
+	rm -r /root/* && rm $logfile && sleep 2 && reboot && return 1
 }
 
 #  --------------
