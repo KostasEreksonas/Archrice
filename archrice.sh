@@ -568,9 +568,7 @@ function installWM () {
 	# Install suckless utilities
 	MAKE="True" && Install "$title" "$isAUR" "$isGIT" "$MAKE" ${suckless_utilities[@]}
 
-	rm -f $tempfile
-
-	return $?
+	rm -f $tempfile && return $?
 }
 
 # Install additional software to extend window manager functionality
@@ -654,11 +652,9 @@ function installError () {
 	error=$(grep $1 $logfile | tail -1)
 	dialog --title "$title" --yesno "Could not install $1. Error message: $error. Do you want to retry the installation process? (Warning: if you choose No, some packages will not be installed)" 0 0
 	if [ $? == 0 ]; then
-		dialog --title "$title" --infobox "Retrying to install $1 in 5 seconds" 0 0 && sleep 5
-		return 0
+		dialog --title "$title" --infobox "Retrying to install $1 in 5 seconds" 0 0 && sleep 5 && return 0
 	else
-		dialog --title "$title" --msgbox "Package $1 not installed" 0 0
-		return 1
+		dialog --title "$title" --msgbox "Package $1 not installed" 0 0 && return 1
 	fi
 }
 
