@@ -332,7 +332,7 @@ function copyConfigs() {
 	cp $homedir/Documents/git/Archrice/dotfiles/pixmaps/* /usr/share/pixmaps/ 2>>$logfile 1>&2
 
 	# Download mpv notification script rom emilazy
-	wget https://raw.githubuserconttent.com/emilazy/mpv-notify-send/master/notify-send.lua -P $homedir/.config/mpv/scripts/
+	wget https://raw.githubusercontent.com/emilazy/mpv-notify-send/master/notify-send.lua -P $homedir/.config/mpv/scripts/
 
 	return $?
 }
