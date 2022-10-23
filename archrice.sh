@@ -353,8 +353,7 @@ function configureVim () {
 	if [ $choice == 0 ]; then # Choice == neovim
 		vimdir=$homedir/.config/nvim/
 		printf "\n\nexport EDITOR=nvim" >> $homedir/.bashrc
-		nvim=(neovim python-neovim)
-		Install "$title" "$isAUR" "$isGIT" "$MAKE" "${nvim[@]}"
+		nvim=(neovim python-neovim) && Install "$title" "$isAUR" "$isGIT" "$MAKE" "${nvim[@]}"
 		dialog --title "$title" --yesno "Do you want to alias nvim as vim?" 0 0
 		if [ $? == 0 ]; then printf "\n\nalias vim=\'nvim\'" >> $homedir/.bashrc; fi
 	elif [ $choice == 1 ]; then # Choice == vim
