@@ -332,7 +332,7 @@ function copyConfigs() {
 	cp $homedir/Documents/git/Archrice/dotfiles/pixmaps/* /usr/share/pixmaps/ 2>>$logfile 1>&2
 
 	# Download mpv notification script rom emilazy
-	wget https://raw.githubusercontent.com/emilazy/mpv-notify-send/master/notify-send.lua -P $homedir/.config/mpv/scripts/
+	wget https://raw.githubusercontent.com/emilazy/mpv-notify-send/master/notify-send.lua -P $homedir/.config/mpv/scripts/ 2>>$logfile 1>&2
 
 	return $?
 }
@@ -370,10 +370,8 @@ function configureVim () {
 	# Create a directory in $vimdir to store color themes
 	mkdir $vimdir/colors/ && cd $vimdir/colors/
 
-	# Install additional themes for Vim
-	for theme in ${themes[@]}; do
-		wget https://raw.githubusercontent.com/lifepillar/vim-solarized8/master/colors/$theme.vim
-	done
+	# Install additional color themes for Vim
+	for theme in ${themes[@]}; do wget https://raw.githubusercontent.com/lifepillar/vim-solarized8/master/colors/$theme.vim 2>>$logfile 1>&2; done
 
 	# Copy .vimrc config file from dotfiles
 	dialog --title "$title" --infobox "Copying configuration to the user $username home directory" 0 0
