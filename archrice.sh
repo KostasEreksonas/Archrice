@@ -371,7 +371,9 @@ function configureVim () {
 	mkdir $vimdir/colors/ && cd $vimdir/colors/
 
 	# Install additional color themes for Vim
-	for theme in ${themes[@]}; do wget https://raw.githubusercontent.com/lifepillar/vim-solarized8/master/colors/$theme.vim 2>>$logfile 1>&2; done
+	for theme in ${themes[@]}; do
+		wget https://raw.githubusercontent.com/lifepillar/vim-solarized8/master/colors/$theme.vim 2>>$logfile 1>&2
+	done
 
 	# Copy .vimrc config file from dotfiles
 	dialog --title "$title" --infobox "Copying configuration to the user $username home directory" 0 0
@@ -772,27 +774,9 @@ function exitMsg () {
 #  --------------
 
 while [ $? == 0 ]; do
-	installDependencies
-	welcomeMsg
-	createUser
-	createDirectories
-	configurePacman
-	updateSystem
-	installDrivers
-	installApplications
-	installWine
-	installWM
-	extendWM
-	installFonts
-	configurePass
-	cloneDotfiles
-	configureBashrc
-	installScripts
-	configureVim
-	copyConfigs
-	configureOwnership
-	installAURHelper
-	installVirtualization
-	InstallAUR
-	exitMsg
+	installDependencies && welcomeMsg && createUser && createDirectories && configurePacman && \
+	updateSystem && installDrivers && installApplications && installWine && installWM && extendWM && \
+	installFonts && configurePass && cloneDotfiles && configureBashrc && installScripts && \
+	configureVim && copyConfigs && configureOwnership && installAURHelper && \
+	installVirtualization && InstallAUR && exitMsg
 done
