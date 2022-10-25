@@ -167,7 +167,8 @@ qemu=(virt-manager qemu-desktop libvirt edk2-ovmf dnsmasq iptables-nft)
 vbox_utils=(virtualbox-host-modules-arch virtualbox-guest-iso virtualbox)
 
 # Additional themes for Vim
-themes=(solarized8 gruvbox8 gruvbox8_hard gruvbox8_soft)
+themes_solarized=(solarized8 solarized8_flat solarized8_high solarized8_low)
+themes_gruvbox=(gruvbox8 gruvbox8_hard gruvbox8_soft)
 
 #  ---------------
 # | Configuration |
@@ -342,9 +343,14 @@ function configureVim () {
 	# Create a directory in $vimdir to store color themes
 	mkdir $vimdir/colors/ && cd $vimdir/colors/
 
-	# Install additional color themes for Vim
-	for theme in ${themes[@]}; do
+	# Install solarized color theme variations for Vim
+	for theme in ${themes_solarized[@]}; do
 		wget https://raw.githubusercontent.com/lifepillar/vim-solarized8/master/colors/$theme.vim 2>>$logfile 1>&2
+	done
+
+	# Install gruvbox color theme variations for Vim
+	for theme in ${themes_gruvbox[@]}; do
+		wget https://raw.githubusercontent.com/lifepillar/vim-gruvbox8/master/colors/$theme.vim 2>>$logfile 1>&2
 	done
 
 	# Copy .vimrc config file from dotfiles
