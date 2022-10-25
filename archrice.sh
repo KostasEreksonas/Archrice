@@ -677,13 +677,11 @@ function gitError () {
 		choice=$?
 		if [ $choice == 0 ]; then
 			dialog --title "$title" --infobox "Retrying to clone $1 in 5 seconds" 0 0
-			cat $tempfile >> $logfile
-			> $tempfile && sleep 5
+			cat $tempfile >> $logfile && > $tempfile && sleep 5
 			return $choice
 		else
 			dialog --title "$title" --msgbox "Failed to clone $1. Some features will not be installed" 0 0
-			cat $tempfile >> $logfile
-			> $tempfile
+			cat $tempfile >> $logfile && > $tempfile
 			return $choice
 		fi
 	fi
