@@ -27,32 +27,19 @@ directories=(.local/share/fonts/ \
 		Wine/)
 
 # Dependencies for this script
-dependencies=(dialog \
-		git \
-		wget \
-		p7zip \
-		networkmanager)
+dependencies=(dialog git wget p7zip networkmanager)
 
 # Intel integrated GPU drivers
-intel_igpu_drivers=(vulkan-intel \
-		xf86-video-intel)
+intel_igpu_drivers=(vulkan-intel xf86-video-intel)
 
 # Proprietary Nvidia GPU drivers
-nvidia_dgpu_drivers_proprietary=(nvidia \
-		nvidia-prime \
-		nvidia-utils \
-		nvidia-settings \
-		lib32-nvidia-utils)
+nvidia_dgpu_drivers_proprietary=(nvidia nvidia-prime nvidia-utils nvidia-settings lib32-nvidia-utils)
 
 # Open Source Nvidia GPU drivers
 nvidia_dgpu_drivers_open_source=(xf86-video-nouveau)
 
 # Custom suckless dwm window manager and it's utilities
-suckless_utilities=(dwm-kostas \
-		dwmblocks-kostas \
-		dmenu-kostas \
-		st-kostas \
-		slock-kostas)
+suckless_utilities=(dwm-kostas dwmblocks-kostas dmenu-kostas st-kostas slock-kostas)
 
 # Tools to extend functionality of dwm window manager
 wm_tools=(feh \
@@ -108,10 +95,7 @@ applications=(xorg-server \
 		darktable \
 		discord)
 
-aur_packages=(xurls \
-		vim-youcompleteme-git \
-		picom-jonaburg-git \
-		fastfetch-git)
+aur_packages=(xurls vim-youcompleteme-git picom-jonaburg-git fastfetch-git)
 
 fonts=(noto-fonts \
 	noto-fonts-emoji \
@@ -129,9 +113,7 @@ vim_plugins=(preservim/nerdtree \
 		tpope/vim-fugitive)
 
 # Main Wine utilities
-wine_main=(wine \
-		wine-mono \
-		wine-gecko)
+wine_main=(wine wine-mono wine-gecko)
 
 # Optional dependencies for Wine
 wine_opt_depts=(giflib \
@@ -179,23 +161,13 @@ wine_opt_depts_32bit=(lib32-giflib \
 		lib32-sdl2)
 
 # Packages for QEMU
-qemu=(virt-manager \
-	qemu-desktop \
-	libvirt \
-	edk2-ovmf \
-	dnsmasq \
-	iptables-nft)
+qemu=(virt-manager qemu-desktop libvirt edk2-ovmf dnsmasq iptables-nft)
 
 # Packages for Virtualbox
-vbox_utils=(virtualbox-host-modules-arch \
-			virtualbox-guest-iso \
-			virtualbox)
+vbox_utils=(virtualbox-host-modules-arch virtualbox-guest-iso virtualbox)
 
 # Additional themes for Vim
-themes=(solarized8 \
-		gruvbox8 \
-		gruvbox8_hard \
-		gruvbox8_soft)
+themes=(solarized8 gruvbox8 gruvbox8_hard gruvbox8_soft)
 
 #  ---------------
 # | Configuration |
