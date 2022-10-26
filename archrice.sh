@@ -93,7 +93,8 @@ applications=(xorg-server \
 		transmission-gtk \
 		python-pip \
 		darktable \
-		discord)
+		discord \
+		neomutt)
 
 aur_packages=(xurls vim-youcompleteme-git picom-jonaburg-git fastfetch-git)
 
