@@ -337,7 +337,7 @@ function configureVim () {
 
 	# Install Pathogen plugin manager
 	dialog --title "$title" --infobox "Installing Vim plugin manager" 0 0
-	mkdir -p $vimdir/autoload $vimdir/bundle && curl -LSso $vimdir/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+	mkdir -p $vimdir/autoload/ $vimdir/bundle/ && curl -LSso $vimdir/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 
 	cd $vimdir/bundle/ && isGIT="True" && Install "$title" "$isAUR" "$isGIT" "$MAKE" ${vim_plugins[@]}
 
