@@ -94,7 +94,8 @@ applications=(xorg-server \
 		python-pip \
 		darktable \
 		discord \
-		neomutt)
+		neomutt \
+		speedcrunch)
 
 aur_packages=(xurls vim-youcompleteme-git picom-jonaburg-git fastfetch-git)
 
