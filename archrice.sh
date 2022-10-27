@@ -30,7 +30,7 @@ directories=(.local/share/fonts/ \
 dependencies=(dialog git wget p7zip networkmanager)
 
 # Intel integrated GPU drivers
-intel_igpu_drivers=(vulkan-intel xf86-video-intel)
+intel_igpu_drivers=(vulkan-intel xf86-video-intel xf86-video-fbdev)
 
 # Proprietary Nvidia GPU drivers
 nvidia_dgpu_drivers_proprietary=(nvidia nvidia-prime nvidia-utils nvidia-settings lib32-nvidia-utils)
