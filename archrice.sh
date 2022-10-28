@@ -313,9 +313,7 @@ function copyConfigs() {
 
 # Recursively set ownership of users' home directory
 function configureOwnership() {
-	cd /home/ && chown -R $username:$username $homedir/ 2>>$logfile 1>&2
-
-	return $?
+	cd /home/ && chown -R $username:$username $homedir/ 2>>$logfile 1>&2 && return $?
 }
 
 # Customize Vim text editor
