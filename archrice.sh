@@ -95,7 +95,9 @@ applications=(xorg-server \
 		darktable \
 		discord \
 		neomutt \
-		speedcrunch)
+		speedcrunch \
+		dracut \
+		schedtool)
 
 aur_packages=(xurls vim-youcompleteme-git picom-jonaburg-git fastfetch-git)
 
