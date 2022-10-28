@@ -74,12 +74,15 @@ During the installation of archrice script the user is prompted to create aliase
 
 ## Vim
 
-Archrice script installs Vim terminal based text editor and `Pathogen` plugin manager with some plugins.
+Archrice script installs either Vim or Neovim terminal based text editor and `Pathogen` plugin manager with some plugins.
 
 * [Nerd Tree](https://github.com/preservim/nerdtree) - file system explorer for Vim.
 * [Pear Tree](https://github.com/tmsvg/pear-tree) - auto-pair plugin for Vim.
 * [Vim Airline](https://github.com/vim-airline/vim-airline) - status/tabline for Vim.
-* [Vim Solarized](https://github.com/altercation/vim-colors-solarized) - solarized color theme for Vim.
+* [Vim Airline Themes](https://github.com/vim-airline/vim-airline-themes) - collection of color themes for airline statusline.
+* [Vim Solarized Theme](https://github.com/lifepillar/vim-solarized8) - solarized themes collection for Vim.
+* [Vim Gruvbox Theme](https://github.com/lifepillar/vim-gruvbox8) - gruvbox themes collection for Vim.
+* [Vim Fugitive](https://github.com/tpope/vim-fugitive) - Git plugin for Vim.
 * [You Complete Me](https://github.com/ycm-core/YouCompleteMe) - code completion engine for Vim.
 
 ## Other Software
