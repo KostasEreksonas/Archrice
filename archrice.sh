@@ -111,8 +111,7 @@ vim_plugins=(preservim/nerdtree \
 		vim-airline/vim-airline \
 		vim-airline/vim-airline-themes \
 		altercation/vim-colors-solarized \
-		tmsvg/pear-tree \
-		tpope/vim-fugitive)
+		tmsvg/pear-tree)
 
 # Main Wine utilities
 wine_main=(wine wine-mono wine-gecko)
