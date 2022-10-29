@@ -751,9 +751,27 @@ function exitMsg () {
 #  --------------
 
 while [ $? == 0 ]; do
-	installDependencies && welcomeMsg && createUser && createDirectories && configurePacman && \
-	updateSystem && installDrivers && installApplications && installWine && installWM && extendWM && \
-	installFonts && configurePass && cloneDotfiles && configureBashrc && installScripts && \
-	configureVim && copyConfigs && configureOwnership && installAURHelper && \
-	installVirtualization && InstallAUR && exitMsg
+	installDependencies
+	welcomeMsg
+	createUser
+	createDirectories
+	configurePacman
+	updateSystem
+	installDrivers
+	installApplications
+	installWine
+	installWM
+	extendWM
+	installFonts
+	configurePass
+	cloneDotfiles
+	configureBashrc
+	installScripts
+	configureVim
+	copyConfigs
+	configureOwnership
+	installAURHelper
+	installVirtualization
+	InstallAUR
+	exitMsg
 done
