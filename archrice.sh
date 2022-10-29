@@ -552,7 +552,7 @@ function installWM () {
 	Install "$title" "$isAUR" "$isGIT" "$MAKE" "${suckless_utilities[@]}"
 
 	# Install suckless utilities
-	MAKE="True" && Install "$title" "$isAUR" "$isGIT" "$MAKE" "${suckless_utilities[@]}"
+	isGIT="False" && MAKE="True" && Install "$title" "$isAUR" "$isGIT" "$MAKE" "${suckless_utilities[@]}"
 
 	return $?
 }
