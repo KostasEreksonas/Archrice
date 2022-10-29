@@ -85,6 +85,10 @@ Archrice script installs either Vim or Neovim terminal based text editor and `Pa
 * [Vim Fugitive](https://github.com/tpope/vim-fugitive) - Git plugin for Vim.
 * [You Complete Me](https://github.com/ycm-core/YouCompleteMe) - code completion engine for Vim.
 
+## Hacking applications
+
+Recently I added some software I use for hacking and cybersecurity analysis. The list includes ***Nmap***, ***Wireshark*** and ***Radare2*** and might be expandend later on.
+
 ## Other Software
 Other software installed with archrice script include:
 * `Firefox` - web browser
