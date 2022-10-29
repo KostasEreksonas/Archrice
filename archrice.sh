@@ -546,15 +546,15 @@ function installWM () {
 	title="Installing Window Manager" && isAUR="False" && isGIT="True" && MAKE="False"
 
 	dialog --title "$title" --infobox "Install suckless window manager and it's utilities" 0 0 && sleep 2
-	tempfile=/tmp/archtemp.txt && cd $homedir/Documents/git/ 2>>$logfile 1>&2
+	cd $homedir/Documents/git/ 2>>$logfile 1>&2
 
 	# Clone suckless utilities
-	Install "$title" "$isAUR" "$isGIT" "$MAKE" ${suckless_utilities[@]}
+	Install "$title" "$isAUR" "$isGIT" "$MAKE" "${suckless_utilities[@]}"
 
 	# Install suckless utilities
-	MAKE="True" && Install "$title" "$isAUR" "$isGIT" "$MAKE" ${suckless_utilities[@]}
+	MAKE="True" && Install "$title" "$isAUR" "$isGIT" "$MAKE" "${suckless_utilities[@]}"
 
-	rm -f $tempfile && return $?
+	return $?
 }
 
 # Install additional software to extend window manager functionality
@@ -604,11 +604,8 @@ function installVirtualization() {
 
 function installHacking() {
 	title="Installing Hacking Apps" && isAUR="False" && isGIT="False" && MAKE="False"
-
 	dialog --title "$title" --yesno "Do you want to install apps for hacking?" 0 0
-	if [ $? == 0 ]; then
-		Install "$title" "$isAUR" "$isGIT" "$MAKE" "${hack_apps[@]}"
-	fi
+	if [ $? == 0 ]; then Install "$title" "$isAUR" "$isGIT" "$MAKE" "${hack_apps[@]}"; fi
 }
 
 #  --------
