@@ -446,6 +446,11 @@ function Install() {
 					gitError || break
 				done
 			done
+		elif [ ${arr[0]} == "yay" ]; then
+			until dialog --title "$title" --infobox "Cloning ${arr[0]}" 0 0 && \
+				git clone --quiet https://aur.archlinux.org/yay.git 2>>$tempfile 1>&2; do
+				gitError || break
+			done
 		else
 			for i in "${arr[@]}"; do
 				until dialog --title "$title" --infobox "Cloning $i" 0 0 && \
