@@ -173,6 +173,9 @@ vbox_utils=(virtualbox-host-modules-arch virtualbox-guest-iso virtualbox)
 themes_solarized=(solarized8 solarized8_flat solarized8_high solarized8_low)
 themes_gruvbox=(gruvbox8 gruvbox8_hard gruvbox8_soft)
 
+# Some applications for hacking
+hack_apps=(nmap wireshark-qt radare2)
+
 #  ---------------
 # | Configuration |
 #  ---------------
@@ -592,6 +595,15 @@ function installVirtualization() {
 	fi
 
 	return $?
+}
+
+function installHacking() {
+	title="Installing Hacking Apps" && isAUR="False" && isGIT="False" && MAKE="False"
+
+	dialog --title "$title" --yesno "Do you want to install apps for hacking?" 0 0
+	if [ $? == 0 ]; then
+		Install "$title" "$isAUR" "$isGIT" "$MAKE" "${hack_apps[@]}"
+	fi
 }
 
 #  --------
