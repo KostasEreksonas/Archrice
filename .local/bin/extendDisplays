@@ -26,3 +26,8 @@ if [ $displayCount -gt 1 ]; then
 		printf "\n" >> ~/.xprofile
 	fi
 fi
+
+# If Nvidia drivers are installed, copy Nvidia config to /etc/X11/xorg.conf.d
+pacman -Qi nvidia 2>>$logfile 1>&2
+if [ $? == 0 ]; then cp $homedir/Documents/git/Archrice/dotfiles/xorg.conf.d/20-nvidia.conf /etc/X11/xorg.conf.d/ 2>>$logfile 1>&2; fi
+

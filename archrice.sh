@@ -299,10 +299,6 @@ function copyConfigs() {
 	cp $homedir/Documents/git/Archrice/dotfiles/xorg.conf.d/10-monitor.conf /etc/X11/xorg.conf.d/ 2>>$logfile 1>&2
 	cp $homedir/Documents/git/Archrice/dotfiles/xorg.conf.d/40-libinput.conf /etc/X11/xorg.conf.d/ 2>>$logfile 1>&2
 
-	# If Nvidia drivers are installed, copy Nvidia config to /etc/X11/xorg.conf.d
-	pacman -Qi nvidia 2>>$logfile 1>&2
-	if [ $? == 0 ]; then cp $homedir/Documents/git/Archrice/dotfiles/xorg.conf.d/20-nvidia.conf /etc/X11/xorg.conf.d/ 2>>$logfile 1>&2; fi
-
 	# If Intel iGPU exists, copy Intel iGPU config to /etc/X11/xorg.conf.d
 	lspci | grep Intel\ Corporation\ HD\ Graphics 2>$logfile 1>&2
 	if [ $? == 0 ]; then cp $homedir/Documents/git/Archrice/dotfiles/xorg.conf.d/30-intel.conf /etc/X11/xorg.conf.d/ 2>>$logfile 1>&2; fi
