@@ -782,6 +782,5 @@ while [ $? == 0 ]; do
 	configureOwnership
 	installAURHelper
 	installVirtualization
-	installHacking
-	exitMsg
+	installHacking && exitMsg
 done
