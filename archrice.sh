@@ -95,6 +95,8 @@ applications=(xorg-server \
 		darktable \
 		discord \
 		neomutt \
+		isync \
+		msmtp \
 		speedcrunch \
 		dracut \
 		schedtool)
