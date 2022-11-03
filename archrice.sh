@@ -200,9 +200,7 @@ function configurePass () {
 	email=$(grep @ $logfile | tail -1 | cut -d " " -f 25 | tr -d "<>")
 	dialog --title "Pass Configuration" --infobox "Initializing password store for $email" 0 0 && sleep 2
 	runuser -u $username -- pass init $email 2>>$logfile
-	chown -R root:root /dev/tty1
-
-	return $?
+	chown -R root:root /dev/tty1 && return $?
 }
 
 function cloneDotfiles () {
