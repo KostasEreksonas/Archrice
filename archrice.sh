@@ -205,9 +205,7 @@ function configurePass () {
 
 function cloneDotfiles () {
 	title="Cloning Dotfiles" && isAUR="False" && isGIT="True" && MAKE="False"
-	tempfile=/tmp/archtemp.txt
 	cd $homedir/Documents/git/ && Install "$title" "$isAUR" "$isGIT" "$MAKE" "Archrice"
-	rm -f $tempfile
 
 	return $?
 }
@@ -320,7 +318,7 @@ function configureOwnership() {
 # Customize Vim text editor
 function configureVim () {
 	title="Vim Configuration" && isAUR="False" && isGIT="False" && MAKE="False"
-	tempfile=/tmp/archtemp.txt && vimdir=""
+	vimdir=""
 	dialog --title $title --yes-label "Neovim" --no-label "Vim" --yesno "Which editor to install?" 0 0
 	choice=$?
 	if [ $choice == 0 ]; then # Choice == neovim
@@ -361,7 +359,7 @@ function configureVim () {
 		cp /home/$username/Documents/git/Archrice/dotfiles/.vimrc $homedir/.vimrc 2>>$logfile 1>&2
 	fi
 
-	rm -f $tempfile && return $?
+	return $?
 }
 
 #  --------------
@@ -438,19 +436,19 @@ function Install() {
 		if [ "${arr[0]}" == "preservim/nerdtree" ]; then
 			for i in "${arr[@]}"; do
 				until dialog --title "$title" --infobox "Cloning $i" 0 0 && \
-					git clone --quiet https://github.com/$i.git 2>>$tempfile 1>&2; do
+					git clone --quiet https://github.com/$i.git 2>>$logfile 1>&2; do
 					gitError || break
 				done
 			done
 		elif [ ${arr[0]} == "yay" ]; then
 			until dialog --title "$title" --infobox "Cloning ${arr[0]}" 0 0 && \
-				git clone --quiet https://aur.archlinux.org/yay.git 2>>$tempfile 1>&2; do
+				git clone --quiet https://aur.archlinux.org/yay.git 2>>$logfile 1>&2; do
 				gitError || break
 			done
 		else
 			for i in "${arr[@]}"; do
 				until dialog --title "$title" --infobox "Cloning $i" 0 0 && \
-					git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$tempfile 1>&2; do
+					git clone --quiet https://github.com/KostasEreksonas/$i.git 2>>$logfile 1>&2; do
 					gitError || break
 				done
 			done
@@ -507,7 +505,6 @@ function installApplications () {
 function installAURHelper() {
 	title="Installing AUR Helper" && isAUR="False" && isGIT="True" && MAKE="False"
 
-	tempfile=/tmp/archtemp.txt
 	cd $homedir/Documents/aur/ && Install "$title" "$isAUR" "$isGIT" "$MAKE" "yay"
 
 	chown -R $username:$username $homedir/Documents/aur/yay
@@ -515,8 +512,6 @@ function installAURHelper() {
 	cd $homedir/Documents/aur/yay/
 	until sudo -u $username makepkg --noconfirm -si 2>>$logfile 1>&2; do installError yay || break; done
 	dialog --title "$title" --infobox "AUR helper installed" 0 0 && sleep 1
-
-	rm -f $tempfile
 
 	return $?
 }
@@ -660,17 +655,15 @@ function userError() {
 # Display this message when a package fails to install via make
 function gitError () {
 	title="Error Cloning Git Repository"
-	error=$(grep "Could not resolve host: github.com" $tempfile)
+	error=$(grep "Could not resolve host: github.com" $logfile)
 	if [ $? == 0 ]; then
 		dialog --title "$title" --yesno "Failed to clone $1. Error message: $error Do you want to retry?" 0 0
 		choice=$?
 		if [ $choice == 0 ]; then
 			dialog --title "$title" --infobox "Retrying to clone $1 in 5 seconds" 0 0
-			cat $tempfile >> $logfile && > $tempfile && sleep 5
 			return $choice
 		else
 			dialog --title "$title" --msgbox "Failed to clone $1. Some features will not be installed" 0 0
-			cat $tempfile >> $logfile && > $tempfile
 			return $choice
 		fi
 	fi
