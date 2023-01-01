@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Read current time
-time="$(date '+%b %d (%a) %I:%M%p')"
+time="$(date '+%Y %b %d (%a) %I:%M%p')"
 
 # Calendar icon
 icon=
