@@ -755,7 +755,11 @@ function createUser() {
 # Creates directories within home directory of the new user
 function createDirectories() {
 	dialog --title "Directory Creation" --infobox "Creating necessary directories" 0 0 && sleep 2
-	cd $homedir/ && for directory in ${directories[@]}; do mkdir -p $directory; done && return $?
+	cd $homedir/
+	for directory in ${directories[@]}; do
+		mkdir -p $directory
+	done
+	return $?
 }
 
 function exitMsg () {
@@ -768,5 +772,28 @@ function exitMsg () {
 #  --------------
 
 while [ $? == 0 ]; do
-	checkNetwork && installDependencies && welcomeMsg && createUser && createDirectories && configurePacman && updateSystem && installDrivers && installApplications && installWine && installWM && extendWM && installFonts && configurePass && cloneDotfiles && configureBashrc && installScripts && configureVim && copyConfigs && configureOwnership && installAURHelper && installVirtualization && installHacking && exitMsg
+	checkNetwork
+	installDependencies
+	welcomeMsg
+	createUser
+	createDirectories
+	configurePacman
+	updateSystem
+	installDrivers
+	installApplications
+	installWine
+	installWM
+	extendWM
+	installFonts
+	configurePass
+	cloneDotfiles
+	configureBashrc
+	installScripts
+	configureVim
+	copyConfigs
+	configureOwnership
+	installAURHelper
+	installVirtualization
+	installHacking
+	exitMsg
 done
