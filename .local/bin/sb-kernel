@@ -8,6 +8,8 @@ version=$(uname -r)
 
 # Mouse controls
 case $BUTTON in
+	# Left click opens a terminal instance with kernel info
+	1) setsid -f "$TERMINAL" -e $(uname -a) ;;
 	# Right click creates a notification with a current kernel version
 	3) notify-send "Kernel version: " "$version" ;;
 esac
