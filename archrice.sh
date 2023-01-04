@@ -4,9 +4,9 @@
 # Created by: Kostas Ereksonas
 # License: GPLv3
 
-#  -----------
-# | Variables |
-#  -----------
+#  -----------------------------
+# | Variables and software list |
+#  -----------------------------
 
 homedir= && username= && logfile=/var/log/archrice.log
 
