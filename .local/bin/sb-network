@@ -1,13 +1,13 @@
 #!/bin/sh
 
-# Get network name (https://askubuntu.com/questions/117065/how-do-i-find-out-the-name-of-the-ssid-im-connected-to-from-the-command-line)
-SSID="$(nmcli -t -f active,ssid dev wifi | grep -E '^yes' | cut -d: -f2)"
-
 # Wifi network icon
 icon=
 
+# Get network name (https://askubuntu.com/questions/117065/how-do-i-find-out-the-name-of-the-ssid-im-connected-to-from-the-command-line)
+SSID="$(nmcli -t -f active,ssid dev wifi | grep -E '^yes' | cut -d: -f2)"
+
 # Get UP network interface
-interface="$(ip addr | grep "state UP" | awk '{print $2}' | cut -d ":" -f 1)"
+interface="$(ip a | grep "state UP" | awk 'NR == 1 {print $2}' | cut -d ":" -f 1)"
 
 # Get IP address
 IP="$(ip a | grep $interface | awk 'NR == 2 {print $2}' | cut -d "/" -f 1)"
