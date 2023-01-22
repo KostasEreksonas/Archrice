@@ -8,7 +8,9 @@
 # | Variables and software list |
 #  -----------------------------
 
-homedir= && username= && logfile=/var/log/archrice.log
+homedir= 
+username= 
+logfile=/var/log/archrice.log
 
 # Directories for the new user
 directories=(.local/share/fonts/ \
