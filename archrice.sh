@@ -675,22 +675,6 @@ function gitError () {
 # | Other |
 #  -------
 
-function checkNetwork() {
-	title="Network Configuration"
-	ping -c 1 archlinux.org 2>>$logfile
-	errorMsg=$(grep $logfile | tail -1)
-	if [ $errorMsg == "" ]; then
-		dialog --title "$title" --yesno "Do you want to connect to the internet?" 0 0
-		if [ $? == 0 ]; then
-			ssid=$(dialog --title "$title" --inputbox "Enter SSID for your network" 0 0)
-			password=$(dialog --title "$title" --passwordbox "Enter pasword for your network" 0 0)
-			nmcli device wifi connect "$ssid" password "$password" && return 1
-		elif [ $? == 1 ]; then
-			dialog --title "$title" --msgbox "Internet not connected. Installation aborting" 0 0 && exit 1
-		fi
-	fi
-}
-
 function welcomeMsg () {
 	dialog --title "Arch Linux Auto Configuration Script" --msgbox "Welcome to Arch Linux configuration script. Purpose of this script is to expand a base Arch Linux install and configure a dwm window manager environment with most of the software necessary for daily usage installed. Press OK to start the configuration process" 0 0 && return $?
 }
@@ -774,7 +758,6 @@ function exitMsg () {
 #  --------------
 
 while [ $? == 0 ]; do
-	checkNetwork
 	installDependencies
 	welcomeMsg
 	createUser
