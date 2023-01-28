@@ -362,6 +362,14 @@ function configureVim () {
 	return $?
 }
 
+function bashPowerline () {
+	cd $homedir/Documents/git/
+	git clone https://github.com/chris-marsh/pureline.git
+	cp pureline/configs/powerline_full_256col.conf $homedir/.pureline.conf
+	echo "source $homedir/Documents/git/pureline/ $homedir/.pureline.conf"
+	return $?
+}
+
 #  --------------
 # | Installation |
 #  --------------
@@ -775,6 +783,7 @@ while [ $? == 0 ]; do
 	configureBashrc
 	installScripts
 	configureVim
+	bashPowerline
 	copyConfigs
 	configureOwnership
 	installAURHelper
