@@ -318,6 +318,7 @@ function configureOwnership() {
 # Customize Vim text editor
 function configureVim () {
 	title="Vim Configuration" && isAUR="False" && isGIT="False" && MAKE="False"
+	cd $homedir/
 	vimdir=""
 	dialog --title $title --yes-label "Neovim" --no-label "Vim" --yesno "Which editor to install?" 0 0
 	choice=$?
