@@ -1,0 +1,13 @@
+#!/bin/sh
+
+if [ -z $1 ]; then
+	printf "Usage: yt-download <URL>\n"
+else
+	read -p "Do you want to save video or audio? (Video/Audio) " choice
+	if [ $choice == "Audio" ]; then
+		read -p "Please enter format for the audio: " format
+		yt-dlp -x --audio-format $format $1
+	else
+		yt-dlp $1
+	fi
+fi
