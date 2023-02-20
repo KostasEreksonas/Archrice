@@ -1,9 +1,0 @@
-#!/bin/sh
-
-title="Configuring Neomutt"
-dialog --title "$title" --yesno "Do you want to configure Neomutt?" 0 0
-
-if [ $? == 0 ]; then
-	mkdir -p $HOME/.config/mutt/
-	cp -r $HOME/Documents/git/Archrice/dotfiles/mutt/* $HOME/.config/mutt/
-fi
