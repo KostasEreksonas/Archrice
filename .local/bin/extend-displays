@@ -1,33 +1,85 @@
 #!/bin/sh
 
-# If the user has more than one display, ask whether to extend available displays
-displayCount=$(xrandr | grep -w connected | wc -l)
-if [ $displayCount -gt 1 ]; then
-	dialog --title "Display Configuration" --yesno "Do you want to extend available displays?" 0 0
-	if [ $? == 0 ]; then
-		printf "\n# Extend displays on WM startup\n" >> ~/.xprofile
-		primary=$(xrandr | grep -w primary | cut -d " " -f 1)
-		printf "xrandr --output $primary --auto" >> ~/.xprofile # Xrandr command for extending displays
+function place_screens() {
+	echo $sideof
+}
 
-		# Count secondary displays and append them to the xrandr command
-		countSecondary=$(xrandr | grep -w connected | grep -wv primary | wc -l) && ((countSecondary+=1))
-		for (( i=1; i<$countSecondary; i++ )); do
-			secondary=$(xrandr | grep -w connected | grep -wv primary | cut -d " " -f 1 | sed -n "$i p")
-			dialog --title "Display Configuration" --yes-label "Right of" --no-label "Left of" \
-				--yesno "Do you wan the secondary display right of or left of the primary one?" 0 0
+# Detect connected displays
+displays=$(xrandr | grep -w connected | cut -d " " -f 1)
+
+# Split found values to an array
+bak=$IFS
+IFS=$'\n'
+displays=($displays)
+IFS=$bak
+
+# Get index numbers for detected displays
+declare -a num
+display_count=${#displays[@]}
+count=1
+for (( i=0; i<$display_count; i++ )); do
+	num+=("$count")
+	((count++))
+done
+
+# Create a numbered list of detected displays
+for (( i=0; i<$display_count; i++ )); do
+	list+=("${num[$i]}" "${displays[$i]}")
+done
+
+# Define dialog exit codes
+: {OK=0}
+: {CANCEL=1}
+: {HELP=2}
+: {EXTRA=3}
+: {ITEM_HELP=4}
+: {ESC=255}
+
+# Create a dialog menu for configuring displays
+while true; do
+	exec 3>&1
+	selection=$(dialog --title "Detected displays" --clear --menu "Which display should be set as primary?" 0 0 4 "${list[@]}" 2>&1 1>&3)
+	exit_status=$?
+	exec 3>&-
+	case $exit_status in
+		$CANCEL)
+			clear
+			echo "Program terminated."
+			exit
+			;;
+		$ESC)
+			clear
+			echo "Program aborted." >&2
+			exit 1
+			;;
+	esac
+	case $selection in
+		1)
+			primary=${displays[0]}
+			secondary=${displays[1]}
+			sideof=''
+			dialog --title "Screen configuration" --no-collapse --yes-label "right-of" --no-label "left-of" --yesno "Where do you want to put your secondary screen?" 0 0
 			if [ $? == 0 ]; then
-				printf " --output $secondary --right-of $primary --auto" >> ~/.xprofile && unset secondary
-			elif [ $? == 1 ]; then
-				printf " --output $secondary --left-of $primary --auto" >> ~/.xprofile && unset secondary
+				sideof="--right-of"
 			else
-				break
+				sideof="--left-of"
 			fi
-		done
-		printf "\n" >> ~/.xprofile
-	fi
-fi
+			;;
+		2)
+			primary=${displays[1]}
+			secondary=${displays[0]}
+			sideof=''
+			dialog --title "Screen configuration" --no-collapse --yes-label "right-of" --no-label "left-of" --yesno "Where do you want to put your secondary screen?" 0 0
+			if [ $? == 0 ]; then
+				sideof="--right-of"
+			else
+				sideof="--left-of"
+			fi
+			;;
+	esac
+	break
+done
 
-# If Nvidia drivers are installed, copy Nvidia config to /etc/X11/xorg.conf.d
-pacman -Qi nvidia 2>/dev/null 1>&2
-if [ $? == 0 ]; then cp $homedir/Documents/git/Archrice/dotfiles/xorg.conf.d/20-nvidia.conf /etc/X11/xorg.conf.d/ 2>/dev/null 1>&2; fi
-
+# Create a command for display extension and put it a the top of .xprofile
+sed -i '2s/^/\n# Extend displays on WM startup\n/' ~/.xprofile
+sed -i '4s/^/xrandr --output '$primary' --auto --output '$secondary' '$sideof' '$primary' --auto\n/' ~/.xprofile
