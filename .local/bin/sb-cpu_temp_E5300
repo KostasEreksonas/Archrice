@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# Set temperature icon
+icon=糖
+
+# Get core count
+coreCount="$(sensors | grep Core | wc -l)"
+
+# Core counter
+counter=1
+
+# Get temperature of every found core for notification
+notification="$(for ((core = 1; core <= $coreCount; core++)); do eval "echo "Core $counter: "$(sensors | grep Core | awk -v var=$core 'NR == var {print $3}')"; counter=$((counter+1)); done)"
+
+# Get CPU package temperature
+package="$(sensors | awk '/^temp1/ {print $2}')"
+
+# Define mouse controls
+case $BUTTON in
+	# Left-click opens a terminal instance with sensors
+	1) setsid -f "$TERMINAL" -e watch sensors ;;
+	# Right-click shows a notification with CPU temperature
+	3) notify-send "CPU temperature" "Package: $package\n$notification" ;;
+esac
+
+# Show icon and CPU package temperature
+printf "$icon $package"
