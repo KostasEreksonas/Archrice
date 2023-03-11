@@ -62,6 +62,7 @@ wm_tools=(feh \
 		ntfs-3g \
 		yt-dlp \
 		youtube-dl \
+		gsimplecal \
 		bash-completion \
 		intel-undervolt)
 
