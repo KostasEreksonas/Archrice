@@ -13,7 +13,10 @@ counter=1
 notification="$(for ((core = 1; core <= $coreCount; core++)); do eval "echo "Core $counter: "$(sensors | grep Core | awk -v var=$core 'NR == var {print $3}')"; counter=$((counter+1)); done)"
 
 # Get CPU package temperature
-package="$(sensors | awk '/^temp1/ {print $2}')"
+# package="$(sensors | awk '/^temp1/ {print $2}')"
+
+# Get average temperature of all cores
+average=$(sum=0; values=$(sensors | awk '/^Core/ {print $3}' | cut -d "+" -f 2 | cut -d "." -f 1); for value in ${values[@]}; do sum=$(( $sum + $value / $coreCount )); done; printf "+$sum°C\n")
 
 # Define mouse controls
 case $BUTTON in
@@ -24,4 +27,4 @@ case $BUTTON in
 esac
 
 # Show icon and CPU package temperature
-printf "$icon $package"
+printf "$icon $average"
