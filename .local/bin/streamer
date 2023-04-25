@@ -1,6 +1,6 @@
 #!/bin/sh
 
-printf "1) LRT Televizija\n2) LRT Plius\n3) LRT Lituanica\n"
+printf "1) LRT Televizija\n2) LRT Plius\n3) LRT Lituanica\n4) Lofi Girl\n"
 
 read -p "Which channel to watch? " choice
 
@@ -13,6 +13,9 @@ case $choice in
 		;;
 	3)
 		mpv https://www.lrt.lt/mediateka/tiesiogiai/lrt-lituanica
+		;;
+	4)
+		mpv https://www.youtube.com/watch?v=jfKfPfyJRdk
 		;;
 	*)
 		printf "Channel does not exist\n"
