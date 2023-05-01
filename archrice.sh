@@ -697,7 +697,7 @@ function createUser() {
 		if [ -z $name ]; then
 			dialog --title "User Creation" --msgbox "Username cannot be empty. Try again" 0 0
 		else
-			homedir=/home/$name && username=$name && useradd -m $name
+			useradd -m $name && homedir=/home/$name && username=$name
 		fi
 	done
 
