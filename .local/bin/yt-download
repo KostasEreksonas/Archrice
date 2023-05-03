@@ -3,11 +3,26 @@
 if [ -z $1 ]; then
 	printf "Usage: yt-download <URL>\n"
 else
-	read -p "Do you want to save video or audio? (Video/Audio) " choice
-	if [ $choice == "Audio" ]; then
-		read -p "Please enter format for the audio: " format
-		yt-dlp -x --audio-format $format $1
-	else
-		yt-dlp $1
-	fi
+	while true; do
+		read -p "Save as video or audio? (Video/Audio) " choice
+		case $choice in
+			[Aa]udio)
+				while [ -z $format]; do
+					read -p "Please choose audio format: " format
+					if [ -z $format ]; then
+						printf "No audio format given\n"
+					else
+						break
+					fi
+				done
+				yt-dlp -x --audio-format $format $1
+				break;;
+			[Vv]ideo)
+				yt-dlp $1
+				break;;
+			*)
+				printf "Please choose format to save\n"
+				;;
+		esac
+	done
 fi
