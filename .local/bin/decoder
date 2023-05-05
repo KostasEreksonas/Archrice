@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import re
+import sys
 import base64
 
 def decode(string, pattern, match):
@@ -17,7 +18,10 @@ def decode(string, pattern, match):
     return result
 
 def main():
-    string = input("Enter base64 encoded string: ")
+    if (len(sys.argv)) == 1:
+        string = input("Enter base64 encoded string: ")
+    else:
+        string = sys.argv[1]
     pattern=r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)" # Pattern to match URL
     print(f"URL: {decode(string, pattern, None)}")
 
