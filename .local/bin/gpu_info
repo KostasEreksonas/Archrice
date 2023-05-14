@@ -1,0 +1,18 @@
+#!/bin/sh
+
+function format_data () {
+	grep -A 11 *-display $1
+}
+
+FILE='hwinfo.txt'
+
+if [ -f $FILE ]; then
+	format_data $FILE
+else
+	check=$(command -v lshw)
+	if [ -z $check ]; then
+		printf "lshw command not found. Please install lshw in order to use this script.\n"
+	else
+		touch $FILE && lshw >> $FILE && format_data $FILE && rm $FILE
+	fi
+fi
