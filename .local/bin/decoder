@@ -18,6 +18,7 @@ def decode(string, pattern, match):
     return result
 
 def main():
+    """Main program"""
     if (len(sys.argv)) == 1:
         string = input("Enter base64 encoded string: ")
     else:
