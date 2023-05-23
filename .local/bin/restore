@@ -1,0 +1,14 @@
+#!/bin/sh
+
+files=(*)
+printf "${#files[@]}\n"
+for ((i=0; i<${#files[@]}; i++)); do
+	extension=$(exiftool ${files[$i]} | grep Extension | cut -d " " -f 17)
+	name=$(echo ${files[$i]} | cut -d "." -f 1)
+	if [ -z $extension ]; then
+		printf "Unknown format for ${files[$i]}. Skipping...\n" | tee -a unknown.txt
+	else
+		mv ${files[$i]} $name.$extension
+		printf "Moving ${files[$i]} to $name.$extension\n"
+	fi
+done
