@@ -684,9 +684,10 @@ function gitError () {
 #  -------
 # | Other |
 #  -------
-
+title="Arch Linux Auto Configuration Script"
+msg="Welcome to Arch Linux configuration script. Purpose of this script is to expand a base Arch Linux install and configure a dwm window manager environment with most of the software necessary for daily usage installed. Press OK to start the configuration process"
 function welcomeMsg () {
-	dialog --title "Arch Linux Auto Configuration Script" --msgbox "Welcome to Arch Linux configuration script. Purpose of this script is to expand a base Arch Linux install and configure a dwm window manager environment with most of the software necessary for daily usage installed. Press OK to start the configuration process" 0 0 && return $?
+	dialog --title $title --msgbox $msg 0 0 && return $?
 }
 
 # Create and configure a new system user
