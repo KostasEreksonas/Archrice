@@ -572,7 +572,7 @@ function installFonts () {
 	dialog --title "$title" --infobox "Installing all necessary fonts" 0 0 && sleep 2
 	cd $homedir/.local/share/fonts
 	dialog --title "$title" --infobox "Downloading Hack Nerd font" 0 0
-	wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/Hack.zip 2>>$logfile 1>&2
+	wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/Hack.zip 2>>$logfile 1>&2
 	dialog --title "$title" --infobox "Extracting Hack Nerd font" 0 0
 	7z x Hack.zip 2>>$logfile 1>&2 && rm Hack.zip
 
