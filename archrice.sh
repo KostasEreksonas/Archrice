@@ -69,6 +69,7 @@ wm_tools=(feh \
 # Other applications and drivers
 applications=(xorg-server \
 		xorg-xinit \
+		xorg-xrandr \
 		mesa \
 		mesa-utils \
 		vulkan-tools \
