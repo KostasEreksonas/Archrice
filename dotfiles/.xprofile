@@ -3,6 +3,9 @@
 # Keyboard layout
 setxkbmap -model pc105 -layout us,lt -option grp:alt_shift_toggle &
 
+# Extend displays on WM startup
+xrandr --output eDP1 --auto --output HDMI-0 --right-of eDP1 --auto
+
 # Desktop background image
 feh --bg-fill /usr/share/pixmaps/background.jpg &
 
@@ -16,7 +19,7 @@ dwmblocks &
 numlockx &
 
 # Picom compositor for transparency effects
-picom -b --config ~/.config/picom/picom.conf
+picom -b --config ~/.config/picom/picom.conf --backend glx
 
 # Fix for Pycharm blank window on program's startup
 export _JAVA_AWT_WM_NONREPARENTING=1
