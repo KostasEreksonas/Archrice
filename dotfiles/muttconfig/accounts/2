@@ -19,13 +19,15 @@ set postponed='+[Gmail]/Drafts'
 set spoolfile="+INBOX"
 mailboxes = +INBOX +[Gmail]/Drafts +[Gmail]/Important +[Gmail]/Sent\ Mail +[Gmail]/Spam +[Gmail]/Starred +[Gmail]/Trash
 
-# ------------- Native SMTP for sending mail --------
+# ------------- Internal SMTP for sending mail --------
 # set smtp_url="smtp://name@gmail.com@smtp.gmail.com:587/"
 # set smtp_pass=$imap_pass
 
+# ------------- External SMTP for sending mail --------
+set sendmail="/usr/bin/msmtp"			# External SMTP agent (msmtp) for sending mail
+
 # ------------- NAME --------------------------------
 set from="name@gmail.com"
-set sendmail="/usr/bin/msmtp"			# External SMTP agent (msmtp) for sending mail
 set realname="Name Surname"
 set use_from=yes
 set envelope_from=yes
