@@ -1,3 +1,6 @@
+phpstorm
+vim-youcompleteme-git
 virtualbox-ext-oracle
 xurls
 yay
+zoom
