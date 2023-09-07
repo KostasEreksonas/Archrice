@@ -130,6 +130,7 @@ gmime3
 gmp
 gnupg
 gnutls
+go
 gobject-introspection-runtime
 gperftools
 gpgme
