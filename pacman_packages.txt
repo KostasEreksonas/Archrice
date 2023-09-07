@@ -414,6 +414,7 @@ libmng
 libmnl
 libmodplug
 libmpc
+libmspack
 libmspub
 libmtp
 libmwaw
@@ -712,6 +713,7 @@ sdl2
 sdl_net
 sdl_sound
 sed
+sfml
 sfsexp
 shaderc
 shadow
@@ -756,6 +758,7 @@ usbutils
 util-linux
 util-linux-libs
 v4l-utils
+vbam-wx
 vid.stab
 vim
 vim-runtime
@@ -779,6 +782,8 @@ wine
 wine-gecko
 wine-mono
 wpa_supplicant
+wxwidgets-common
+wxwidgets-gtk3
 x264
 x265
 xapian-core
@@ -817,6 +822,7 @@ zathura-pdf-poppler
 zenity
 zeromq
 zimg
+zip
 zlib
 zstd
 zxing-cpp
