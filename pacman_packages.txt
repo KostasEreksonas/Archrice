@@ -37,6 +37,7 @@ bluez-libs
 bmon
 boost-libs
 box2d
+bridge-utils
 brotli
 bzip2
 ca-certificates
@@ -49,14 +50,19 @@ cantarell-fonts
 cblas
 cdparanoia
 cifs-utils
+clang
 clucene
+cmake
 cmatrix
 colord
 colord-gtk
 colord-gtk-common
+compiler-rt
 confuse
+containerd
 coreutils
 cpio
+cppdap
 cryptsetup
 cups
 cups-filters
@@ -76,6 +82,7 @@ dialog
 diffutils
 discord
 dnssec-anchors
+docker
 dosbox
 double-conversion
 dracut
@@ -188,6 +195,7 @@ jasper
 jbigkit
 json-c
 json-glib
+jsoncpp
 kbd
 keyutils
 kmod
@@ -656,8 +664,10 @@ psmisc
 pugixml
 pulseaudio
 pulseaudio-alsa
+pybind11
 python
 python-attrs
+python-bottle
 python-certifi
 python-cffi
 python-cryptography
@@ -672,6 +682,7 @@ python-pip
 python-ply
 python-pycparser
 python-pynvim
+python-watchdog
 python-wheel
 python-yaml
 qpdf
@@ -688,9 +699,11 @@ rasqal
 rav1e
 readline
 redland
+rhash
 rnnoise
 rtkit
 rubberband
+runc
 samba
 sane
 schedtool
