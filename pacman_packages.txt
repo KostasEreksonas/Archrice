@@ -193,7 +193,10 @@ isync
 jack2
 jansson
 jasper
+java-runtime-common
 jbigkit
+jre17-openjdk
+jre17-openjdk-headless
 json-c
 json-glib
 jsoncpp
@@ -360,6 +363,7 @@ libconfig
 libcups
 libdaemon
 libdatrie
+libdbusmenu-glib
 libdc1394
 libde265
 libdecor
@@ -422,6 +426,7 @@ libmwaw
 libmypaint
 libnatpmp
 libndp
+libnet
 libnetfilter_conntrack
 libnewt
 libnfnetlink
@@ -667,6 +672,7 @@ pugixml
 pulseaudio
 pulseaudio-alsa
 pybind11
+pycharm-community-edition
 python
 python-attrs
 python-bottle
