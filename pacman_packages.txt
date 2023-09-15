@@ -30,6 +30,7 @@ base
 base-devel
 bash
 bash-completion
+bc
 binutils
 bison
 blas
