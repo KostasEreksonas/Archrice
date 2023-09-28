@@ -85,6 +85,7 @@ discord
 dnssec-anchors
 docker
 dosbox
+dosfstools
 double-conversion
 dracut
 duktape
