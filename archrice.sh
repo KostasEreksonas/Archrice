@@ -101,7 +101,8 @@ applications=(xorg-server \
 		msmtp \
 		speedcrunch \
 		dracut \
-		schedtool)
+		schedtool \
+		dosfstools)
 
 aur_packages=(xurls vim-youcompleteme-git picom-jonaburg-git fastfetch-git)
 
