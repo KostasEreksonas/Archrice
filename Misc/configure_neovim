@@ -1,0 +1,29 @@
+#!/bin/sh
+
+function configure_neovim() {
+	vim_plugins=(preservim/nerdtree \
+		vim-airline/vim-airline \
+		vim-airline/vim-airline-themes \
+		altercation/vim-colors-solarized \
+		tmsvg/pear-tree)
+	themes_solarized=(solarized8 solarized8_flat solarized8_high solarized8_low)
+	themes_gruvbox=(gruvbox8 gruvbox8_hard gruvbox8_soft)
+	mkdir ~/.config/nvim/
+	cp ../dotfiles/.vimrc ~/.config/nvim/init.vim
+	cd ~/.config/nvim/
+	mkdir autoload/ bundle/ colors/
+	curl -LSso autoload/pathogen.vim https://tpo.pe/pathogen.vim
+	cd bundle/
+	for plugin in ${vim_plugins[@]}; do
+		git clone https://github.com/$plugin.git
+	done
+	cd ../colors/
+	for theme in ${themes_solarized[@]}; do
+		wget https://raw.githubusercontent.com/lifepillar/vim-solarized8/master/colors/$theme.vim
+	done
+	for theme in ${themes_gruvbox[@]}; do
+		wget https://raw.githubusercontent.com/lifepillar/vim-gruvbox8/master/colors/$theme.vim
+	done
+}
+
+configure_neovim
