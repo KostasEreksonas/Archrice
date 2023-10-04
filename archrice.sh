@@ -26,92 +26,10 @@ directories=(.local/share/fonts/ \
 		Videos/OBS/ \
 		Wine/)
 
-# Dependencies for this script
-dependencies=(dialog git wget p7zip networkmanager)
-
-# Intel integrated GPU drivers
-intel_igpu_drivers=(vulkan-intel xf86-video-intel xf86-video-fbdev)
-
-# Proprietary Nvidia GPU drivers
-nvidia_dgpu_drivers_proprietary=(nvidia nvidia-prime nvidia-utils nvidia-settings lib32-nvidia-utils)
-
-# Open Source Nvidia GPU drivers
-nvidia_dgpu_drivers_open_source=(xf86-video-nouveau)
-
 # Custom suckless dwm window manager and it's utilities
 suckless_utilities=(dwm-kostas dwmblocks-kostas dmenu-kostas st-kostas slock-kostas)
 
-# Tools to extend functionality of dwm window manager
-wm_tools=(feh \
-		bmon \
-		xclip \
-		maim \
-		xdotool \
-		udisks2 \
-		udiskie \
-		numlockx \
-		dunst \
-		ranger \
-		ueberzug \
-		zathura \
-		zathura-pdf-poppler \
-		ffmpegthumbnailer \
-		lynx \
-		perl-image-exiftool \
-		odt2txt \
-		ntfs-3g \
-		yt-dlp \
-		youtube-dl \
-		gsimplecal \
-		bash-completion \
-		intel-undervolt)
-
-# Other applications and drivers
-applications=(xorg-server \
-		xorg-xinit \
-		xorg-xrandr \
-		mesa \
-		mesa-utils \
-		vulkan-tools \
-		openssh \
-		newsboat \
-		pass \
-		passff-host \
-		htop \
-		nvtop \
-		cmatrix \
-		firefox \
-		gimp \
-		mpv \
-		alsa-utils \
-		pulseaudio-alsa \
-		pamixer \
-		pavucontrol \
-		sysstat \
-		acpilight \
-		libreoffice-fresh \
-		android-file-transfer \
-		android-udev \
-		transmission-gtk \
-		python-pip \
-		darktable \
-		discord \
-		neomutt \
-		isync \
-		msmtp \
-		speedcrunch \
-		dracut \
-		schedtool \
-		dosfstools)
-
 aur_packages=(xurls vim-youcompleteme-git picom-jonaburg-git fastfetch-git)
-
-fonts=(noto-fonts \
-	noto-fonts-emoji \
-	adobe-source-han-sans-kr-fonts \
-	adobe-source-han-sans-cn-fonts \
-	adobe-source-han-sans-tw-fonts \
-	adobe-source-han-sans-jp-fonts)
 
 # Plugins for Vim text editor
 vim_plugins=(preservim/nerdtree \
@@ -119,60 +37,6 @@ vim_plugins=(preservim/nerdtree \
 		vim-airline/vim-airline-themes \
 		altercation/vim-colors-solarized \
 		tmsvg/pear-tree)
-
-# Main Wine utilities
-wine_main=(wine wine-mono wine-gecko)
-
-# Optional dependencies for Wine
-wine_opt_depts=(giflib \
-		libpng \
-		libldap \
-		gnutls \
-		mpg123 \
-		openal \
-		v4l-utils \
-		libpulse \
-		alsa-plugins \
-		alsa-lib \
-		libjpeg-turbo \
-		libxcomposite \
-		libxinerama \
-		opencl-icd-loader \
-		libxslt \
-		gst-plugins-base-libs \
-		vkd3d \
-		sdl2 \
-		libgphoto2 \
-		sane \
-		gsm \
-		cups \
-		samba \
-		dosbox)
-
-wine_opt_depts_32bit=(lib32-giflib \
-		lib32-libldap \
-		lib32-libpng \
-		lib32-gnutls \
-		lib32-mpg123 \
-		lib32-openal \
-		lib32-v4l-utils \
-		lib32-libpulse \
-		lib32-alsa-plugins \
-		lib32-alsa-lib \
-		lib32-libjpeg-turbo \
-		lib32-libxcomposite \
-		lib32-libxinerama \
-		lib32-opencl-icd-loader \
-		lib32-libxslt \
-		lib32-gst-plugins-base-libs \
-		lib32-vkd3d \
-		lib32-sdl2)
-
-# Packages for QEMU
-qemu=(virt-manager qemu-desktop libvirt edk2-ovmf dnsmasq iptables-nft)
-
-# Packages for Virtualbox
-vbox_utils=(virtualbox-host-modules-arch virtualbox-guest-iso virtualbox)
 
 # Additional themes for Vim
 themes_solarized=(solarized8 solarized8_flat solarized8_high solarized8_low)

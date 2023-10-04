@@ -1,0 +1,1 @@
+feh bmon xclip maim xdotool udisks2 udiskie numlockx dunst ranger ueberzug zathura zathura-pdf-poppler ffmpegthumbnailer lynx perl-image-exiftool odt2txt ntfs-3g yt-dlp gsimplecal bash-completion intel-undervolt
