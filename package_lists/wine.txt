@@ -1,1 +1,3 @@
-wine wine-mono wine-gecko
+wine
+wine-mono
+wine-gecko

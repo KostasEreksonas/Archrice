@@ -1,1 +1,24 @@
-giflib libpng libldap gnutls mpg123 openal v4l-utils libpulse alsa-plugins alsa-lib libjpeg-turbo libxcomposite libxinerama opencl-icd-loader libxslt gst-plugins-base-libs vkd3d sdl2 libgphoto2 sane gsm cups samba dosbox
+giflib
+libpng
+libldap
+gnutls
+mpg123
+openal
+v4l-utils
+libpulse
+alsa-plugins
+alsa-lib
+libjpeg-turbo
+libxcomposite
+libxinerama
+opencl-icd-loader
+libxslt
+gst-plugins-base-libs
+vkd3d
+sdl2
+libgphoto2
+sane
+gsm
+cups
+samba
+dosbox

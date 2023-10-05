@@ -1,1 +1,5 @@
-dialog git wget p7zip networkmanager
+dialog
+git
+wget
+p7zip
+networkmanager

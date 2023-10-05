@@ -1,1 +1,3 @@
-virtualbox-host-modules-arch virtualbox-guest-iso virtualbox
+virtualbox-host-modules-arch
+virtualbox-guest-iso
+virtualbox
