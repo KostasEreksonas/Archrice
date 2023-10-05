@@ -22,7 +22,7 @@ directories=(.local/share/fonts/ \
 		Documents/Phone/ \
 		Downloads/ \
 		Music/ \
-		Photos/Screenshots/ \
+		Pictures/Screenshots/ \
 		Videos/OBS/ \
 		Wine/)
 
