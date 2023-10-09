@@ -261,8 +261,8 @@ function updateSystem () {
 }
 
 # Install a package using pacman
-function installPackage () {
-	pacman --noconfirm --needed -S $1 2>>$logfile 1>&2 && return $?
+function installPackage() {
+	pacman --noconfirm --needed -S - < $1 2>>$logfile 1>&2 && return $?
 }
 
 # Install a package from AUR
@@ -271,7 +271,7 @@ function installAURPackage() {
 }
 
 # Install a package using pacman
-function InstallAUR () {
+function InstallAUR() {
 	title="Installing AUR Package" && isAUR="True" && isGIT="False" && MAKE="False"
 	dialog --title "$title" --infobox "Installing packages from AUR" 0 0 && sleep 1
 	Install "$title" "$isAUR" "$isGIT" "$MAKE" "${aur_packages[@]}"
@@ -342,7 +342,7 @@ function installDrivers () {
 	title="Video Driver Installation" && isAUR="False" && isGIT="False" && MAKE="False"
 
 	dialog --title "$title" --yesno "Do you want to install Intel GPU drivers?" 0 0
-	if [ $? == 0 ]; then Install "$title" "$isAUR" "$isGIT" "$MAKE" "${intel_igpu_drivers[@]}"; fi
+	if [ $? == 0 ]; then Install "$title" "$isAUR" "$isGIT" "$MAKE" "./package_lists/intel_igpu_drivers.txt"; fi
 
 	dialog --title "$title" --yesno "Do you want to install AMD GPU drivers?" 0 0
 	if [ $? == 0 ]; then Install "$title" "$isAUR" "$isGIT" "$MAKE" "xf86-video-amdgpu"; fi
@@ -351,7 +351,7 @@ function installDrivers () {
 	if [ $? == 0 ]; then
 		dialog --title "$title" --yes-label "Proprietary" --no-label "Open Source" --yesno "Would you like to install proprietary or open source Nvidia GPU drivers?" 0 0
 		if [ $? == 0 ]; then
-			Install "$title" "$isAUR" "$isGIT" "$MAKE" "${nvidia_dgpu_drivers_proprietary[@]}"
+			Install "$title" "$isAUR" "$isGIT" "$MAKE" "./package_lists/nvidia_drivers.txt"
 		else
 			Install "$title" "$isAUR" "$isGIT" "$MAKE" "${nvidia_dgpu_drivers_open_source[@]}"
 		fi
