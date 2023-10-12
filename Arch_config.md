@@ -43,4 +43,6 @@
 18. Configure `.bashrc`:
     18.1. Add aliases for `list_neworks`, `connect_wifi` and `connect_hotspot` commands
     18.2. Add `~/local/bin/` to `$PATH`
-19. Use `dialog` for displaying configuration options
+19. Use `dialog` for displaying configuration options.
+20. Configure `pacman.conf`
+21. Clone Automatic1111
