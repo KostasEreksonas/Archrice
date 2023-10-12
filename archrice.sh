@@ -252,7 +252,7 @@ function installAURPackages() {
 
 function installKernel() {
 	dialog --title "Kernel Install" --infobox "Installing linux-tkg" 0 0 && sleep 1
-	cd ~/Documents/git/
+	cd $homedir/Documents/git/
 	git clone https://github.com/Frogging-Family/linux-tkg.git
 	cd linux-tkg/
 	./install.sh install
