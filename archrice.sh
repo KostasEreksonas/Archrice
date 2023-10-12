@@ -164,6 +164,7 @@ function configureScripts() {
 
 function cloneDotfiles() {
 	cd /root/Archrice/dotfiles/
+	cp .xinitrc .xprofile $homedir/
 	cp pixmaps/* /usr/share/pixmaps/
 	cp xorg.conf.d/* /etc/X11/xorg.conf.d/
 	dotfiles=(dunst gsimplecal mutt picom ranger)
