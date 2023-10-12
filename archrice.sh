@@ -233,6 +233,10 @@ function installYAY() {
 	dialog --title "$title" --infobox "AUR helper installed" 0 0 && sleep 1
 }
 
+function installAURPackages() {
+	yay --noconfirm --needed -S - < /root/Archrice/package_lists/aur_packages.txt
+}
+
 #  -------------
 # | Main Script |
 #  -------------
@@ -246,6 +250,7 @@ while [ $? == 0 ]; do
 	updateSystem
 	installPackages
 	installYAY
+	installAURPackages
 	installFonts
 	configurePass
 	configureBashrc
