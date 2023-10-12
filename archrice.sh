@@ -205,11 +205,21 @@ function configureOwnership() {
 	cd /home/ && chown -R $username:$username $homedir/
 }
 
+#  --------------
+# | Installation |
+#  --------------
+
+function installDependencies() {
+	echo "Installing dependencies"
+	pacman -S - < /root/Archrice/package_lists/dependencies.txt
+}
+
 #  -------------
 # | Main Script |
 #  -------------
 
 while [ $? == 0 ]; do
+	installDependencies
 	welcomeMsg
 	createUser
 	createDirectories
