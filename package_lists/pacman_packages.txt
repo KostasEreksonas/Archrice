@@ -695,6 +695,7 @@ python-pynvim
 python-watchdog
 python-wheel
 python-yaml
+qemu-base
 qpdf
 qt5-base
 qt5-tools
@@ -771,9 +772,6 @@ vbam-wx
 vid.stab
 vim
 vim-runtime
-virtualbox
-virtualbox-guest-iso
-virtualbox-host-modules-arch
 vkd3d
 vmaf
 volume_key
