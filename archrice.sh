@@ -258,6 +258,12 @@ function installKernel() {
 	./install.sh install
 }
 
+function installSD() {
+	chown -R $username:$username /usr/local/games/
+	cd /usr/local/games/
+	git clone https://github.com/KostasEreksonas/stable-diffusion-webui.git
+}
+
 #  -------------
 # | Main Script |
 #  -------------
@@ -273,6 +279,7 @@ while [ $? == 0 ]; do
 	installYAY
 	installAURPackages
 	installKernel
+	installSD
 	configureVM
 	installFonts
 	configurePass
