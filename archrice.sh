@@ -200,6 +200,11 @@ function configurNeovim() {
 	done
 }
 
+# Recursively set ownership of users' home directory
+function configureOwnership() {
+	cd /home/ && chown -R $username:$username $homedir/
+}
+
 #  -------------
 # | Main Script |
 #  -------------
@@ -215,5 +220,6 @@ while [ $? == 0 ]; do
 	configureScripts
 	cloneDotfiles
 	configureNeovim
+	configureOwnership
 	exitMsg
 done
