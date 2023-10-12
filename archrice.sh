@@ -110,6 +110,22 @@ function installFonts() {
 	7z x Hack.zip && rm Hack.zip
 }
 
+# Configure pass utility to store passwords
+function configurePass () {
+	logfile=/var/log/archrice.log
+	title="Configuring Pass"
+	dialog --title "$title" --msgbox "Now you will be prompted to create a GPG keypair." 0 0
+	# Change terminal ownership to $username to get the passphrase for GPG key, as sugessted here:
+	# https://github.com/MISP/MISP/issues/3702#issuecomment-443371431
+	chown -R $username:$username /dev/tty1
+	runuser -u $username -- gpg --full-gen-key && sleep 5
+	email=$(grep @ $logfile | tail -1 | cut -d " " -f 25 | tr -d "<>")
+	dialog --title "$title" --infobox "Initializing password store for $email" 0 0 && sleep 2
+	runuser -u $username -- pass init $email
+	chown -R root:root /dev/tty1
+	rm $logfile
+}
+
 #  -------------
 # | Main Script |
 #  -------------
@@ -120,5 +136,6 @@ while [ $? == 0 ]; do
 	createDirectories
 	configurePacman
 	installFonts
+	configurePass
 	exitMsg
 done
