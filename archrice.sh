@@ -19,6 +19,11 @@ function welcomeMsg() {
 	dialog --title "Arch auto config" --msgbox "Press Ok to start" 0 0
 }
 
+function exitMsg() {
+	dialog --title "Arch auto config" --msgbox "Setup done" 0 0
+	return 1
+}
+
 #  ---------------
 # | Configuration |
 #  ---------------
@@ -29,4 +34,5 @@ function welcomeMsg() {
 
 while [ $? == 0 ]; do
 	welcomeMsg
+	exitMsg
 done
