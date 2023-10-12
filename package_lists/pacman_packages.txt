@@ -503,6 +503,7 @@ libuv
 libva
 libvdpau
 libverto
+libvirt
 libvisio
 libvorbis
 libvpx
