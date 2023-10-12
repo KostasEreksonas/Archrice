@@ -28,11 +28,18 @@ function exitMsg() {
 # | Configuration |
 #  ---------------
 
+# Editing pacman configuration file
+function configurePacman() {
+	dialog --title "Configuring Pacman" --infobox "Updating Pacman configuration file" 0 0 && sleep 2
+	cd /etc/ && sed -i '33s/#//' pacman.conf; sed -i '37s/#//' pacman.conf; sed -i '93s/#//' pacman.conf; sed -i '94s/#//' pacman.conf
+}
+
 #  -------------
 # | Main Script |
 #  -------------
 
 while [ $? == 0 ]; do
 	welcomeMsg
+	configurePacman
 	exitMsg
 done
