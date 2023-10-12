@@ -223,6 +223,16 @@ function installPackages() {
 	pacman --no-confirm --needed -S - < /root/Archrice/package_lists/pacman_packages.txt
 }
 
+function installYAY() {
+	title="Installing AUR Helper" && isAUR="False" && isGIT="True" && MAKE="False"
+	cd $homedir/Documents/aur/ && git clone https://aur.archlinux.org/yay.git
+	chown -R $username:$username $homedir/Documents/aur/yay
+	dialog --title "$title" --infobox "Installing yay AUR helper" 0 0
+	cd $homedir/Documents/aur/yay/
+	sudo -u $username makepkg --noconfirm -si
+	dialog --title "$title" --infobox "AUR helper installed" 0 0 && sleep 1
+}
+
 #  -------------
 # | Main Script |
 #  -------------
@@ -235,6 +245,7 @@ while [ $? == 0 ]; do
 	configurePacman
 	updateSystem
 	installPackages
+	installYAY
 	installFonts
 	configurePass
 	configureBashrc
