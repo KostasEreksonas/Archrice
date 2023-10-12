@@ -205,6 +205,19 @@ function configureOwnership() {
 	cd /home/ && chown -R $username:$username $homedir/
 }
 
+function configureVM() {
+	cd /var/lib/libvirt/images/
+	title="Local File Download"
+	ip=$(dialog --stdout --title "$title" --inputbox "Enter IP address to download from" 0 0)
+	port=$(dialog --stdout --title "$title" --inputbox "Enter port for downloading files" 0 0)
+	while [ $? == 0 ]; do
+		file=$(dialog --stdout --title "$title" --inputbox "Enter the name of a file you want to download" 0 0)
+		wget -nc http://$ip:$port/$file
+		dialog --title "$title" --yesno "Download another file?" 0 0
+		if [ $? != 0 ]; then break; fi
+	done
+}
+
 #  --------------
 # | Installation |
 #  --------------
@@ -251,6 +264,7 @@ while [ $? == 0 ]; do
 	installPackages
 	installYAY
 	installAURPackages
+	configureVM
 	installFonts
 	configurePass
 	configureBashrc
