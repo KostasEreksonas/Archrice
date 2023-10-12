@@ -100,6 +100,15 @@ function configurePacman() {
 	cd /etc/ && sed -i '33s/#//' pacman.conf; sed -i '37s/#//' pacman.conf; sed -i '93s/#//' pacman.conf; sed -i '94s/#//' pacman.conf
 }
 
+# Install system fonts
+function installFonts() {
+	title="Font Configuration"
+	dialog --title "$title" --infobox "Installing fonts" 0 0 && sleep 2
+	cd $homedir/.local/share/fonts/
+	dialog --title "$title" --infobox "Installing Hack Nerd Font" 0 0
+	wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/Hack.zip
+	7z x Hack.zip && rm Hack.zip
+}
 
 #  -------------
 # | Main Script |
@@ -110,5 +119,6 @@ while [ $? == 0 ]; do
 	createUser
 	createDirectories
 	configurePacman
+	installFonts
 	exitMsg
 done
