@@ -91,7 +91,7 @@ function createDirectories() {
 	cd $homedir/
 	while read dirname others; do
 		mkdir -p "$dirname"
-	done < /Archrice/directories.txt
+	done < /root/Archrice/directories.txt
 }
 
 # Editing pacman configuration file
@@ -162,6 +162,16 @@ function configureScripts() {
 	cp /root/Archrice/dotfiles/system_scripts/* /usr/local/bin/
 }
 
+function cloneDotfiles() {
+	cd /root/Archrice/dotfiles/
+	cp pixmaps/* /usr/share/pixmaps/
+	cp xorg.conf.d/* /etc/X11/xorg.conf.d/
+	dotfiles=(dunst gsimplecal mutt picom ranger)
+	for file in ${dotfiles[@]}; do
+		cp -r $file $homedir/.config/
+	done
+}
+
 #  -------------
 # | Main Script |
 #  -------------
@@ -175,5 +185,6 @@ while [ $? == 0 ]; do
 	configurePass
 	configureBashrc
 	configureScripts
+	cloneDotfiles
 	exitMsg
 done
