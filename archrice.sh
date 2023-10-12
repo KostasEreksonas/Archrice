@@ -211,11 +211,16 @@ function configureOwnership() {
 
 function installDependencies() {
 	echo "Installing dependencies"
-	pacman -S - < /root/Archrice/package_lists/dependencies.txt
+	pacman --no-confirm --needed -S - < /root/Archrice/package_lists/dependencies.txt
 }
 
 function updateSystem() {
 	pacman -Syyu
+}
+
+function installPackages() {
+	dialog --title "Installing packages" --infobox "Installing system packages" 0 0 && sleep 1
+	pacman --no-confirm --needed -S - < /root/Archrice/package_lists/pacman_packages.txt
 }
 
 #  -------------
@@ -229,6 +234,7 @@ while [ $? == 0 ]; do
 	createDirectories
 	configurePacman
 	updateSystem
+	installPackages
 	installFonts
 	configurePass
 	configureBashrc
