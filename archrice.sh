@@ -21,7 +21,7 @@ function welcomeMsg() {
 
 function exitMsg() {
 	dialog --title "Arch auto config" --msgbox "Setup done" 0 0
-	return 1
+	rm -r /root/Archrice/ && return 1
 }
 
 #  ---------------
