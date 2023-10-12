@@ -214,6 +214,10 @@ function installDependencies() {
 	pacman -S - < /root/Archrice/package_lists/dependencies.txt
 }
 
+function updateSystem() {
+	pacman -Syyu
+}
+
 #  -------------
 # | Main Script |
 #  -------------
@@ -224,6 +228,7 @@ while [ $? == 0 ]; do
 	createUser
 	createDirectories
 	configurePacman
+	updateSystem
 	installFonts
 	configurePass
 	configureBashrc
