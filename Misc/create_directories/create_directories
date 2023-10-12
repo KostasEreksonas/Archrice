@@ -1,0 +1,5 @@
+#!/bin/sh
+
+while read dirname others; do
+    mkdir -p "$dirname"
+done < ../../directories.txt
