@@ -11,4 +11,22 @@
 homedir= 
 username= 
 
+#  ------
+# | Misc |
+#  ------
 
+function welcomeMsg() {
+	dialog --title "Arch auto config" --msgbox "Press Ok to start" 0 0
+}
+
+#  ---------------
+# | Configuration |
+#  ---------------
+
+#  -------------
+# | Main Script |
+#  -------------
+
+while [ $? == 0 ]; do
+	welcomeMsg
+done
