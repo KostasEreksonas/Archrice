@@ -28,12 +28,6 @@ function exitMsg() {
 # | Configuration |
 #  ---------------
 
-# Editing pacman configuration file
-function configurePacman() {
-	dialog --title "Configuring Pacman" --infobox "Updating Pacman configuration file" 0 0 && sleep 2
-	cd /etc/ && sed -i '33s/#//' pacman.conf; sed -i '37s/#//' pacman.conf; sed -i '93s/#//' pacman.conf; sed -i '94s/#//' pacman.conf
-}
-
 # Create and configure a new system user
 function createUser() {
 	# Pick an username (cannot be empty)
@@ -90,9 +84,22 @@ function createUser() {
 			unset $passcheck && echo "$name:$password" | chpasswd
 		fi
 	done
-
-	return $?
 }
+
+function createDirectories() {
+	dialog --title "Creating Directories" --infobox "Creating directories" 0 0 && sleep 2
+	cd $homedir/
+	while read dirname others; do
+		mkdir -p "$dirname"
+	done < /Archrice/directories.txt
+}
+
+# Editing pacman configuration file
+function configurePacman() {
+	dialog --title "Configuring Pacman" --infobox "Updating Pacman configuration file" 0 0 && sleep 2
+	cd /etc/ && sed -i '33s/#//' pacman.conf; sed -i '37s/#//' pacman.conf; sed -i '93s/#//' pacman.conf; sed -i '94s/#//' pacman.conf
+}
+
 
 #  -------------
 # | Main Script |
@@ -100,7 +107,8 @@ function createUser() {
 
 while [ $? == 0 ]; do
 	welcomeMsg
-	configurePacman
 	createUser
+	createDirectories
+	configurePacman
 	exitMsg
 done
