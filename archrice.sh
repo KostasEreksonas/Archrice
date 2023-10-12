@@ -250,6 +250,14 @@ function installAURPackages() {
 	yay --noconfirm --needed -S - < /root/Archrice/package_lists/aur_packages.txt
 }
 
+function installKernel() {
+	dialog --title "Kernel Install" --infobox "Installing linux-tkg" 0 0 && sleep 1
+	cd ~/Documents/git/
+	git clone https://github.com/Frogging-Family/linux-tkg.git
+	cd linux-tkg/
+	./install.sh install
+}
+
 #  -------------
 # | Main Script |
 #  -------------
@@ -264,6 +272,7 @@ while [ $? == 0 ]; do
 	installPackages
 	installYAY
 	installAURPackages
+	installKernel
 	configureVM
 	installFonts
 	configurePass
