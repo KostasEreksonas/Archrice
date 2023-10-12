@@ -83,6 +83,7 @@ device-mapper
 dialog
 diffutils
 discord
+dnsmasq
 dnssec-anchors
 docker
 dosbox
@@ -92,6 +93,7 @@ dracut
 duktape
 dunst
 e2fsprogs
+edk2-ovmf
 egl-wayland
 eglexternalplatform
 exiv2
@@ -696,7 +698,7 @@ python-pynvim
 python-watchdog
 python-wheel
 python-yaml
-qemu-base
+qemu-desktop
 qpdf
 qt5-base
 qt5-tools
@@ -773,6 +775,7 @@ vbam-wx
 vid.stab
 vim
 vim-runtime
+virt-manager
 vkd3d
 vmaf
 volume_key
