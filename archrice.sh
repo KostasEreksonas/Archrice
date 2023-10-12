@@ -172,6 +172,32 @@ function cloneDotfiles() {
 	done
 }
 
+function configurNeovim() {
+	mkdir $homedir/.config/nvim/
+	cp /root/Archrice/dotfiles/init.vim $homedir/.config/nvim/
+	cd $homedir/.config/nvim/
+	mkdir autoload/ bundle/ colors/
+	curl -LSso autoload/pathogen.vim https://tpo.pe/pathogen.vim
+	cd bundle/
+	vim_plugins=(preservim/nerdtree \
+		vim-airline/vim-airline \
+		vim-airline/vim-airline-themes \
+		altercation/vim-colors-solarized \
+		tmsvg/pear-tree)
+	for plugin in ${vim_plugins[@]}; do
+		git clone https://github.com/$plugin.git
+	done
+	cd ../colors/
+	themes_solarized=(solarized8 solarized8_flat solarized8_high solarized8_low)
+	for theme in ${themes_solarized[@]}; do
+		wget https://raw.githubusercontent.com/lifepillar/vim-solarized8/master/colors/$theme.vim
+	done
+	themes_gruvbox=(gruvbox8 gruvbox8_hard gruvbox8_soft)
+	for theme in ${themes_gruvbox[@]}; do
+		wget https://raw.githubusercontent.com/lifepillar/vim-gruvbox8/master/colors/$theme.vim
+	done
+}
+
 #  -------------
 # | Main Script |
 #  -------------
@@ -186,5 +212,6 @@ while [ $? == 0 ]; do
 	configureBashrc
 	configureScripts
 	cloneDotfiles
+	configureNeovim
 	exitMsg
 done
