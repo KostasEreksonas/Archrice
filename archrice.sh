@@ -251,7 +251,7 @@ function installAURPackages() {
 }
 
 function installKernel() {
-	dialog --title "Kernel Install" --infobox "Installing linux-tkg" 0 0 && sleep 1
+	dialog --title "Kernel Install" --infobox "Installing linux-tkg kernel " 0 0 && sleep 1
 	cd $homedir/Documents/git/
 	git clone https://github.com/Frogging-Family/linux-tkg.git
 	cd linux-tkg/
@@ -259,6 +259,7 @@ function installKernel() {
 }
 
 function installSD() {
+	dialog --title "Stable Diffusion Install" --infobox "Installing Automatic1111 UI for Stable Diffusion" 0 0 && sleep 1
 	chown -R $username:$username /usr/local/games/
 	cd /usr/local/games/
 	git clone https://github.com/KostasEreksonas/stable-diffusion-webui.git
