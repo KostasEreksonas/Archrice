@@ -156,6 +156,12 @@ function configureBashrc () {
 	fi
 }
 
+# Configure system scripts
+function configureScripts() {
+	cp /root/Archrice/.local/bin/* $homedir/.local/bin/
+	cp /root/Archrice/dotfiles/system_scripts/* /usr/local/bin/
+}
+
 #  -------------
 # | Main Script |
 #  -------------
@@ -168,5 +174,6 @@ while [ $? == 0 ]; do
 	installFonts
 	configurePass
 	configureBashrc
+	configureScripts
 	exitMsg
 done
