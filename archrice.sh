@@ -24,6 +24,20 @@ function exitMsg() {
 	rm -r /root/Archrice/ && return 1
 }
 
+#  --------
+# | Errors |
+#  --------
+
+function installError() {
+	title="Error Installing Package"
+	dialog --title "$title" --yesno "Could not install $1. Retry?" 0 0
+	if [ $? == 0 ]; then
+		dialog --title "$title" --infobox "Retrying to install $1 in 5 seconds." 0 0 && sleep 5 && return 0
+	else
+		dialog --title "$title" --msgbox "Package $1 not installed" 0 0 && return 1
+	fi
+}
+
 #  ---------------
 # | Configuration |
 #  ---------------
@@ -231,9 +245,17 @@ function updateSystem() {
 	pacman -Syyu
 }
 
+function install() {
+	pacman --noconfirm --needed -S $1
+}
+
 function installPackages() {
-	dialog --title "Installing packages" --infobox "Installing system packages" 0 0 && sleep 1
-	pacman --no-confirm --needed -S - < /root/Archrice/package_lists/pacman_packages.txt
+	readarray -t packages < package_lists/pacman_packages.txt
+	for package in ${packages[@]}; do
+		until dialog --title "Installing packages" --infobox "Installing $package" 0 0 && install $package; do
+			installError $package || break
+		done
+	done
 }
 
 function installYAY() {
