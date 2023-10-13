@@ -202,6 +202,15 @@ function configureVM() {
 	done
 }
 
+function installPureline() {
+	cd $homedir/Documents/git/
+	git clone https://github.com/chris-marsh/pureline.git
+	mkdir $homedir/pureline/
+	cd pureline/
+	cp -r pureline segments/ $homedir/pureline/
+	cp configs/powerline_full_256col.conf $homedir/.pureline.conf
+}
+
 #  --------------
 # | Installation |
 #  --------------
@@ -273,6 +282,7 @@ while [ $? == 0 ]; do
 	installAURPackages
 	installKernel
 	installSD
+	installPureline
 	configureVM
 	installFonts
 	configurePass
