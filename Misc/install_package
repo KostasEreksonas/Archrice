@@ -1,0 +1,41 @@
+#!/bin/sh
+
+logfile=log.txt
+function installError() {
+	title="Error Installing Package"
+	dialog --title "$title" --yesno "Could not install $1. Retry?" 0 0
+	if [ $? == 0 ]; then
+		dialog --title "$title" --infobox "Retrying to install $1 in 5 seconds." 0 0 && sleep 5 && return 0
+	else
+		dialog --title "$title" --msgbox "Package $1 not installed" 0 0 && return 1
+	fi
+}
+
+function install() {
+	pacman --noconfirm --needed -S $1 2>>$logfile 1>&2
+}
+
+function installPackage() {
+	pkglist=$(dialog --stdout --title "Choose Package List" --radiolist "Choose the package list to install from:" 0 0 0 \
+		applications - on \
+		aur_packages - off \
+		dependencies - off \
+		fonts - off \
+		intel_igpu_drivers - off \
+		nvidia_drivers - off \
+		pacman_packages - off \
+		qemu - off \
+		virtualbox - off \
+		wine_opt_32bit - off \
+		wine_opt - off \
+		wine - off \
+		wm_tools - off)
+	readarray -t packages < ../package_lists/$pkglist.txt
+	for package in ${packages[@]}; do
+		until dialog --title "Installing Packages" --infobox "Installing $package" 0 0 && install $package; do
+			installError $package || break
+		done
+	done
+}
+
+installPackage
