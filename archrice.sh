@@ -140,36 +140,6 @@ function configurePass () {
 	rm $logfile
 }
 
-# Configure bashrc file
-function configureBashrc () {
-	alias="" && SSID="" && title="Configuring Bashrc"
-	cd $homedir/ && cp $homedir/Documents/git/Archrice/dotfiles/.bashrc $homedir/.bashrc
-	dialog --title "$title" --infobox "Appending $homedir/.local/bin/ to PATH" 0 0 && sleep 2
-	sed -i "13s/username/$username/" .bashrc
-	dialog --title "$title" --yesno "Add an alias for connecting to wireless/hotspot network? " 0 0
-	if [ $? == 0 ]; then
-		printf "\n\n#  -------\n# | Wi-Fi |\n#  -------" >> .bashrc
-		mkdir -p $homedir/.password-store/wifi/ && chown -R $username:$username $homedir/.password-store/wifi/
-		while [ $? == 0 ]; do
-			unset alias && unset SSID
-			alias=$(dialog --stdout --title "$title" --inputbox "Enter name of an alias:" 0 0)
-			SSID=$(dialog --stdout --title "$title" --inputbox "Enter SSID of your Wireless network:" 0 0)
-			dialog --title "$title" --msgbox "Now You will be prompted to enter a password for $SSID" 0 0
-			chown -R $username:$username /dev/tty1 && runuser -u $username -- pass add $SSID && chown -R root:root /dev/tty1
-			mv $homedir/.password-store/$SSID.gpg $homedir/.password-store/wifi/$SSID.gpg
-			dialog --title "$title" --infobox "Creating an $alias alias for $SSID" 0 0 && sleep 1
-			printf "\n\nalias $alias=\'nmcli device wifi connect $SSID password \`pass wifi/$SSID\`\'" >> .bashrc
-			dialog --title "$title" --yesno "Do you want to add an alias for another Wireless network?" 0 0
-			if [ $? != 0 ]; then break; fi
-		done
-	fi
-	dialog --title "$title" --yesno "Do you want to add alias to list all available Wireless networks?" 0 0
-	if [ $? == 0 ]; then
-		unset alias && alias=$(dialog --stdout --title "$title" --inputbox "Enter name of an alias:" 0 0)
-		printf "\n\nalias $alias=\'nmcli device wifi list\'" >> .bashrc
-	fi
-}
-
 # Configure system scripts
 function configureScripts() {
 	cp /root/Archrice/.local/bin/* $homedir/.local/bin/
@@ -306,7 +276,6 @@ while [ $? == 0 ]; do
 	configureVM
 	installFonts
 	configurePass
-	configureBashrc
 	configureScripts
 	cloneDotfiles
 	configureNeovim
