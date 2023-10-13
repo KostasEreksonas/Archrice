@@ -148,7 +148,7 @@ function configureScripts() {
 
 function cloneDotfiles() {
 	cd /root/Archrice/dotfiles/
-	cp .xinitrc .xprofile $homedir/
+	cp .xinitrc .xprofile .bashrc $homedir/
 	cp -r .newsboat/ $homedir/
 	cp pixmaps/* /usr/share/pixmaps/
 	cp xorg.conf.d/* /etc/X11/xorg.conf.d/
