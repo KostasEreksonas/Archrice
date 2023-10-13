@@ -217,6 +217,7 @@ ldb
 ldns
 lensfun
 less
+lf
 lib32-acl
 lib32-alsa-lib
 lib32-alsa-plugins
@@ -707,7 +708,6 @@ qt5-x11extras
 qt6-base
 qt6-svg
 qt6-translations
-ranger
 raptor
 rasqal
 rav1e
