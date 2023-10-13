@@ -8,13 +8,32 @@
 alias ls='ls --color=auto'
 PS1='[\u@\h \W]\$ '
 
-export PS1="\[$(tput bold)\]\[$(tput setaf 1)\][\[$(tput setaf 3)\]\u\[$(tput setaf 2)\]@\[$(tput setaf 4)\]\h \[$(tput setaf 5)\]\W\[$(tput setaf 1)\]]\[$(tput setaf 7)\]\\$ \[$(tput sgr0)\]"
+#  ---------
+# | Aliases |
+#  ---------
 
-export PATH=$PATH:/home/username/.local/bin
+alias connectWifi='nmcli device wifi connect <SSID> password `pass wifi/<SSID>`'
+alias connectHotspot='nmcli device wifi connect <SSID> password `pass wifi/<SSID>`'
+alias listNetworks="nmcli device wifi list"
+alias startArch="virsh --connect qemu:///system start archlinux && virt-manager --connect qemu:///system --show-domain-console archlinux"
+alias startWin10="virsh --connect qemu:///system start win10 && virt-manager --connect qemu:///system --show-domain-console win10"
+alias startKali="virsh --connect qemu:///system start debian12 && virt-manager --connect qemu:///system --show-domain-console debian12"
+
+#  ---------
+# | Exports |
+#  ---------
+
+export PATH=$PATH:/home/kostas/.local/bin
 export TERMINAL=st
 
+#  ---------
+# | Sources |
+#  ---------
+
+source ~/pureline/pureline ~/.pureline.conf
+
+#  ------
+# | Misc |
+#  ------
+
 RANGER_LOAD_DEFAULT_RC=FALSE
-
-# Aliases
-
-
