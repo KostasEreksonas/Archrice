@@ -1,6 +1,5 @@
 #!/bin/sh
-
-memory="$(free -h | awk 'NR == 2 {print $3"/"$2}' | sed 's/i//g')"
+memory="$(free -h | awk '{if (NR==2) {print $3"/"$2}}' | sed 's/i//g')"
 icon=
 
 #Define mouse controls
