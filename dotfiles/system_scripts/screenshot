@@ -2,4 +2,4 @@
 
 # Dependencies: maim, xdotool
 
-maim -i $(xdotool getactivewindow) -B ~/Photos/Screenshots/$(date +"%Y-%m-%d_%H-%M-%S").png && notify-send "Screenshot made!" "Screenshot saved at ~/Photos/Screenshots/$(date +"%Y-%m-%d_%H-%M-%S").png"
+maim -i $(xdotool getactivewindow) -B ~/Pictures/Screenshots/$(date +"%Y-%m-%d_%H-%M-%S").png && notify-send "Screenshot made!" "Screenshot saved at ~/Pictures/Screenshots/$(date +"%Y-%m-%d_%H-%M-%S").png"
