@@ -1,0 +1,155 @@
+# ------------------------ Gmail ------------------------
+IMAPAccount gmail
+# Address to connect to
+Host imap.gmail.com
+Port 993
+User name@gmail.com
+# To store the password in an encrypted file use PassCmd instead of Pass
+PassCmd "gpg -d ~/.password-store/mail/email.gpg"
+#
+# Use SSL
+SSLType IMAPS
+# The following line should work. If get certificate errors, uncomment the two following lines and read the "Troubleshooting" section.
+CertificateFile /etc/ssl/certs/ca-certificates.crt
+# CertificateFile ~/.cert/imap.gmail.com.pem
+# CertificateFile ~/.cert/Equifax_Secure_CA.pem
+
+IMAPStore gmail-remote
+Account gmail
+
+MaildirStore gmail-local
+Subfolders Verbatim
+# The trailing "/" is important
+Path ~/Mail/gmail/
+Inbox ~/Mail/gmail/INBOX
+
+Channel gmail
+Far :gmail-remote:
+Near :gmail-local:
+# Exclude everything under the internal [Gmail] folder, except the interesting folders
+#Patterns * ![Gmail]* "[Gmail]/Sent Mail" "[Gmail]/Starred" "[Gmail]/All Mail"
+# Or include everything
+Patterns *
+# Automatically create missing mailboxes, both locally and on the server
+Create Both
+# Prevent files from getting deleted
+Expunge Both
+# Save the synchronization state files in the relevant directory
+SyncState *
+
+# ------------------------ Gmail Main -------------------
+IMAPAccount gmail_main
+# Address to connect to
+Host imap.gmail.com
+Port 993
+User name@gmail.com
+# To store the password in an encrypted file use PassCmd instead of Pass
+PassCmd "gpg -d ~/.password-store/mail/email_main.gpg"
+#
+# Use SSL
+SSLType IMAPS
+# The following line should work. If get certificate errors, uncomment the two following lines and read the "Troubleshooting" section.
+CertificateFile /etc/ssl/certs/ca-certificates.crt
+# CertificateFile ~/.cert/imap.gmail.com.pem
+# CertificateFile ~/.cert/Equifax_Secure_CA.pem
+
+IMAPStore gmail_main-remote
+Account gmail_main
+
+MaildirStore gmail_main-local
+Subfolders Verbatim
+# The trailing "/" is important
+Path ~/Mail/gmail_main/
+Inbox ~/Mail/gmail_main/INBOX
+
+Channel gmail_main
+Far :gmail_main-remote:
+Near :gmail_main-local:
+# Exclude everything under the internal [Gmail] folder, except the interesting folders
+#Patterns * ![Gmail]* "[Gmail]/Sent Mail" "[Gmail]/Starred" "[Gmail]/All Mail"
+# Or include everything
+Patterns *
+# Automatically create missing mailboxes, both locally and on the server
+Create Both
+# Prevent files from getting deleted
+Expunge Both
+# Save the synchronization state files in the relevant directory
+SyncState *
+
+# ------------------------ Cock --------------------------
+IMAPAccount cockmail
+# Address to connect to
+Host mail.cock.li
+Port 993
+User name@cock.li
+# To store the password in an encrypted file use PassCmd instead of Pass
+PassCmd "gpg -d ~/.password-store/mail/cockmail.gpg"
+#
+# Use SSL
+SSLType IMAPS
+# The following line should work. If get certificate errors, uncomment the two following lines and read the "Troubleshooting" section.
+CertificateFile /etc/ssl/certs/ca-certificates.crt
+# CertificateFile ~/.cert/imap.gmail.com.pem
+# CertificateFile ~/.cert/Equifax_Secure_CA.pem
+
+IMAPStore cockmail-remote
+Account cockmail
+
+MaildirStore cockmail-local
+Subfolders Verbatim
+# The trailing "/" is important
+Path ~/Mail/cockmail/
+Inbox ~/Mail/cockmail/INBOX
+
+Channel cockmail
+Far :cockmail-remote:
+Near :cockmail-local:
+# Exclude everything under the internal [Gmail] folder, except the interesting folders
+#Patterns * ![Gmail]* "[Gmail]/Sent Mail" "[Gmail]/Starred" "[Gmail]/All Mail"
+# Or include everything
+Patterns *
+# Automatically create missing mailboxes, both locally and on the server
+Create Both
+# Prevent files from getting deleted
+Expunge Both
+# Save the synchronization state files in the relevant directory
+SyncState *
+
+# ------------------------ KU ----------------------------
+IMAPAccount KU
+# Address to connect to
+Host outlook.office365.com
+Port 993
+User name@ku.lt
+# To store the password in an encrypted file use PassCmd instead of Pass
+PassCmd "gpg -d ~/.password-store/mail/KU.gpg"
+#
+# Use SSL
+SSLType IMAPS
+# The following line should work. If get certificate errors, uncomment the two following lines and read the "Troubleshooting" section.
+CertificateFile /etc/ssl/certs/ca-certificates.crt
+# CertificateFile ~/.cert/imap.gmail.com.pem
+# CertificateFile ~/.cert/Equifax_Secure_CA.pem
+
+IMAPStore KU-remote
+Account KU
+
+MaildirStore KU-local
+Subfolders Verbatim
+# The trailing "/" is important
+Path ~/Mail/KU/
+Inbox ~/Mail/KU/INBOX
+
+Channel KU
+Far :KU-remote:
+Near :KU-local:
+# Exclude everything under the internal [Gmail] folder, except the interesting folders
+#Patterns * ![Gmail]* "[Gmail]/Sent Mail" "[Gmail]/Starred" "[Gmail]/All Mail"
+# Or include everything
+Patterns *
+# Automatically create missing mailboxes, both locally and on the server
+Create Both
+# Prevent files from getting deleted
+Expunge Both
+# Save the synchronization state files in the relevant directory
+SyncState *
