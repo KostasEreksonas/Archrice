@@ -10,7 +10,7 @@ Table of Contents
 	* [System Scripts](#System-Scripts)
 	* [Statusbar](#Statusbar)
 	* [Aliases](#Aliases)
-	* [Vim](#Vim)
+	* [Neovim](#Neovim)
 	* [Other Software](#Other-Software)
 
 # Installation
@@ -73,7 +73,7 @@ For dwmblocks statusbar I made several scripts that are used for system monitori
 
 During the installation of archrice script the user is prompted to create aliases for Wireless and Bluetooth network connections.
 
-## Vim
+## Neovim
 
 Archrice script installs either Vim or Neovim terminal based text editor and `Pathogen` plugin manager with some plugins.
 
