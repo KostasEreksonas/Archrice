@@ -158,7 +158,7 @@ function cloneDotfiles() {
 	done
 }
 
-function configurNeovim() {
+function configureNeovim() {
 	mkdir $homedir/.config/nvim/
 	cp /root/Archrice/dotfiles/init.vim $homedir/.config/nvim/
 	cd $homedir/.config/nvim/
