@@ -2,21 +2,21 @@
 
 if [ -z $1 ]; then
 	printf "Usage: get_deps <package_name>\n"
+elif [[ $EUID -ne 0 ]]; then
+	printf "This script needs to be run as root.\n"
 else
 	pacman -Qi $1 | nl -w2 >> f
+	deps=$(grep "Optional Deps" f | cut -d ":" -f 2 | tr -d " " | cut -d "[" -f 1)
 	start=$(grep "Optional Deps" f)
-	deps=()
-	deps+=$(grep "Optional Deps" f | cut -d ":" -f 2 | tr -d " " | cut -d "[" -f 1)
 	x=${start:0:2}
+	START=$(($x+1))
 	end=$(grep "Required By" f)
 	y=${end:0:2}
-	START=$(($x+1))
 	END=$(($y-1))
 	for i in $(seq $START $END); do
 		deps+=' '
 		deps+=$(head -n $i f | tail -1 | cut -d " " -f 19 | cut -d ":" -f 1 | tr -d ":")
 	done
 	rm f
-	printf "${deps[*]}\n"
 	pacman -S ${deps[*]}
 fi
