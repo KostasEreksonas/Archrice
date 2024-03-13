@@ -1,0 +1,9 @@
+#!/bin/sh
+
+awk '/PRETTY_NAME/' /etc/os-release | sed -e 's/PRETTY_NAME="/OS: /;s/"//'
+grep m.*me /proc/cpuinfo -m1 | sed -r 's/m.*me.*:/CPU:/'
+lspci | grep -E "(VGA|3D)" | cut -d " " -f 2- | sed -e 's/VGA compatible controller/GPU/'
+awk '/MemTotal/{printf "Memory size: %.1f GB \n", $2/1024/1024}' /proc/meminfo
+awk '{printf "Storage (NVME): %.1f GB \n", $1* 512/1000/1000/1000}' /sys/block/nvme0n1/size
+awk '{printf "Storage (HDD): %.1f GB \n", $1* 512/1000/1000/1000}' /sys/block/sda/size
+awk '{printf "Storage (USB): %.1f GB \n", $1* 512/1000/1000/1000}' /sys/block/sd[b-z]/size
