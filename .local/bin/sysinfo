@@ -7,3 +7,5 @@ awk '/MemTotal/{printf "Memory size: %.1f GB \n", $2/1024/1024}' /proc/meminfo
 awk '{printf "Storage (NVME): %.1f GB \n", $1* 512/1000/1000/1000}' /sys/block/nvme0n1/size
 awk '{printf "Storage (HDD): %.1f GB \n", $1* 512/1000/1000/1000}' /sys/block/sda/size
 awk '{printf "Storage (USB): %.1f GB \n", $1* 512/1000/1000/1000}' /sys/block/sd[b-z]/size
+lspci | grep -E "Network" | cut -d " " -f 2- | sed -e 's/Network controller/Wi-Fi/'
+lspci | grep -E "Ethernet" | cut -d " " -f 2- | sed -e 's/ controller//'
