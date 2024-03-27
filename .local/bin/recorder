@@ -1,0 +1,25 @@
+#!/bin/sh
+
+#  ------------
+# | Parameters |
+#  ------------
+
+loglevel="error"
+size="1920x1080"
+method="x11grab"
+crf="17"
+hwaccel="cuda"
+video="h264_nvenc"
+audio="pulse"
+sink="$(pacmd list-sources | grep -PB 1 "analog.*monitor" | head -n 1 | sed 's/.* //g')"
+preset="medium"
+name="$(date +'%Y-%m-%d_%H-%M-%S')"
+ext="mp4"
+directory="/home/kostas/Videos/OBS/"
+
+#  ------
+# | Main |
+#  ------
+
+cd $directory
+ffmpeg -loglevel $loglevel -video_size $size -f $method -i :0.0+1920,0 -hwaccel $hwaccel -f $audio -i $sink -preset $preset -c:v $video $name.$ext
