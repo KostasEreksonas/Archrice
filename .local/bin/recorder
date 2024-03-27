@@ -12,14 +12,15 @@ hwaccel="cuda"
 video="h264_nvenc"
 audio="pulse"
 sink="$(pacmd list-sources | grep -PB 1 "analog.*monitor" | head -n 1 | sed 's/.* //g')"
-preset="medium"
+preset="slow"
 name="$(date +'%Y-%m-%d_%H-%M-%S')"
 ext="mkv"
 directory="/home/kostas/Videos/OBS/"
+buffer="16M"
 
 #  ------
 # | Main |
 #  ------
 
 cd $directory
-ffmpeg -loglevel $loglevel -video_size $size -f $method -i :0.0+1920,0 -hwaccel $hwaccel -f $audio -i $sink -preset $preset -c:v $video $name.$ext
+ffmpeg -loglevel $loglevel -video_size $size -f $method -i :0.0+1920,0 -hwaccel $hwaccel -hwaccel_output_format $hwaccel -f $audio -i $sink -preset $preset -profile:v high -tune hq -rc-lookahead 8 -bf 2 -rc vbr -cq 26 -b:v 0 -maxrate 120M -b:v $buffer -bufsize "240M" -c:v $video $name.$ext
