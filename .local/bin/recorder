@@ -14,7 +14,7 @@ audio="pulse"
 sink="$(pacmd list-sources | grep -PB 1 "analog.*monitor" | head -n 1 | sed 's/.* //g')"
 preset="medium"
 name="$(date +'%Y-%m-%d_%H-%M-%S')"
-ext="mp4"
+ext="mkv"
 directory="/home/kostas/Videos/OBS/"
 
 #  ------
