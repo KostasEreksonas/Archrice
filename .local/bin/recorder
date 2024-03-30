@@ -50,8 +50,8 @@ function record() {
 		-b:v $bitrate \
 		-maxrate $maxrate \
 		-bufsize $buffer \
-		-c:v \
-		$video $name.$ext
+		-c:v $video \
+		$name.$ext
 }
 
 #  ------
