@@ -3,34 +3,33 @@
 #  ------------
 # | Parameters |
 #  ------------
-
 loglevel="error"
-size="1920x1080"
-method="x11grab"
-crf="17"
-hwaccel="cuda"
-video="h264_nvenc"
-audio="pulse"
-sink="$(pacmd list-sources | grep -PB 1 "analog.*monitor" | head -n 1 | sed 's/.* //g')"
-preset="slow"
 name="$(date +'%Y-%m-%d_%H-%M-%S')"
 ext="mkv"
 directory="/home/kostas/Videos/OBS/"
-bitrate="120M"
-maxrate="120M"
-buffer="240M"
-profile="high"
-tune="hq"
-rc="vbr"
-lookahead="8"
-bframes="4"
-cq="19"
 
 #  -----------
 # | Functions |
 #  -----------
 
 function record() {
+	size="1920x1080"
+	method="x11grab"
+	crf="17"
+	hwaccel="cuda"
+	video="h264_nvenc"
+	audio="pulse"
+	sink="$(pacmd list-sources | grep -PB 1 "analog.*monitor" | head -n 1 | sed 's/.* //g')"
+	preset="slow"
+	bitrate="120M"
+	maxrate="120M"
+	buffer="240M"
+	profile="high"
+	tune="hq"
+	rc="vbr"
+	lookahead="8"
+	bframes="4"
+	cq="19"
 	cd $directory
 	ffmpeg -loglevel $loglevel \
 		-video_size $size \
@@ -54,6 +53,21 @@ function record() {
 		$name.$ext
 }
 
+function webcam() {
+	cd $directory
+	audio="alsa"
+	audio_device="default"
+	video="v4l2"
+	video_device="/dev/video0"
+	ffmpeg -loglevel $loglevel \
+		-f $audio \
+		-ac 2 \
+		-i $audio_device \
+		-f $video \
+		-i $video_device \
+		$name.$ext
+}
+
 #  ------
 # | Main |
 #  ------
@@ -63,5 +77,17 @@ then
 	printf "xdpyinfo not found\n"
 	exit 1
 else
-	record
+	printf "Choose option: (r) record, (w) webcam\n"
+	read key
+	case $key in
+		r)
+			record
+			;;
+		w)
+			webcam
+			;;
+		*)
+			printf "Unrecognized option\n" && exit 1
+			;;
+	esac
 fi
