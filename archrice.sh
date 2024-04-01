@@ -266,6 +266,10 @@ function installSD() {
 	git clone https://github.com/KostasEreksonas/stable-diffusion-webui.git
 }
 
+function installLlama() {
+	curl -fsSL https://ollama.com/install.sh | sh
+}
+
 #  -------------
 # | Main Script |
 #  -------------
@@ -282,6 +286,7 @@ while [ $? == 0 ]; do
 	installAURPackages
 	installKernel
 	installSD
+	installLlama
 	installPureline
 	configureVM
 	installFonts
