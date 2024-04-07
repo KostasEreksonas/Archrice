@@ -16,7 +16,7 @@ Table of Contents
 # Installation
 
 Download the archrice shell script from this repo with `curl`, make the script executable and run it.
-The instructions are given down below:
+The instructions are given below:
 
 ```
 curl -LJO https://raw.githubusercontent.com/KostasEreksonas/Archrice/main/archrice.sh
