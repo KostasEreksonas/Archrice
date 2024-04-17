@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+
+import requests
+import json
+
+def status(forecast):
+    """
+    Return status code of a request
+    """
+    return forecast.status_code
+
+def write_data(forecast):
+    """
+    Write forecast data to a file in json format
+    """
+    data = forecast.json()
+    text = json.dumps(data, sort_keys=True, indent=4)
+    with open('weather_report.json', 'w') as file:
+        file.write(text)
+
+def main():
+    city = "mazeikiai"
+    url = f"https://api.meteo.lt/v1/places/{city}/forecasts/long-term"
+    forecast = requests.get(url) # GET request of weather data
+    write_data(forecast)
+
+if __name__ == "__main__":
+    main()
