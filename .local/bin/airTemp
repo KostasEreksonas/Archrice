@@ -62,7 +62,7 @@ def main():
     Main function - load, prepare and print data
     """
     time = datetime.now().strftime("%Y-%m-%d %H:00:00")
-    data = json.load(open("weather_report.json"))
+    data = json.load(open("/home/kostas/.local/bin/weather_report.json"))
     temp(time, data)
 
 if __name__ == "__main__":
