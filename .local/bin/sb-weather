@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# Show current air temperature
+python3 airTemp
+
+
+# Define mouse controls
+case $BUTTON in
+	# Left-click opens an instance of gsimplecal
+    1) setsid -f "$TERMINAL" -e python3 currentWeather ;;
+	# Right-click shows a notification with current time
+	3) currentWeather | while read OUTPUT; do notify-send "$OUTPUT"; done
+esac

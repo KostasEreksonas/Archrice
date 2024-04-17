@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+
+import json
+from datetime import datetime
+
+def condition(timestamp):
+    """
+    Get current weather conditions based on conditionCode
+    """
+    if timestamp["conditionCode"] == "clear":
+        return ""
+    elif timestamp["conditionCode"] == "cloudy":
+        return ""
+    elif timestamp["conditionCode"] == "partly-cloudy":
+        return ""
+    elif timestamp["conditionCode"] == "cloudy-with-sunny-intervals":
+        return ""
+    elif timestamp["conditionCode"] == "thunder":
+        return ""
+    elif timestamp["conditionCode"] == "isolated-thunderstorms":
+        return ""
+    elif timestamp["conditionCode"] == "thunderstorms":
+        return ""
+    elif timestamp["conditionCode"] == "heavy-rain-with-thunderstorms":
+        return ""
+    elif timestamp["conditionCode"] == "light-rain":
+        return ""
+    elif timestamp["conditionCode"] == "rain":
+        return ""
+    elif timestamp["conditionCode"] == "heavy-rain":
+        return ""
+    elif timestamp["conditionCode"] == "light-sleet":
+        return ""
+    elif timestamp["conditionCode"] == "sleet":
+        return ""
+    elif timestamp["conditionCode"] == "freezing-rain":
+        return ""
+    elif timestamp["conditionCode"] == "hail":
+        return ""
+    elif timestamp["conditionCode"] == "light-snow":
+        return ""
+    elif timestamp["conditionCode"] == "snow":
+        return ""
+    elif timestamp["conditionCode"] == "heavy-snow":
+        return ""
+    elif timestamp["conditionCode"] == "fog":
+        return ""
+    elif timestamp["conditionCode"] == "null":
+        return "null"
+
+def temp(time, data):
+    """
+    Get current temperature
+    """
+    timestamps = data["forecastTimestamps"]
+    for timestamp in timestamps:
+        if time == timestamp["forecastTimeUtc"]:
+            print(f"{condition(timestamp)} {timestamp['airTemperature']} °C")
+
+def main():
+    """
+    Main function - load, prepare and print data
+    """
+    time = datetime.now().strftime("%Y-%m-%d %H:00:00")
+    data = json.load(open("weather_report.json"))
+    temp(time, data)
+
+if __name__ == "__main__":
+    main()
