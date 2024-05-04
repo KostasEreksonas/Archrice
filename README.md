@@ -15,7 +15,7 @@ Table of Contents
 
 # Installation
 
-Download the archrice shell script from this repo with `curl`, make the script executable and run it.
+Download the script from this repo with `curl`, make the script executable and run it.
 The instructions are given below:
 
 ```
