@@ -1,6 +1,6 @@
 # Archrice
 
-Archrice is a shell script for installing a window manager based graphical environment with some of the most needed software on a base Arch Linux installation.
+Archrice is a shell script used for installing a window manager based graphical environment with some of the most needed software on a base Arch Linux installation.
 
 Table of Contents
 =================
