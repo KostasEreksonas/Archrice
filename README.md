@@ -26,7 +26,7 @@ chmod +x archrice.sh
 
 # Features
 
-Main system features that are installed by archrice script are presented below.
+Main system features that are presented below.
 
 ## Window Manager
 
