@@ -1,0 +1,50 @@
+#!/bin/sh
+
+# Get filenames
+fname="*"
+
+# File count
+count=0
+
+for f in $fname; do
+	((++count))
+	# Get duration info
+	duration=$(exiftool $f | grep Duration)
+
+	#Get hour, minute and second values
+	hours=$(echo $duration | cut -d ":" -f 2 | tr -d " ")
+	minutes=$(echo $duration | cut -d ":" -f 3 | tr -d " ")
+	seconds=$(echo $duration | cut -d ":" -f 4 | tr -d " " | cut -d "." -f 1)
+
+	# Count sum of hours
+	if [[ $hours =~ 0[0]+ ]]; then
+		hours=0
+	elif [[ $hours =~ 0[1-9]+ ]]; then
+		hours=$(echo $hours | tr -d "0")
+	fi
+	sum_hours=$((sum_hours + hours))
+
+	# Count sum of minutes
+	if [[ $minutes =~ 0[0]+ ]]; then
+		minutes=0
+	elif [[ $minutes =~ 0[1-9]+ ]]; then
+		minutes=$(echo $minutes | tr -d "0")
+	fi
+	sum_minutes=$((sum_minutes + minutes))
+
+	# Count sum of seconds
+	if [[ $seconds =~ 0[0]+ ]]; then
+		seconds=0
+	elif [[ $seconds =~ 0[1-9]+ ]]; then
+		seconds=$(echo $seconds | tr -d "0")
+	fi
+	sum_seconds=$((sum_seconds + seconds))
+
+	#printf "Sum hours: $sum_hours, hours: $hours\nSum minutes: $sum_minutes, minutes: $minutes\nSum seconds: $sum_seconds, seconds: $seconds\n"
+done
+
+total=$((3600*$sum_hours+60*$sum_minutes+$sum_seconds))
+total_hours=$(echo $total / 3600 | bc)
+total_minutes=$(echo "($total - 3600 * $total_hours) / 60" | bc)
+total_seconds=$(echo "$total - 3600 * $total_hours - 60 * $total_minutes" | bc)
+printf "Files: $count, total hours: $total_hours, total minutes: $total_minutes, total seconds: $total_seconds\n"
