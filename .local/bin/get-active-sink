@@ -1,0 +1,51 @@
+#!/bin/sh
+
+# Get id of a RUNNING sink
+
+c=0
+sinks=()
+data=$(pactl list sinks | grep -A 1 Sink);
+
+while IFS="-- "; read -ra line; do
+	for i in "${line[@]}"; do
+		# Get sink id
+		if [[ "$i" =~ \#[0-9] ]]; then
+			c=0
+			sink=$(echo $i | tr -d '#')
+			sinks+=("$sink")
+		fi
+		# Get sink status (sink status is 2 lines below sink id)
+		if [ $c == 2 ]; then
+			sinks+=("$i")
+			c=0
+		fi
+		c=$((c+1))
+	done
+done <<< "$data"
+
+keys=()
+values=()
+
+for i in ${sinks[@]}; do
+	# Match strings as keys
+	if [[ "$i" =~ [A-Za-z]+ ]]; then
+		keys+=($i)
+	fi
+	# Match sink id's as values
+	if [[ $i =~ [0-9]+ ]]; then
+		values+=($i)
+	fi
+done
+
+# Create an associative array
+length=${#keys[@]}
+((length--))
+declare -A arr_assoc
+for (( i = 0; i <= $length; i++ )); do
+	key=${keys[$i]}
+	value=${values[$i]}
+	arr_assoc[$key]=$value
+done
+
+# Get id of a RUNNING sink
+echo ${arr_assoc["RUNNING"]}
