@@ -1,46 +1,99 @@
 #!/bin/sh
 
-# Get filenames
-fname="*"
+# Get total duration of all video files in a specific directory
+# Dependencies: bc
+
+# Check if bc is installed
+pacman -Qi bc 2>/dev/null 1>&2
+if [[ $? != 0 ]]; then
+	echo "bc is not installed. Terminating script"
+	exit 1
+fi
+
+# Delete all hyphens in a filename
+for f in *-*; do
+	mv "$f" "${f//-/}"
+done 2>/dev/null
+
+# Delete square brackets with everything between them
+for f in *[*; do
+	tmp=$(echo $f | sed 's/\[[^]]*\]//g')
+	mv "$f" "$tmp"
+done 2>/dev/null
+
+# Remove all but the last dot (last dot is a separator between file name and file extension)
+for f in *.*; do
+	count=$(awk -F "." '{print NF-1}' <<< "$f")
+	if [[ $count > 1 ]]; then
+		tmp=$(echo $f | tr -d ".")
+        position=$((${#tmp}-3))
+        tmp=$(echo $tmp | sed "s/./&./$position")
+		mv "$f" "$tmp"
+	fi
+done
+
+# Replace a whitespace between file name and file extension
+for f in *; do
+	position=$((${#f}-4));
+	if [[ ${f:$(($position-1)):1} == " " ]]; then
+		tmp=$(echo $f | sed "s/.//$position")
+		mv "$f" "$tmp"
+	fi
+done
+
+# Replace multiple subsequent whitespaces with one
+for f in *\ *; do
+	tmp=$(echo "$f" | tr -s " ")
+	mv "$f" "$tmp"
+done 2>/dev/null
+
+# Replace whitespaces with undersocres in filename
+for f in *\ *; do
+	mv "$f" "${f// /_}"
+done 2>/dev/null
 
 # File count
 count=0
 
-for f in $fname; do
-	((++count))
-	# Get duration info
-	duration=$(exiftool $f | grep Duration)
+# Match only video files within the current directory
+for f in *; do
+	if [[ $f =~ [A-Za-z0-9]+\.[a-z0-9]{3} ]]; then
+		((++count))
+		# Get duration info
+		duration=$(exiftool $f | grep Duration)
 
-	#Get hour, minute and second values
-	hours=$(echo $duration | cut -d ":" -f 2 | tr -d " ")
-	minutes=$(echo $duration | cut -d ":" -f 3 | tr -d " ")
-	seconds=$(echo $duration | cut -d ":" -f 4 | tr -d " " | cut -d "." -f 1)
+		#Get hour, minute and second values
+		hours=$(echo $duration | cut -d ":" -f 2 | tr -d " ")
+		minutes=$(echo $duration | cut -d ":" -f 3 | tr -d " ")
+		seconds=$(echo $duration | cut -d ":" -f 4 | tr -d " " | cut -d "." -f 1)
 
-	# Count sum of hours
-	if [[ $hours =~ 0[0]+ ]]; then
-		hours=0
-	elif [[ $hours =~ 0[1-9]+ ]]; then
-		hours=$(echo $hours | tr -d "0")
+		# Count sum of hours
+		if [[ $hours =~ 0[0]+ ]]; then
+			hours=0
+		elif [[ $hours =~ 0[1-9]+ ]]; then
+			hours=$(echo $hours | tr -d "0")
+		fi
+		sum_hours=$((sum_hours + hours))
+
+		# Count sum of minutes
+		if [[ $minutes =~ 0[0]+ ]]; then
+			minutes=0
+		elif [[ $minutes =~ 0[1-9]+ ]]; then
+			minutes=$(echo $minutes | tr -d "0")
+		fi
+		sum_minutes=$((sum_minutes + minutes))
+
+		# Count sum of seconds
+		seconds=$(echo $seconds | sed 's/.//3g')
+		if [[ $seconds =~ 0[0]+ ]]; then
+			seconds=0
+		elif [[ $seconds =~ 0[1-9]+ ]]; then
+			seconds=$(echo $seconds | tr -d "0")
+		fi
+		sum_seconds=$((sum_seconds + seconds))
+
+		#printf "Sum hours: $sum_hours, hours: $hours\nSum minutes: $sum_minutes, minutes: $minutes\nSum seconds: $sum_seconds, seconds: $seconds\n"
 	fi
-	sum_hours=$((sum_hours + hours))
-
-	# Count sum of minutes
-	if [[ $minutes =~ 0[0]+ ]]; then
-		minutes=0
-	elif [[ $minutes =~ 0[1-9]+ ]]; then
-		minutes=$(echo $minutes | tr -d "0")
-	fi
-	sum_minutes=$((sum_minutes + minutes))
-
-	# Count sum of seconds
-	if [[ $seconds =~ 0[0]+ ]]; then
-		seconds=0
-	elif [[ $seconds =~ 0[1-9]+ ]]; then
-		seconds=$(echo $seconds | tr -d "0")
-	fi
-	sum_seconds=$((sum_seconds + seconds))
-
-	#printf "Sum hours: $sum_hours, hours: $hours\nSum minutes: $sum_minutes, minutes: $minutes\nSum seconds: $sum_seconds, seconds: $seconds\n"
 done
 
 total=$((3600*$sum_hours+60*$sum_minutes+$sum_seconds))
