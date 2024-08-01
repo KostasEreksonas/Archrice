@@ -13,6 +13,12 @@ for f in *[*; do
 	mv "$f" "$tmp"
 done 2>/dev/null
 
+# Delete curly brackets with everything between them
+for f in *{*; do
+	tmp=$(echo $f | sed 's/\{{^}}*\}//g')
+	mv "$f" "$tmp"
+done 2>/dev/null
+
 # Remove all but the last dot (last dot is a separator between file name and file extension)
 for f in *.*; do
 	count=$(awk -F "." '{print NF-1}' <<< "$f")
@@ -22,7 +28,7 @@ for f in *.*; do
         tmp=$(echo $tmp | sed "s/./&./$position")
 		mv "$f" "$tmp"
 	fi
-done
+done 2>/dev/null
 
 # Replace a whitespace between file name and file extension
 for f in *; do
@@ -31,7 +37,7 @@ for f in *; do
 		tmp=$(echo $f | sed "s/.//$position")
 		mv "$f" "$tmp"
 	fi
-done
+done 2>/dev/null
 
 # Replace multiple subsequent whitespaces with one
 for f in *\ *; do
