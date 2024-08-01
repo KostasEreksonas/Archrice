@@ -15,7 +15,7 @@ function trim {
 }
 
 # Check if bc is installed
-pacman -Qi bc 2>/dev/null 1>&2
+bc -v 2>/dev/null 1>&2
 if [[ $? != 0 ]]; then
 	echo "bc is not installed. Terminating script"
 	exit 1
