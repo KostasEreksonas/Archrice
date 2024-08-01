@@ -3,6 +3,17 @@
 # Get total duration of all video files in a specific directory
 # Dependencies: bc
 
+# Remove leading 0's
+function trim {
+	if [[ $1 =~ 0[0]+ ]]; then
+		echo 0
+	elif [[ $1 =~ 0[1-9]+ ]]; then
+		echo $1 | tr -d "0"
+	else
+		echo $1
+	fi
+}
+
 # Check if bc is installed
 pacman -Qi bc 2>/dev/null 1>&2
 if [[ $? != 0 ]]; then
@@ -28,28 +39,16 @@ for f in *; do
 		seconds=$(echo $duration | cut -d ":" -f 4 | tr -d " " | cut -d "." -f 1)
 
 		# Count sum of hours
-		if [[ $hours =~ 0[0]+ ]]; then
-			hours=0
-		elif [[ $hours =~ 0[1-9]+ ]]; then
-			hours=$(echo $hours | tr -d "0")
-		fi
+		hours=$(trim $hours)
 		sum_hours=$((sum_hours + hours))
 
 		# Count sum of minutes
-		if [[ $minutes =~ 0[0]+ ]]; then
-			minutes=0
-		elif [[ $minutes =~ 0[1-9]+ ]]; then
-			minutes=$(echo $minutes | tr -d "0")
-		fi
+		minutes=$(trim $minutes)
 		sum_minutes=$((sum_minutes + minutes))
 
 		# Count sum of seconds
 		seconds=$(echo $seconds | sed 's/.//3g')
-		if [[ $seconds =~ 0[0]+ ]]; then
-			seconds=0
-		elif [[ $seconds =~ 0[1-9]+ ]]; then
-			seconds=$(echo $seconds | tr -d "0")
-		fi
+		seconds=$(trim $seconds)
 		sum_seconds=$((sum_seconds + seconds))
 
 		#printf "Sum hours: $sum_hours, hours: $hours\nSum minutes: $sum_minutes, minutes: $minutes\nSum seconds: $sum_seconds, seconds: $seconds\n"
