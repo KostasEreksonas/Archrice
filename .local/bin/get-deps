@@ -51,7 +51,7 @@ printf '%s ' "${installed[@]}"
 printf "\n"
 
 # If all optional dependencies are installed, print a message and finish execution
-if [ -z ${missing[@]} ]; then
+if [[ -z ${missing[@]} ]]; then
 	printf "All optional dependecies are installed.\n"
 elif [ -z $choice ]; then
 	# Print packages that are not installed
