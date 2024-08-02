@@ -1,0 +1,71 @@
+#!/bin/sh
+
+# Specify a drive where Stable Diffusion is located
+drive="/dev/sda1"
+
+# Specify a mountpoint for the drive
+mountpoint="/home/kostas/Documents/backup"
+
+# Specify a path of Stable Diffusion
+path="$mountpoint/Documents/SD"
+
+# Check if mountpoint exists, if not - create it
+if ! [ -d $mountpoint ]; then
+	mkdir -p $mountpoint
+	printf "[+] Mountpoint $mountpoint created\n"
+else
+	printf "[+] Mountpoint $mountpoint exists\n"
+fi
+
+# If drive is not mounted, mount it
+if ! grep -qs $drive /proc/mounts; then
+	sudo /bin/sh -c "mount $drive $mountpoint"
+fi
+printf "[+] Drive $drive mounted\n"
+
+# Check if path for SD exists, if not - create it
+if ! [ -d $path ]; then
+	mkdir -p $path
+	printf "[+] Path $path created\n"
+else
+	printf "[+] Path $path exists\n"
+fi
+
+# Change directory to stable diffusion path
+cd $path
+printf "[+] Changed directory to $path\n"
+
+# Check if python 3.10 is installed, if not - install it
+python3.10 --version 2>/dev/null 1>&2
+if [[ $? != 0 ]]; then
+	pkg=python310
+	git clone https://aur.archlinux.org/$pkg.git
+	printf "[+] Cloning $pkg to $pkg/"
+	cd $pkg/
+	printf "[+] Installing $pkg\n"
+	makepkg --needed --noconfirm --syncdeps --install
+	cd ../
+	sudo /bin/sh -c "rm -r $pkg"
+	printf "[+] Installed $pkg\n"
+fi
+
+# Check if python virtual environment is installed, if not - install it
+if ! [ -d $path/bin ]; then
+	printf "[+] Creating virtual environment\n"
+	python3.10 -m venv .
+	printf "[+] Virtual environment created\n"
+fi
+
+# Activate the virtual environment
+source bin/activate
+printf "[+] Virtual environment activated\n"
+
+# Check if Automatic1111 webui for stable diffusion is installed
+if ! [ -d $path/stable-diffusion-webui ]; then
+	export python_cmd="python3.10"
+	wget -q https://raw.githubusercontent.com/AUTOMATIC1111/stable-diffusion-webui/master/webui.sh
+	chmod +x webui.sh && ./webui.sh --xformers --lowvram --opt-sdp-attention --opt-split-attention
+else
+	# Start Automatic1111 stable diffusion GUI with parameters
+	./webui.sh --xformers --lowvram --opt-sdp-attention --opt-split-attention
+fi
