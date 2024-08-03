@@ -63,7 +63,7 @@ printf "[+] Virtual environment activated\n"
 # Check if Automatic1111 webui for stable diffusion is installed
 if ! [ -d $path/stable-diffusion-webui ]; then
 	export python_cmd="python3.10"
-	wget -q https://raw.githubusercontent.com/AUTOMATIC1111/stable-diffusion-webui/master/webui.sh
+	wget -q https://raw.githubusercontent.com/KostasEreksonas/stable-diffusion-webui/master/webui.sh
 	chmod +x webui.sh && ./webui.sh --xformers --lowvram --opt-sdp-attention --opt-split-attention
 else
 	# Start Automatic1111 stable diffusion GUI with parameters
