@@ -60,11 +60,14 @@ fi
 source bin/activate
 printf "[+] Virtual environment activated\n"
 
+# API token for downloading models from CivitAI (get token from custom shell variable)
+token=$CIVITAI_TOKEN
+
 # Check if Automatic1111 webui for stable diffusion is installed
 if ! [ -d $path/stable-diffusion-webui ]; then
 	export python_cmd="python3.10"
 	wget -q https://raw.githubusercontent.com/KostasEreksonas/stable-diffusion-webui/master/webui.sh
-	chmod +x webui.sh && ./webui.sh --xformers --lowvram --opt-sdp-attention --opt-split-attention
+	chmod +x webui.sh && ./webui.sh $token --xformers --lowvram --opt-sdp-attention --opt-split-attention
 else
 	# Start Automatic1111 stable diffusion GUI with parameters
 	./webui.sh --xformers --lowvram --opt-sdp-attention --opt-split-attention
