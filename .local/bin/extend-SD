@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# Install extensions for stable diffusion webui
+# Declare a read-only associative array of stable diffusion extensions
+# Key - name of a git repo
+# Value - name of an extension
+declare -rA extensions=(["Bing-su"]="adetailer"
+                        ["Elldreth"]="loopback_scaler"
+                        ["pkuliyi2015"]="multidiffusion-upscaler-for-automatic1111"
+                        ["mcmonkeyprojects"]="sd-dynamic-thresholding"
+                        ["Mikubill"]="sd-webui-controlnet"
+                        ["KU-CVLAB"]="Self-Attention-Guidance"
+                        ["opparco"]="stable-diffusion-webui-composable-lora")
+
+# Loop through an associative array
+for key in ${!extensions[@]}; do
+    pkg=${extensions[${key}]}
+    printf "\n%s\n" "${delimiter}"
+        printf "Installing $pkg\n"
+    git clone https://github.com/${key}/${pkg}.git extensions/${pkg}
+done

@@ -1,0 +1,130 @@
+#!/bin/sh
+
+# Download additional models for Stable Diffusion
+
+function updateName {
+	# Update model name to contain only letters and numbers
+	string=$1
+	newString=""
+	for (( i=0; i<${#string}; i++ )); do
+		if [[ "${string:$i:1}" =~ [A-Za-z0-9] ]]; then
+			newString="${newString}${string:$i:1}"
+		fi
+	done
+	echo $newString
+}
+
+function downloadModel {
+	# Downloads Stable Diffusion models to a specified location
+	dir=$1 # Current directory
+	folder=$2 # Download folder for models
+	token=$3 # CivitAI token
+	shift 3 # Delete first 3 values from function's input array
+	versionID=$@ # Array of model version ID's to download
+
+	# Create a folder to download models, if it doesn't exist
+	if ! [ -d $folder ]; then
+		mkdir -p $folder
+	fi
+
+	# Download selected models
+	cd $folder
+	for id in ${versionID[@]}; do
+		# Get ID of a base model from it's version ID
+		modelID=$(curl -s https://civitai.com/model-versions/$id | cut -d "/" -f 3 | cut -d "?" -f 1)
+
+		# Get name of the model
+		model=$(curl -s https://civitai.com/api/v1/models/$modelID | jq ".name" | sed 's/ //g' | tr -d "\"")
+
+		# Strip all special symbols from model name
+		model=$(updateName $model)
+
+		# Get ID's of all the model's versions
+		versionIDs=$(curl -s https://civitai.com/api/v1/models/$modelID | jq ".modelVersions[].id")
+
+		# Get namess of all the model's versions
+		versionNames=$(curl -s https://civitai.com/api/v1/models/$modelID | jq ".modelVersions[].name")
+
+		# Declare an associative array
+		declare -A assoc_array
+
+		# Rebuild array only when version id is not present
+		if ! [ ${assoc_array[${id}]} ]; then
+            # Collect model version ID's to an array
+            while read -r line; do
+                id_array+=(${line})
+            done <<< $versionIDs
+
+            # Collect model version names to an array
+            while read -r line; do
+                line=$(updateName $line)
+                name_array+=(${line})
+            done <<< $versionNames
+
+			# Populate an associative array (versionID => versionName)
+            length=${#id_array[@]}
+            for (( i=0; i<$length; i++ )); do
+                assoc_array["${id_array[${i}]}"]=${name_array[${i}]}
+            done
+		fi
+
+        # Print associative array (for debugging)
+        #for key in "${!assoc_array[@]}"; do
+        #    printf "${key} => ${assoc_array[${key}]}\n"
+        #done
+
+        # Get version for a model
+        version=${assoc_array["${id}"]}
+
+        # Get full model name
+        name="${model}_${version}"
+
+		# If model is not downloaded, save it to <model-name_version>.safetensors
+		if ! [ -f "${name}.safetensors" ]; then
+			curl -s -o "${name}.safetensors" -L -H "Content-Type: application/json" -H "Authorization: Bearer $token" https://civitai.com/api/download/models/$id?type=Model&format=SafeTensor&size=pruned&fp=fp16
+		else
+			printf "Model \"${name}.safetensors\" already exists\n"
+		fi
+	done
+
+	# Wait while all models are downloaded
+	count=$(ps -ef | grep curl | wc -l)
+	while [ $count > 1 ]; do
+		count=$(ps -ef | grep curl | wc -l)
+		if [ $count == 1 ]; then break; fi
+		sleep 1
+	done
+
+	# Remove residual files
+	rm 1
+
+	# Go back to original directory
+	cd $dir
+}
+
+# Add a stable diffusion token
+token=$1
+
+# Pretty print
+delimiter="################################################################"
+
+# Download Embeddings
+printf "\n%s\n" "${delimiter}"
+printf "Downloading Embeddings"
+printf "\n%s\n" "${delimiter}"
+embeddings=(165259 165424)
+downloadModel $PWD "embeddings/" $token ${embeddings[@]}
+
+# Download Lora models
+printf "\n%s\n" "${delimiter}"
+printf "Downloading Lora models"
+printf "\n%s\n" "${delimiter}"
+models=(135867 319697 116354 33381 509253 482268)
+downloadModel $PWD "models/Lora/" $token ${models[@]}
+
+# Download Checkpoints
+printf "\n%s\n" "${delimiter}"
+printf "Downloading Checkpoint models"
+printf "\n%s\n" "${delimiter}"
+models=(511677 429454 361593 627807)
+downloadModel $PWD "models/Stable-diffusion/" $token ${models[@]}
