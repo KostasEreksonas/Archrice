@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# Check if jq is installed
+jq --version 2>/dev/null 1>&2
+if [[ $? != 0 ]]; then
+	echo "jq is not installed. Aborting script..." && exit 1
+fi
+
 # Specify a drive where Stable Diffusion is located
 drive="/dev/sda1"
 
@@ -62,6 +68,11 @@ printf "[+] Virtual environment activated\n"
 
 # API token for downloading models from CivitAI (get token from custom shell variable)
 token=$CIVITAI_TOKEN
+
+# Check if token is not empty
+if [ -z $token ]; then
+	echo "Civitai authorization token not available. Aborting..." && exit 1
+fi
 
 # Check if Automatic1111 webui for stable diffusion is installed
 if ! [ -d $path/stable-diffusion-webui ]; then
