@@ -2,7 +2,7 @@
 
 # Download additional models for Stable Diffusion
 
-# Add a stable diffusion token
+# Add a CivitAI token
 token=$1
 
 # Pretty print
@@ -20,17 +20,17 @@ function downloadModel {
 	if ! [ -d $folder ]; then
 		mkdir -p $folder
 	fi
+	cd $folder
 
 	# Download selected models
-	cd $folder
 	for id in ${versionID[@]}; do
-		# Get ID of a base model from it's version ID
+		# Get the ID of a base model from it's version ID
 		modelID=$(curl -s https://civitai.com/model-versions/${id} | cut -d "/" -f 3 | cut -d "?" -f 1)
 
-		# Get model names
+		# Get names of the files associated with the model
 		files=$(curl -s https://civitai.com/api/v1/models/${modelID} | jq ".modelVersions[]|select(.id==${id}).files[].name")
 
-		# Get model URL
+		# Get URLs for files of the model
 		urls=$(curl -s https://civitai.com/api/v1/models/${modelID} | jq ".modelVersions[]|select(.id==${id}).files[].downloadUrl")
 
 		# Create array of filenames
@@ -77,7 +77,7 @@ function downloadModel {
 printf "\n%s\n" "${delimiter}"
 printf "Downloading Embeddings"
 printf "\n%s\n" "${delimiter}"
-embeddings=(509253 482268)
+embeddings=(82745 509253 482268)
 downloadModel $PWD "embeddings/" $token ${embeddings[@]}
 
 # Download Lora models
@@ -91,6 +91,5 @@ downloadModel $PWD "models/Lora/" $token ${models[@]}
 printf "\n%s\n" "${delimiter}"
 printf "Downloading Checkpoint models"
 printf "\n%s\n" "${delimiter}"
-#models=(511677 429454 361593 627807)
-models=(429454)
+models=(511677 429454 361593 627807 495273)
 downloadModel $PWD "models/Stable-diffusion/" $token ${models[@]}
