@@ -41,24 +41,24 @@ fi
 cd $path
 printf "[+] Changed directory to $path\n"
 
-# Check if python 3.10 is installed, if not - install it
-python3.10 --version 2>/dev/null 1>&2
+# Check if python 3.11 is installed, if not - install it
+python3.11 --version 2>/dev/null 1>&2
 if [[ $? != 0 ]]; then
-	pkg=python310
+	pkg=python311
 	git clone https://aur.archlinux.org/$pkg.git
 	printf "[+] Cloning $pkg to $pkg/"
 	cd $pkg/
 	printf "[+] Installing $pkg\n"
-	makepkg --needed --noconfirm --syncdeps --install
+	makepkg --needed --syncdeps --install
 	cd ../
-	sudo /bin/sh -c "rm -r $pkg"
+	sudo /bin/sh -c "rm -r $pkg/"
 	printf "[+] Installed $pkg\n"
 fi
 
 # Check if python virtual environment is installed, if not - install it
 if ! [ -d $path/bin ]; then
 	printf "[+] Creating virtual environment\n"
-	python3.10 -m venv .
+	python3.11 -m venv .
 	printf "[+] Virtual environment created\n"
 fi
 
@@ -74,9 +74,11 @@ if [ -z $token ]; then
 	echo "Civitai authorization token not available. Aborting..." && exit 1
 fi
 
+# Export python
+export python_cmd="python3.11"
+
 # Check if Automatic1111 webui for stable diffusion is installed
 if ! [ -d $path/stable-diffusion-webui ]; then
-	export python_cmd="python3.10"
 	wget -q https://raw.githubusercontent.com/KostasEreksonas/stable-diffusion-webui/master/webui.sh
 	chmod +x webui.sh && ./webui.sh $token --xformers --lowvram --opt-sdp-attention --opt-split-attention
 else
