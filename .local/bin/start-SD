@@ -13,7 +13,7 @@ drive="/dev/sda1"
 mountpoint="/home/kostas/Documents/backup"
 
 # Specify a path of Stable Diffusion
-path="$mountpoint/Documents/SD"
+path="$mountpoint/Documents/stablediffusion"
 
 # Check if mountpoint exists, if not - create it
 if ! [ -d $mountpoint ]; then
