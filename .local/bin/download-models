@@ -2,6 +2,12 @@
 
 # Download additional models for Stable Diffusion
 
+# Add a stable diffusion token
+token=$1
+
+# Pretty print
+delimiter="################################################################"
+
 function downloadModel {
 	# Downloads Stable Diffusion models to a specified location
 	dir=$1 # Current directory
@@ -21,59 +27,70 @@ function downloadModel {
 		# Get ID of a base model from it's version ID
 		modelID=$(curl -s https://civitai.com/model-versions/${id} | cut -d "/" -f 3 | cut -d "?" -f 1)
 
-		# Get files for chosen version
-		name=$(curl -s https://civitai.com/api/v1/models/${modelID} | jq ".modelVersions[]|select(.id==${id}).files[].name")
+		# Get model names
+		files=$(curl -s https://civitai.com/api/v1/models/${modelID} | jq ".modelVersions[]|select(.id==${id}).files[].name")
 
-		# Iterate through files
+		# Get model URL
+		urls=$(curl -s https://civitai.com/api/v1/models/${modelID} | jq ".modelVersions[]|select(.id==${id}).files[].downloadUrl")
+
+		# Create array of filenames
 		while read -r file; do
-			# If model is not downloaded, save it to <model-name_version>.safetensors
-			if ! [ -f "${file}" ]; then
-				echo ${file}
-				#curl -s -o "${name}" -L -H "Content-Type: application/json" -H "Authorization: Bearer $token" https://civitai.com/api/download/models/$id?type=Model&format=SafeTensor&size=pruned&fp=fp16
+			# Remove whitespace
+			file=$(echo ${file} | sed 's/ //g')
+			files_array+=(${file})
+		done <<< ${files}
+
+		# Create array of urls
+		while read -r url; do
+			urls_array+=(${url})
+		done <<< ${urls}
+
+		# Download models
+		for (( i=0; i<${#urls_array[@]}; i++)); do
+			name=$(echo ${files_array[${i}]} | tr -d "\"")
+			url=$(echo ${urls_array[$i]} | tr -d "\"")
+			printf "\n%s\n" "${delimiter}"
+			# Skip model if it's already downloaded
+			if [ -f ${name} ]; then
+				printf "File ${name} already exists\n"
 			else
-				printf "Model \"${file}\" already exists\n"
+				printf "Downloading ${name}\n"
+				if [[ $(curl -s ${url}) == "{\"error\":\"Unauthorized\",\"message\":\"The creator of this asset requires you to be logged in to download it\"}" ]]; then
+					curl -o ${name} -L -H "Content-Type: application/json" -H "Authorization: Bearer ${token}" ${url}
+				else
+					url=$(curl -s ${url})
+					curl -o ${name} ${url}
+				fi
 			fi
-		done <<< ${name}
-	done
+		done
 
-	# Wait while all models are downloaded
-	count=$(ps -ef | grep curl | wc -l)
-	while [ $count > 1 ]; do
-		count=$(ps -ef | grep curl | wc -l)
-		if [ $count == 1 ]; then break; fi
-		sleep 1
+		# Unset arrays
+		unset files_array
+		unset urls_array
 	done
-
-	# Remove residual files
-	#rm 1
 
 	# Go back to original directory
 	cd $dir
 }
 
-# Add a stable diffusion token
-token=$1
-
-# Pretty print
-delimiter="################################################################"
-
 # Download Embeddings
 printf "\n%s\n" "${delimiter}"
 printf "Downloading Embeddings"
 printf "\n%s\n" "${delimiter}"
-embeddings=(165259 165424)
+embeddings=(509253 482268)
 downloadModel $PWD "embeddings/" $token ${embeddings[@]}
 
 # Download Lora models
 printf "\n%s\n" "${delimiter}"
 printf "Downloading Lora models"
 printf "\n%s\n" "${delimiter}"
-models=(135867 319697 116354 33381 509253 482268)
+models=(135867 319697 116354 33381 509253 482268 165259 165424)
 downloadModel $PWD "models/Lora/" $token ${models[@]}
 
 # Download Checkpoints
 printf "\n%s\n" "${delimiter}"
 printf "Downloading Checkpoint models"
 printf "\n%s\n" "${delimiter}"
-models=(511677 429454 361593 627807)
+#models=(511677 429454 361593 627807)
+models=(429454)
 downloadModel $PWD "models/Stable-diffusion/" $token ${models[@]}
