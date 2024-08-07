@@ -15,17 +15,20 @@ declare -rA extensions=(["Bing-su"]="adetailer"
 # Pretty print
 delimiter="################################################################"
 
-cd "extensions/"
+# Directory for extensions
+dir="extensions/"
+cd "${dir}"
+
 # Loop through an associative array
 for key in ${!extensions[@]}; do
 	pkg=${extensions[${key}]}
     printf "\n%s\n" "${delimiter}"
     # Clone repository if it doesn't exist
 	if ! [ -d ${pkg} ]; then
-		printf "Installing $pkg\n"
+		printf "[+] Installing $pkg\n"
 		git clone https://github.com/${key}/${pkg}.git ${pkg}
 	else
-		printf "Extension ${pkg} already installed.\n"
+		printf "[+] Extension ${pkg} already installed.\n"
 	fi
 done
 cd ../
