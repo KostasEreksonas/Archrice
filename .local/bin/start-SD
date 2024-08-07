@@ -1,8 +1,11 @@
 #!/bin/sh
 
+# Pretty print
+delimiter="################################################################"
+
 # Check if jq is installed
 jq --version 2>/dev/null 1>&2
-if [[ $? != 0 ]]; then
+if [[ ${?} != 0 ]]; then
 	echo "jq is not installed. Aborting script..." && exit 1
 fi
 
@@ -13,74 +16,85 @@ drive="/dev/sda1"
 mountpoint="/home/kostas/Documents/backup"
 
 # Specify a path of Stable Diffusion
-path="$mountpoint/Documents/stablediffusion"
+path="${mountpoint}/Documents/stablediffusion"
 
+printf "\n%s\n" "${delimiter}"
 # Check if mountpoint exists, if not - create it
-if ! [ -d $mountpoint ]; then
-	mkdir -p $mountpoint
-	printf "[+] Mountpoint $mountpoint created\n"
+if ! [ -d ${mountpoint} ]; then
+	mkdir -p ${mountpoint}
+	printf "[+] Mountpoint ${mountpoint} created\n"
 else
-	printf "[+] Mountpoint $mountpoint exists\n"
+	printf "[+] Mountpoint ${mountpoint} exists\n"
 fi
 
+printf "\n%s\n" "${delimiter}"
 # If drive is not mounted, mount it
-if ! grep -qs $drive /proc/mounts; then
-	sudo /bin/sh -c "mount $drive $mountpoint"
+if ! grep -qs ${drive} /proc/mounts; then
+	sudo /bin/sh -c "mount ${drive} ${mountpoint}"
 fi
-printf "[+] Drive $drive mounted\n"
+printf "[+] Drive ${drive} mounted\n"
 
+printf "\n%s\n" "${delimiter}"
 # Check if path for SD exists, if not - create it
-if ! [ -d $path ]; then
-	mkdir -p $path
-	printf "[+] Path $path created\n"
+if ! [ -d ${path} ]; then
+	mkdir -p ${path}
+	printf "[+] Path ${path} created\n"
 else
-	printf "[+] Path $path exists\n"
+	printf "[+] Path ${path} exists\n"
 fi
 
+printf "\n%s\n" "${delimiter}"
 # Change directory to stable diffusion path
-cd $path
-printf "[+] Changed directory to $path\n"
+cd ${path}
+printf "[+] Changed directory to ${path}\n"
 
 # Check if python 3.11 is installed, if not - install it
 python3.11 --version 2>/dev/null 1>&2
-if [[ $? != 0 ]]; then
+if [[ ${?} != 0 ]]; then
+	printf "\n%s\n" "${delimiter}"
 	pkg=python311
-	git clone https://aur.archlinux.org/$pkg.git
-	printf "[+] Cloning $pkg to $pkg/"
-	cd $pkg/
-	printf "[+] Installing $pkg\n"
+	printf "[+] Cloning ${pkg} to ${pkg}/"
+	git clone https://aur.archlinux.org/${pkg}.git
+	cd ${pkg}/
+	printf "\n%s\n" "${delimiter}"
+	printf "[+] Installing ${pkg}\n"
 	makepkg --needed --syncdeps --install
 	cd ../
-	sudo /bin/sh -c "rm -r $pkg/"
-	printf "[+] Installed $pkg\n"
+	sudo /bin/sh -c "rm -r ${pkg}/"
+	printf "\n%s\n" "${delimiter}"
+	printf "[+] Installed ${pkg}\n"
 fi
 
 # Check if python virtual environment is installed, if not - install it
-if ! [ -d $path/bin ]; then
+if ! [ -d ${path}/bin ]; then
+	printf "\n%s\n" "${delimiter}"
 	printf "[+] Creating virtual environment\n"
 	python3.11 -m venv .
+	printf "\n%s\n" "${delimiter}"
 	printf "[+] Virtual environment created\n"
 fi
 
 # Activate the virtual environment
 source bin/activate
+printf "\n%s\n" "${delimiter}"
 printf "[+] Virtual environment activated\n"
 
 # API token for downloading models from CivitAI (get token from custom shell variable)
-token=$CIVITAI_TOKEN
+token=${CIVITAI_TOKEN}
 
 # Check if token is not empty
-if [ -z $token ]; then
-	echo "Civitai authorization token not available. Aborting..." && exit 1
+if [ -z ${token} ]; then
+	printf "\n%s\n" "${delimiter}"
+	printf "Civitai authorization token not available. Aborting...\n" && exit 1
 fi
 
 # Export python
 export python_cmd="python3.11"
 
 # Check if Automatic1111 webui for stable diffusion is installed
-if ! [ -d $path/stable-diffusion-webui ]; then
+if ! [ -d ${path}/stable-diffusion-webui ]; then
 	wget -q https://raw.githubusercontent.com/KostasEreksonas/stable-diffusion-webui/master/webui.sh
-	chmod +x webui.sh && ./webui.sh $token --xformers --lowvram --opt-sdp-attention --opt-split-attention
+	chmod +x webui.sh && ./webui.sh ${token} --xformers --lowvram --opt-sdp-attention --opt-split-attention
 else
 	# Start Automatic1111 stable diffusion GUI with parameters
 	./webui.sh --xformers --lowvram --opt-sdp-attention --opt-split-attention
