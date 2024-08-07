@@ -113,14 +113,14 @@ function downloadHuggingface {
 printf "\n%s\n" "${delimiter}"
 printf "[+] Downloading Embeddings"
 printf "\n%s\n" "${delimiter}"
-embeddings=(82745 509253 482268)
+embeddings=(82745 509253 482268 5637 220262 95263 95256)
 downloadModel ${PWD} "embeddings/" ${token} ${embeddings[@]}
 
 # Download Lora models
 printf "\n%s\n" "${delimiter}"
 printf "[+] Downloading Lora models"
 printf "\n%s\n" "${delimiter}"
-models=(135867 319697 116354 33381 509253 482268 165259 165424)
+models=(135867 319697 116354 33381 509253 482268 165259 165424 118945)
 downloadModel ${PWD} "models/Lora/" ${token} ${models[@]}
 
 # Download Checkpoints
