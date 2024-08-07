@@ -17,10 +17,13 @@ function downloadModel {
 	versionID=$@ # Array of model version ID's to download
 
 	# Create a folder to download models, if it doesn't exist
-	if ! [ -d $folder ]; then
-		mkdir -p $folder
+	if ! [ -d ${folder} ]; then
+		mkdir -p ${folder}
+        printf "[+] Folder ${folder} created\n"
+	else
+        printf "[+] Folder ${folder} exists\n"
 	fi
-	cd $folder
+	cd ${folder}
 
 	# Download selected models
 	for id in ${versionID[@]}; do
@@ -52,9 +55,9 @@ function downloadModel {
 			printf "\n%s\n" "${delimiter}"
 			# Skip model if it's already downloaded
 			if [ -f ${name} ]; then
-				printf "File ${name} already exists\n"
+				printf "[+] File ${name} already exists\n"
 			else
-				printf "Downloading ${name}\n"
+				printf "[+] Downloading ${name}\n"
 				if [[ $(curl -s ${url}) == "{\"error\":\"Unauthorized\",\"message\":\"The creator of this asset requires you to be logged in to download it\"}" ]]; then
 					curl -o ${name} -L -H "Content-Type: application/json" -H "Authorization: Bearer ${token}" ${url}
 				else
@@ -70,26 +73,73 @@ function downloadModel {
 	done
 
 	# Go back to original directory
-	cd $dir
+	cd ${dir}
+}
+
+function downloadHuggingface {
+    # Download models from Huggingface
+    dir=$1 # Current directory
+    folder=$2 # Download folder for models
+
+        printf "\n%s\n" "${delimiter}"
+        # Check if folder exists, if not - create it
+        if ! [ -d "${folder}" ]; then
+                mkdir -p "${folder}"
+                printf "[+] Folder ${folder} created\n"
+        else
+                printf "[+] Folder ${folder} exists\n"
+        fi
+
+        # Changed directory to a folder
+        cd ${folder}
+
+        # Download files
+        for key in ${!urls[@]}; do
+                printf "\n%s\n" "${delimiter}"
+                # Skip files that already exist
+                if [ -f ${key} ]; then
+                        printf "[+] File ${key} already exists\n"
+                else
+                        printf "[+] Downloading ${key}\n"
+                        curl -o ${key} -L ${urls[${key}]}
+                fi
+        done
+
+        # Get back to original directory
+        cd ${dir}
 }
 
 # Download Embeddings
 printf "\n%s\n" "${delimiter}"
-printf "Downloading Embeddings"
+printf "[+] Downloading Embeddings"
 printf "\n%s\n" "${delimiter}"
 embeddings=(82745 509253 482268)
-downloadModel $PWD "embeddings/" $token ${embeddings[@]}
+downloadModel ${PWD} "embeddings/" ${token} ${embeddings[@]}
 
 # Download Lora models
 printf "\n%s\n" "${delimiter}"
-printf "Downloading Lora models"
+printf "[+] Downloading Lora models"
 printf "\n%s\n" "${delimiter}"
 models=(135867 319697 116354 33381 509253 482268 165259 165424)
-downloadModel $PWD "models/Lora/" $token ${models[@]}
+downloadModel ${PWD} "models/Lora/" ${token} ${models[@]}
 
 # Download Checkpoints
 printf "\n%s\n" "${delimiter}"
-printf "Downloading Checkpoint models"
+printf "[+] Downloading Checkpoint models"
 printf "\n%s\n" "${delimiter}"
 models=(511677 429454 361593 627807 495273)
-downloadModel $PWD "models/Stable-diffusion/" $token ${models[@]}
+downloadModel ${PWD} "models/Stable-diffusion/" ${token} ${models[@]}
+
+# Download additional Hires upscalers
+printf "\n%s\n" "${delimiter}"
+printf "[+] Downloading Hires upscalers"
+printf "\n%s\n" "${delimiter}"
+models=(125843 156841)
+downloadModel ${PWD} "models/ESRGAN" ${token} ${models[@]}
+
+# Download ControlNet Openpose models from Huggingface
+declare -A urls=(["control_v11p_sd15_openpose.yaml"]="https://huggingface.co/lllyasviel/ControlNet-v1-1/raw/main/control_v11p_sd15_openpose.yaml", ["control_v11p_sd15_openpose.pth"]="https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_openpose.pth?download=true")
+printf "\n%s\n" "${delimiter}"
+printf "[+] Downloading ControlNet models"
+printf "\n%s\n" "${delimiter}"
+downloadHuggingface ${PWD} "models/ControlNet" ${urls[@]}
