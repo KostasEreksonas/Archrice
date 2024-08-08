@@ -99,16 +99,17 @@ fi
 
 
 # Remove special characters from filenames and replace whitespaces with underscores
-#$(update-filename)
+$(update-filename)
 
 # Encode all video files
 for f in *; do
 	# Get files in current directory
 	if [[ -f ${f} ]] && [[ ${f} =~ [A-Za-z0-9_\(\)]\.[A-Za-z0-9]+{3,4} ]]; then
-		name=${f%%.*} # Get filename
-		ext_orig=${f##*.} # Get extension
+		name=${f%%.*} # Get file name
+		ext_orig=${f##*.} # Get file extension
+		ext_orig=$(echo ${ext_orig} | tr '[:upper:]' '[:lower:]') # Convert extension to lowercase
 		if [[ ${extensions[@]} =~ ${ext_orig} ]]; then
-			ffmpeg -i ${name}.${ext_orig} -c:a ${audio} -c:v ${enc} -preset ${preset} -crf ${crf} ${name}"_conv".${ext}
+			ffmpeg -i ${f} -c:a ${audio} -c:v ${enc} -preset ${preset} -crf ${crf} ${name}"_conv".${ext}
 		fi
 	fi
 done
