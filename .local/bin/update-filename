@@ -4,48 +4,58 @@
 
 # Delete all hyphens in a filename
 for f in *-*; do
-	mv "$f" "${f//-/}"
+	mv "${f}" "${f//-/}"
+done 2>/dev/null
+
+# Delete all plus symbols in a filename
+for f in *+*; do
+	mv "${f}" "${f//+/}"
+done 2>/dev/null
+
+# Delete all commas symbols in a filename
+for f in *,*; do
+	mv "${f}" "${f//,/}"
 done 2>/dev/null
 
 # Delete square brackets with everything between them
 for f in *[*; do
-	tmp=$(echo $f | sed 's/\[[^]]*\]//g')
-	mv "$f" "$tmp"
+	tmp=$(echo ${f} | sed 's/\[[^]]*\]//g')
+	mv "${f}" "${tmp}"
 done 2>/dev/null
 
 # Delete curly brackets with everything between them
 for f in *{*; do
-	tmp=$(echo $f | sed 's/\{{^}}*\}//g')
-	mv "$f" "$tmp"
+	tmp=$(echo ${f} | sed 's/\{{^}}*\}//g')
+	mv "${f}" "${tmp}"
 done 2>/dev/null
 
 # Remove all but the last dot (last dot is a separator between file name and file extension)
 for f in *.*; do
 	count=$(awk -F "." '{print NF-1}' <<< "$f")
 	if [[ $count > 1 ]]; then
-		tmp=$(echo $f | tr -d ".")
+		tmp=$(echo ${f} | tr -d ".")
         position=$((${#tmp}-3))
-        tmp=$(echo $tmp | sed "s/./&./$position")
-		mv "$f" "$tmp"
+        tmp=$(echo ${tmp} | sed "s/./&./$position")
+		mv "${f}" "${tmp}"
 	fi
 done 2>/dev/null
 
 # Replace a whitespace between file name and file extension
 for f in *; do
 	position=$((${#f}-4));
-	if [[ ${f:$(($position-1)):1} == " " ]]; then
-		tmp=$(echo $f | sed "s/.//$position")
-		mv "$f" "$tmp"
+	if [[ ${f:$((${position}-1)):1} == " " ]]; then
+		tmp=$(echo ${f} | sed "s/.//${position}")
+		mv "${f}" "${tmp}"
 	fi
 done 2>/dev/null
 
 # Replace multiple subsequent whitespaces with one
 for f in *\ *; do
-	tmp=$(echo "$f" | tr -s " ")
-	mv "$f" "$tmp"
+	tmp=$(echo "${f}" | tr -s " ")
+	mv "${f}" "${tmp}"
 done 2>/dev/null
 
 # Replace whitespaces with undersocres in filename
 for f in *\ *; do
-	mv "$f" "${f// /_}"
+	mv "${f}" "${f// /_}"
 done 2>/dev/null
