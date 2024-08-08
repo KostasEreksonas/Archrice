@@ -5,23 +5,22 @@
 
 # Check if ffmpeg is installed
 ffmpeg -version 2>/dev/null 1>&2
-if [[ $? != 0 ]]; then
-        echo "ffmpeg is not installed. Terminating script"
-        exit 1
+if [[ ${?} != 0 ]]; then
+        echo "ffmpeg is not installed. Terminating script" && exit 1
 fi
 
 # Choose an encoder
-if [ -z $enc ]; then
+if [ -z ${enc} ]; then
 	PS3="Choose encoder: "
 	encoders=("libx264" "libx265")
 	select encoder in ${encoders[@]}; do
-		case $encoder in
+		case ${encoder} in
 			"libx264")
-				enc=$encoder
+				enc=${encoder}
 				break
 				;;
 			"libx265")
-				enc=$encoder
+				enc=${encoder}
 				break
 				;;
 			*)
@@ -32,65 +31,63 @@ if [ -z $enc ]; then
 fi
 
 # Set parameters for libx264
-if [ $enc == "libx264" ]; then
+if [ ${enc} == "libx264" ]; then
 	# Set audio parameter value
 	read -p "Choose audio settings (default: copy): " audio
-	if [ -z $audio ]; then audio="${audio:-copy}"; fi
+	if [ -z ${audio} ]; then audio="${audio:-copy}"; fi
 
 	# Set preset parameter value
 	read -p "Choose ffmpeg preset (default: veryslow): " preset
-	if [ -z $preset ]; then preset="${preset:-veryslow}"; fi
+	if [ -z ${preset} ]; then preset="${preset:-veryslow}"; fi
 
 	# Set crf parameter value
-	while ! [[ $crf =~ [0-9] && $crf -ge 0 && $crf -le 53 ]]; do
+	while ! [[ ${crf} =~ [0-9] && ${crf} -ge 0 && ${crf} -le 53 ]]; do
         read -p "Choose CRF value (0-53, defult: 17): " crf
-        if [ -z $crf ]; then crf="${crf:-17}"; fi
-        if [[ $crf -lt 0 || $crf -gt 53 ]]; then
+        if [ -z ${crf} ]; then crf="${crf:-17}"; fi
+        if [[ ${crf} -lt 0 || ${crf} -gt 53 ]]; then
                 printf "Please enter a crf value between 0 - 53\n"
         fi
 	done
-fi
-
 # Set parameters for libx265
-if [ $enc == "libx265" ]; then
+elif [ ${enc} == "libx265" ]; then
 	# Set audio parameter
 	read -p "Choose audio settings (default: copy): " audio
-	if [ -z $audio ]; then audio="${audio:-copy}"; fi
+	if [ -z ${audio} ]; then audio="${audio:-copy}"; fi
 
 	# Set preset parameter value
 	read -p "Choose ffmpeg preset (default: medium): " preset
-	if [ -z $preset ]; then preset="${preset:-medium}"; fi
+	if [ -z ${preset} ]; then preset="${preset:-medium}"; fi
 
 	# Set crf parameter value
-	while ! [[ $crf =~ [0-9] && $crf -ge 0 && $crf -le 53 ]]; do
+	while ! [[ ${crf} =~ [0-9] && ${crf} -ge 0 && ${crf} -le 53 ]]; do
         read -p "Choose CRF value (0-53, defult: 18): " crf
-        if [ -z $crf ]; then crf="${crf:-18}"; fi
-        if [[ $crf -lt 0 || $crf -gt 53 ]]; then
+        if [ -z ${crf} ]; then crf="${crf:-18}"; fi
+        if [[ ${crf} -lt 0 || ${crf} -gt 53 ]]; then
                 printf "Please enter a crf value between 0 - 53\n"
         fi
 	done
 fi
 
-if [ -z $ext ]; then
+if [ -z ${ext} ]; then
 	# Choose a file extension to convert to
 	PS3="Choose file extension to convert to: "
-	extensions=("mp4" "mkv" "webm" "avi")
+	extensions=("mp4" "mkv" "webm" "avi" "mov" "m4v")
 	select extension in ${extensions[@]}; do
-		case $extension in
+		case ${extension} in
 			"mp4")
-				ext=$extension
+				ext=${extension}
 				break
 				;;
 			"mkv")
-				ext=$extension
+				ext=${extension}
 				break
 				;;
 			"webm")
-				ext=$extension
+				ext=${extension}
 				break
 				;;
 			"avi")
-				ext=$extension
+				ext=${extension}
 				break
 				;;
 			*)
@@ -102,12 +99,16 @@ fi
 
 
 # Remove special characters from filenames and replace whitespaces with underscores
-$(update-filename)
+#$(update-filename)
 
 # Encode all video files
 for f in *; do
-	if [[ $f =~ [A-Za-z0-9]+\.[a-z0-9]{3} ]]; then
-		#printf "File: $f, encoder: $enc, audio: $audio, preset: $preset, crf: $crf, extension: $ext\n"
-		ffmpeg -i $f -c:a $audio -c:v $enc -preset $preset -crf $crf $f"_conv".$ext
+	# Get files in current directory
+	if [[ -f ${f} ]] && [[ ${f} =~ [A-Za-z0-9_\(\)]\.[A-Za-z0-9]+{3,4} ]]; then
+		name=${f%%.*} # Get filename
+		ext_orig=${f##*.} # Get extension
+		if [[ ${extensions[@]} =~ ${ext_orig} ]]; then
+			ffmpeg -i ${name}.${ext_orig} -c:a ${audio} -c:v ${enc} -preset ${preset} -crf ${crf} ${name}"_conv".${ext}
+		fi
 	fi
 done
