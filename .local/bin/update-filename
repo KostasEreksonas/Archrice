@@ -17,6 +17,11 @@ for f in *,*; do
 	mv "${f}" "${f//,/}"
 done 2>/dev/null
 
+# Delete all exclamation points in a filename
+for f in *!*; do
+	mv "${f}" "${f//!/}"
+done 2>/dev/null
+
 # Delete square brackets with everything between them
 for f in *[*; do
 	tmp=$(echo ${f} | sed 's/\[[^]]*\]//g')
