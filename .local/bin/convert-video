@@ -39,50 +39,88 @@ fi
 # Print encoder
 printf "[+] Encoder: ${enc}\n"
 
-# Set parameters for libx264
-if [ ${enc} == "libx264" ]; then
+function setParameters {
+	# Set parameters for ffmpeg
+	audio_default=${1}
+	crf_default=${2}
+
 	# Set audio parameter value
-	read -p "[+] Choose audio settings (default: copy): " audio
-	if [ -z ${audio} ]; then audio="${audio:-copy}"; fi
-	printf "[+] Audio : ${audio}\n"
-
-	# Set preset parameter value
-	read -p "[+] Choose ffmpeg preset (default: veryslow): " preset
-	if [ -z ${preset} ]; then preset="${preset:-veryslow}"; fi
-	printf "[+] Preset : ${preset}\n"
-
-	# Set crf parameter value
-	while ! [[ ${crf} =~ [0-9] && ${crf} -ge 0 && ${crf} -le 53 ]]; do
-        read -p "[+] Choose CRF value (0-53, defult: 17): " crf
-        if [ -z ${crf} ]; then crf="${crf:-17}"; fi
-        if [[ ${crf} -lt 0 || ${crf} -gt 53 ]]; then
-                printf "[+] Please enter a crf value between 0 - 53\n"
-        fi
-	done
-	printf "[+] Crf: ${crf}\n"
-fi
-
-# Set parameters for libx265
-if [ ${enc} == "libx265" ]; then
-	# Set audio parameter
-	read -p "[+] Choose audio settings (default: copy): " audio
-	if [ -z ${audio} ]; then audio="${audio:-copy}"; fi
+	read -p "[+] Choose audio settings (default: ${audio_default}): " audio
+	if [ -z ${audio} ]; then audio="${audio:-${audio_default}}"; fi
 	printf "[+] Audio: ${audio}\n"
 
 	# Set preset parameter value
-	read -p "[+] Choose ffmpeg preset (default: medium): " preset
-	if [ -z ${preset} ]; then preset="${preset:-medium}"; fi
+	#read -p "[+] Choose ffmpeg preset (default: ${preset_default}): " preset
+	#if [ -z ${preset} ]; then preset="${preset:-${preset_default}}"; fi
+	PS3="[+] Choose preset: "
+	values=("ultrafast" "superfast" "veryfast" "faster" "fast" "medium" "slow" "slower" "veryslow" "placebo")
+	select value in ${values[@]}; do
+		case ${value} in
+			"ultrafast")
+				preset=${value}
+				break
+				;;
+			"superfast")
+				preset=${value}
+				break
+				;;
+			"veryfast")
+				preset=${value}
+				break
+				;;
+			"faster")
+				preset=${value}
+				break
+				;;
+			"fast")
+				preset=${value}
+				break
+				;;
+			"medium")
+				preset=${value}
+				break
+				;;
+			"slow")
+				preset=${value}
+				break
+				;;
+			"slower")
+				preset=${value}
+				break
+				;;
+			"veryslow")
+				preset=${value}
+				break
+				;;
+			"placebo")
+				preset=${value}
+				break
+				;;
+			*)
+				printf "[+] No such option ${REPLY}\n"
+				;;
+		esac
+	done
+
 	printf "[+] Preset: ${preset}\n"
 
 	# Set crf parameter value
 	while ! [[ ${crf} =~ [0-9] && ${crf} -ge 0 && ${crf} -le 53 ]]; do
-        read -p "[+] Choose CRF value (0-53, defult: 18): " crf
-        if [ -z ${crf} ]; then crf="${crf:-18}"; fi
+        read -p "[+] Choose CRF value (0-53, defult: ${crf_default}): " crf
+        if [ -z ${crf} ]; then crf="${crf:-${crf_default}}"; fi
         if [[ ${crf} -lt 0 || ${crf} -gt 53 ]]; then
                 printf "[+] Please enter a crf value between 0 - 53\n"
         fi
 	done
 	printf "[+] Crf: ${crf}\n"
+}
+
+if [ ${enc} == "libx264" ]; then
+	# Set parameters for libx264
+	setParameters "copy" "17"
+elif [ ${enc} == "libx265" ]; then
+	# Set parameters for libx265
+	setParameters "copy" "18"
 fi
 
 if [ -z ${ext} ]; then
@@ -166,6 +204,7 @@ for f in *; do
 		# If all checks are passed, convert the video file
 		if [[ ${c} == 0 ]]; then
 			printf "[+] Converting ${f} to ${name}_conv.${ext}\n"
+			#printf "Encoder: ${enc}, audio: ${audio}, preset: ${preset}, crf: ${crf}\n"
 			ffmpeg -i ${f} -c:a ${audio} -c:v ${enc} -preset ${preset} -crf ${crf} ${name}"_conv".${ext}
 		fi
 	fi
