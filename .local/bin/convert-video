@@ -6,12 +6,18 @@
 # Check if ffmpeg is installed
 ffmpeg -version 2>/dev/null 1>&2
 if [[ ${?} != 0 ]]; then
-        echo "ffmpeg is not installed. Terminating script" && exit 1
+        echo "[+] Package "ffmpeg" is not installed. Terminating script" && exit 1
+fi
+
+# Check if exiftool is installed
+exiftool -ver 2>/dev/null 1>&2
+if [[ ${?} != 0 ]]; then
+        echo "[+] Package "exiftool" is not installed. Terminating script" && exit 1
 fi
 
 # Choose an encoder
 if [ -z ${enc} ]; then
-	PS3="Choose encoder: "
+	PS3="[+] Choose encoder: "
 	encoders=("libx264" "libx265")
 	select encoder in ${encoders[@]}; do
 		case ${encoder} in
@@ -24,54 +30,65 @@ if [ -z ${enc} ]; then
 				break
 				;;
 			*)
-				echo "No such option"
+				echo "[+] No such option ${REPLY}"
 				;;
 		esac
 	done
 fi
 
+# Print encoder
+printf "[+] Encoder: ${enc}\n"
+
 # Set parameters for libx264
 if [ ${enc} == "libx264" ]; then
 	# Set audio parameter value
-	read -p "Choose audio settings (default: copy): " audio
+	read -p "[+] Choose audio settings (default: copy): " audio
 	if [ -z ${audio} ]; then audio="${audio:-copy}"; fi
+	printf "[+] Audio : ${audio}\n"
 
 	# Set preset parameter value
-	read -p "Choose ffmpeg preset (default: veryslow): " preset
+	read -p "[+] Choose ffmpeg preset (default: veryslow): " preset
 	if [ -z ${preset} ]; then preset="${preset:-veryslow}"; fi
+	printf "[+] Preset : ${preset}\n"
 
 	# Set crf parameter value
 	while ! [[ ${crf} =~ [0-9] && ${crf} -ge 0 && ${crf} -le 53 ]]; do
-        read -p "Choose CRF value (0-53, defult: 17): " crf
+        read -p "[+] Choose CRF value (0-53, defult: 17): " crf
         if [ -z ${crf} ]; then crf="${crf:-17}"; fi
         if [[ ${crf} -lt 0 || ${crf} -gt 53 ]]; then
-                printf "Please enter a crf value between 0 - 53\n"
+                printf "[+] Please enter a crf value between 0 - 53\n"
         fi
 	done
+	printf "[+] Crf: ${crf}\n"
+fi
+
 # Set parameters for libx265
-elif [ ${enc} == "libx265" ]; then
+if [ ${enc} == "libx265" ]; then
 	# Set audio parameter
-	read -p "Choose audio settings (default: copy): " audio
+	read -p "[+] Choose audio settings (default: copy): " audio
 	if [ -z ${audio} ]; then audio="${audio:-copy}"; fi
+	printf "[+] Audio: ${audio}\n"
 
 	# Set preset parameter value
-	read -p "Choose ffmpeg preset (default: medium): " preset
+	read -p "[+] Choose ffmpeg preset (default: medium): " preset
 	if [ -z ${preset} ]; then preset="${preset:-medium}"; fi
+	printf "[+] Preset: ${preset}\n"
 
 	# Set crf parameter value
 	while ! [[ ${crf} =~ [0-9] && ${crf} -ge 0 && ${crf} -le 53 ]]; do
-        read -p "Choose CRF value (0-53, defult: 18): " crf
+        read -p "[+] Choose CRF value (0-53, defult: 18): " crf
         if [ -z ${crf} ]; then crf="${crf:-18}"; fi
         if [[ ${crf} -lt 0 || ${crf} -gt 53 ]]; then
-                printf "Please enter a crf value between 0 - 53\n"
+                printf "[+] Please enter a crf value between 0 - 53\n"
         fi
 	done
+	printf "[+] Crf: ${crf}\n"
 fi
 
 if [ -z ${ext} ]; then
 	# Choose a file extension to convert to
-	PS3="Choose file extension to convert to: "
-	extensions=("mp4" "mkv" "webm" "avi" "mov" "m4v")
+	PS3="[+] Choose file extension to convert to: "
+	extensions=("mkv" "mp4" "webm" "avi" "mov" "m4v" "wmv")
 	select extension in ${extensions[@]}; do
 		case ${extension} in
 			"mp4")
@@ -91,11 +108,14 @@ if [ -z ${ext} ]; then
 				break
 				;;
 			*)
-				printf "No such option\n"
+				printf "[+] No such option ${REPLY}\n"
 				;;
 		esac
 	done
 fi
+
+# Print extension
+printf "[+] Extension to convert: ${ext}\n"
 
 
 # Remove special characters from filenames and replace whitespaces with underscores
@@ -105,10 +125,47 @@ $(update-filename)
 for f in *; do
 	# Get files in current directory
 	if [[ -f ${f} ]] && [[ ${f} =~ [A-Za-z0-9_\(\)]\.[A-Za-z0-9]+{3,4} ]]; then
+		# Split filename
 		name=${f%%.*} # Get file name
 		ext_orig=${f##*.} # Get file extension
 		ext_orig=$(echo ${ext_orig} | tr '[:upper:]' '[:lower:]') # Convert extension to lowercase
-		if [[ ${extensions[@]} =~ ${ext_orig} ]]; then
+
+		# Check if current directory already has a converted video file with the same filename
+		c=0 # Set to 1 if a file is already converted
+		for conv in *_conv*; do
+			# Check if directory has any filenames with _conv suffix
+			if ! [[ ${conv} == "*_conv*" ]]; then
+				if [[ ${name} == ${conv%%_conv*} ]]; then
+					printf "[+] File ${f} is already converted and saved as ${conv}\n"
+					c=1
+				fi
+			fi
+		done
+
+		# Check if a video is already converted
+		if [[ ${name} =~ (_conv)$ ]]; then
+			printf "[+] File ${f} is already converted\n"
+			c=1
+		fi
+
+		# Check if the file is a video file of a supported format
+		if ! [[ ${extensions[@]} =~ ${ext_orig} ]]; then
+			printf "[+] \"${f}\" is not a video file / unsupported extension \"${ext_orig}\"\n"
+			c=1
+		fi
+
+		# Check if file is already encoded using the same encoder
+		if [[ ${c} == 0 ]]; then
+			current_encoding=$(exiftool ${f} | grep -E 'Encoding|Encoder' | cut -d ":" -f 2 | cut -d " " -f 3)
+			if [[ ${current_encoding} == ${enc} ]]; then
+				printf "[+] The video ${f} is already encoded with ${enc}\n"
+				c=1
+			fi
+		fi
+
+		# If all checks are passed, convert the video file
+		if [[ ${c} == 0 ]]; then
+			printf "[+] Converting ${f} to ${name}_conv.${ext}\n"
 			ffmpeg -i ${f} -c:a ${audio} -c:v ${enc} -preset ${preset} -crf ${crf} ${name}"_conv".${ext}
 		fi
 	fi
