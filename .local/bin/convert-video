@@ -204,8 +204,25 @@ for f in *; do
 		# If all checks are passed, convert the video file
 		if [[ ${c} == 0 ]]; then
 			printf "[+] Converting ${f} to ${name}_conv.${ext}\n"
-			#printf "Encoder: ${enc}, audio: ${audio}, preset: ${preset}, crf: ${crf}\n"
 			ffmpeg -i ${f} -c:a ${audio} -c:v ${enc} -preset ${preset} -crf ${crf} ${name}"_conv".${ext}
 		fi
+	fi
+done
+
+# Remove "_conv" suffix from filenames (optional)
+while true; do
+	read -p "[+] Do you want to remove \"_conv\" suffix from the converted files? [Y/N] " choice
+	if [[ "${choice}" == "Y" || "${choice}" == "y" ]]; then
+		for f in *_conv*; do
+			if [ ${f} == "*_conv*" ]; then
+				printf "No files to rename\n"
+			else
+				ext=${f##*.}
+				mv "${f}" "${f/_conv.${ext}/.${ext}}"
+			fi
+		done
+		break
+	elif [[ "${choice}" == "N" || "${choice}" == "n" ]]; then
+		break
 	fi
 done
