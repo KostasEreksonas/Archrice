@@ -2,48 +2,66 @@
 
 function dependencyName {
 	# Get dependency name from the output of pacman -Qi
-	# $1 - line with a dependency name in it
-	# $2 - field number to cut
-	echo $1 | cut -d ":" -f $2 | tr -d " "
+	line=${1}
+	# Count occurences of : symbol
+	count=$(echo ${line} | sed 's/[^:]//g' | awk '{ print length }')
+	if [[ ${line} =~ "Optional Deps" ]]; then
+		if [[ ${count} == 2 ]]; then
+			echo ${line} | cut -d ":" -f 2 | tr -d " "
+		elif [[ ${count} == 1 ]]; then
+			echo ${line} | cut -d " " -f 6
+		fi
+	else
+		if [[ ${count} == 1 ]]; then
+			echo ${line} | cut -d ":" -f 1 | tr -d " "
+		elif [[ ${count} == 0 ]]; then
+			echo ${line} | cut -d " " -f 19
+		fi
+	fi
 }
 
 function separateDeps {
 	# Put installed and not installed dependencies into separate arrays
-	# $1 - line with a dependency name in it
-	# $2 - dependency name
-	if [[ $1 =~ "[installed]" ]]; then
-		installed+=($2)
+	line=${1}
+	dependency=${2}
+	if [[ ${line} =~ "[installed]" ]]; then
+		installed+=(${dependency})
 	else
-		missing+=($2)
+		missing+=(${dependency})
 	fi
 }
 
 # Change Internal Field Separator (IFS) to a newline
-IFS_bak=$IFS
+IFS_bak=${IFS}
 IFS=$'\n'
 
 # Exit the script if no package name is provided
-if [ -z $1 ]; then
-	printf "Usage: get-deps <package-name>\n"
-	exit 1
+if [ -z ${1} ]; then
+	printf "Usage: get-deps <package-name>\n" && exit 1
 fi
 
 # Put pacman -Qi output to an array
 # f - flag for optional dependencies
 while read -r line; do
-	if [[ $line =~ "Optional Deps" ]]; then
-		f=1
-		package=$(dependencyName $line 2)
-		separateDeps $line $package
+	# Get the first line with an optional dependency
+	if [[ ${line} =~ "Optional Deps" ]]; then
+		f=1 # Set the dependency flag to 1, process every line until this flag is unset
+		# Process first dependency
+		package=$(dependencyName ${line})
+		separateDeps ${line} ${package}
 	fi
-	if [[ $line =~ "Required By" ]]; then
-		f=0
+
+	# Get the first line without an optional dependency
+	if [[ ${line} =~ "Required By" ]]; then
+		f=0 # Set the dependency flag to 0, will not process any lines until the flag is set
 	fi
-	if [[ "$f" == "1" ]] && ! [[ $line =~ "Optional Deps" ]]; then
-		package=$(dependencyName $line 1)
-		separateDeps $line $package
+
+	# Process all subsequent optional dependencies
+	if [[ "${f}" == "1" ]] && ! [[ ${line} =~ "Optional Deps" ]]; then
+		package=$(dependencyName ${line})
+		separateDeps ${line} ${package}
 	fi
-done <<< $(pacman -Qi $1)
+done <<< $(pacman -Qi ${1})
 
 # Print packages that are installed
 printf 'Packages installed: '
@@ -53,7 +71,7 @@ printf "\n"
 # If all optional dependencies are installed, print a message and finish execution
 if [[ -z ${missing[@]} ]]; then
 	printf "All optional dependecies are installed.\n"
-elif [ -z $choice ]; then
+elif [ -z ${choice} ]; then
 	# Print packages that are not installed
 	printf 'Packages not yet installed: '
 	printf '%s ' "${missing[@]}"
@@ -61,19 +79,19 @@ elif [ -z $choice ]; then
 	# Ask to install missing optional dependecies
 	while true; do
 		read -p "Do you want to install missing dependencies? [Y/N] " choice
-		if [[ "$choice" == "Y" || "$choice" == "y" ]]; then
-			if [[ $EUID != 0 ]]; then
+		if [[ "${choice}" == "Y" || "${choice}" == "y" ]]; then
+			if [[ ${EUID} != 0 ]]; then
 				printf "You must run this script as root in order to install dependencies.\n"
 				break
 			else
 				pacman --noconfirm -S ${missing[@]}
 				break
 			fi
-		elif [[ "$choice" == "N" || "$choice" == "n" ]]; then
+		elif [[ "${choice}" == "N" || "${choice}" == "n" ]]; then
 			break
 		fi
 	done
 fi
 
 # Restore Internal Field Separator (IFS)
-IFS=$IFS_bak
+IFS=${IFS_bak}
