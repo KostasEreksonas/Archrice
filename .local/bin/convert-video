@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Convert all video files in a given directory
-# Dependencies: ffmpeg
+# Dependencies: ffmpeg, exiftool
 
 # Check if ffmpeg is installed
 ffmpeg -version 2>/dev/null 1>&2
@@ -204,7 +204,8 @@ for f in *; do
 		# If all checks are passed, convert the video file
 		if [[ ${c} == 0 ]]; then
 			printf "[+] Converting ${f} to ${name}_conv.${ext}\n"
-			ffmpeg -i ${f} -c:a ${audio} -c:v ${enc} -preset ${preset} -crf ${crf} ${name}"_conv".${ext}
+			loglevel="quiet"
+			ffmpeg -stats -loglevel ${loglevel} -i ${f} -c:a ${audio} -c:v ${enc} -x265-params log-level=none -preset ${preset} -crf ${crf} ${name}"_conv".${ext}
 		fi
 	fi
 done
@@ -215,7 +216,7 @@ while true; do
 	if [[ "${choice}" == "Y" || "${choice}" == "y" ]]; then
 		for f in *_conv*; do
 			if [ ${f} == "*_conv*" ]; then
-				printf "No files to rename\n"
+				printf "[+] No files to rename\n"
 			else
 				ext=${f##*.}
 				mv "${f}" "${f/_conv.${ext}/.${ext}}"
