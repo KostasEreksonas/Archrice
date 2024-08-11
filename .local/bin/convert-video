@@ -1,7 +1,13 @@
 #!/bin/sh
 
 # Convert all video files in a given directory
-# Dependencies: ffmpeg, exiftool
+# Dependencies: ffmpeg, exiftool, bc
+
+#  -----------
+# | Delimiter |
+#  -----------
+
+delimiter="----------------------------------------------------------------"
 
 #  -----------
 # | Functions |
@@ -14,9 +20,13 @@ function setParameters {
 	crf_default=${3}
 
 	# Set audio parameter value
-	read -p "[+] Choose audio settings (default: ${audio_default}): " audio
+	printf "%s\n" "${delimiter}"
+	read -p "| [+] Choose audio settings (default: ${audio_default}): " audio
+	printf "%s\n" "${delimiter}"
 	if [ -z ${audio} ]; then audio="${audio:-${audio_default}}"; fi
-	printf "[+] Audio: ${audio}\n"
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Audio: ${audio}\n"
+	printf "%s\n" "${delimiter}"
 
 	# Set preset parameter value
 	PS3="[+] Choose preset: "
@@ -64,12 +74,17 @@ function setParameters {
 				break
 				;;
 			*)
-				printf "[+] No such option ${REPLY}\n"
+				printf "%s\n" "${delimiter}"
+				printf "| [+] No such option ${REPLY}\n"
+				printf "%s\n" "${delimiter}"
 				;;
 		esac
 	done
 
-	printf "[+] Preset: ${preset}\n"
+	# Print preset
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Preset: ${preset}\n"
+	printf "%s\n" "${delimiter}"
 
 	# Set max crf value based on encoder
 	if [ ${enc} == "libx264" ]; then
@@ -80,13 +95,21 @@ function setParameters {
 
 	# Set crf parameter value
 	while ! [[ ${crf} =~ [0-9] && ${crf} -ge 0 && ${crf} -le ${crf_max} ]]; do
-        read -p "[+] Choose CRF value (0-${crf_max}, defult: ${crf_default}): " crf
+		printf "%s\n" "${delimiter}"
+        read -p "| [+] Choose CRF value (0-${crf_max}, defult: ${crf_default}): " crf
+		printf "%s\n" "${delimiter}"
         if [ -z ${crf} ]; then crf="${crf:-${crf_default}}"; fi
         if [[ ${crf} -lt 0 || ${crf} -gt ${crf_max} ]]; then
-                printf "[+] Please enter a CRF value between 0 - ${crf_max}\n"
+				printf "%s\n" "${delimiter}"
+                printf "| [+] Please enter a CRF value between 0 - ${crf_max}\n"
+				printf "%s\n" "${delimiter}"
         fi
 	done
-	printf "[+] CRF: ${crf}\n"
+
+	# Print CRF
+	printf "%s\n" "${delimiter}"
+	printf "| [+] CRF: ${crf}\n"
+	printf "%s\n" "${delimiter}"
 }
 
 function formatTime {
@@ -116,19 +139,37 @@ function formatTime {
 # Check if ffmpeg is installed
 ffmpeg -version 2>/dev/null 1>&2
 if [[ ${?} != 0 ]]; then
-        printf "[+] Package ffmpeg is not installed. Terminating script\n" && exit 1
+	printf "%s\n" "${delimiter}"
+    printf "| [+] Package ffmpeg is not installed. Terminating script\n" && exit 1
+	printf "%s\n" "${delimiter}"
+else
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Package ffmpeg installed\n"
+	printf "%s\n" "${delimiter}"
 fi
 
 # Check if exiftool is installed
 exiftool -ver 2>/dev/null 1>&2
 if [[ ${?} != 0 ]]; then
-        printf "[+] Package exiftool is not installed. Terminating script\n" && exit 1
+	printf "%s\n" "${delimiter}"
+    printf "| [+] Package exiftool is not installed. Terminating script\n" && exit 1
+	printf "%s\n" "${delimiter}"
+else
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Package exiftool installed\n"
+	printf "%s\n" "${delimiter}"
 fi
 
 # Check if bc is installed
 bc -v 2>/dev/null 1>&2
 if [[ ${?} != 0 ]]; then
-	printf "[+] Package bc is not installed. Terminating script\n" && exit 1
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Package bc is not installed. Terminating script\n" && exit 1
+	printf "%s\n" "${delimiter}"
+else
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Package bc installed\n"
+	printf "%s\n" "${delimiter}"
 fi
 
 #  ------
@@ -150,14 +191,18 @@ if [ -z ${enc} ]; then
 				break
 				;;
 			*)
-				echo "[+] No such option ${REPLY}"
+				printf "%s\n" "${delimiter}"
+				echo "| [+] No such option ${REPLY}"
+				printf "%s\n" "${delimiter}"
 				;;
 		esac
 	done
 fi
 
 # Print encoder
-printf "[+] Encoder: ${enc}\n"
+printf "%s\n" "${delimiter}"
+printf "| [+] Encoder: ${enc}\n"
+printf "%s\n" "${delimiter}"
 
 if [ ${enc} == "libx264" ]; then
 	# Set parameters for libx264
@@ -190,18 +235,27 @@ if [ -z ${ext} ]; then
 				break
 				;;
 			*)
-				printf "[+] No such option ${REPLY}\n"
+				printf "%s\n" "${delimiter}"
+				printf "| [+] No such option ${REPLY}\n"
+				printf "%s\n" "${delimiter}"
 				;;
 		esac
 	done
 fi
 
 # Print extension
-printf "[+] Extension to convert: ${ext}\n"
-
+printf "%s\n" "${delimiter}"
+printf "| [+] Extension to convert: ${ext}\n"
+printf "%s\n" "${delimiter}"
 
 # Remove special characters from filenames and replace whitespaces with underscores
 $(update-filename)
+printf "%s\n" "${delimiter}"
+printf "| [+] Filenames updated\n"
+printf "%s\n" "${delimiter}"
+
+# Total encoding duration
+total=0
 
 # Encode all video files
 for f in *; do
@@ -216,29 +270,34 @@ for f in *; do
 		ext_orig=$(echo ${ext_orig} | tr '[:upper:]' '[:lower:]') # Convert extension to lowercase
 		c=0 # Conversion flag. Set to 1 if a file is already converted
 
+		# Check if the file is a video file of a supported format
+		if [[ ${c} == 0 ]]; then
+			if ! [[ ${extensions[@]} =~ ${ext_orig} ]]; then
+				printf "%s\n" "${delimiter}"
+				printf "| [+] \"${f}\" is not a video file / unsupported extension \"${ext_orig}\"\n"
+				printf "%s\n" "${delimiter}"
+				c=1
+			fi
+		fi
+
 		# Check if current file has "_conv" suffix
-		if [[ ${name} =~ (_conv)$ ]]; then
-			printf "[+] File ${f} is already converted\n"
-			c=1
+		if [[ ${c} == 0 ]]; then
+			if [[ ${name} =~ (_conv)$ ]]; then
+				printf "%s\n" "${delimiter}"
+				printf "| [+] File ${f} is already converted\n"
+				printf "%s\n" "${delimiter}"
+				c=1
+			fi
 		fi
 
 		# If a directory contains files with _conv suffix, check if filename matches current file
-		for conv in *_conv*; do
-			if ! [[ ${conv} == "*_conv*" ]]; then
-				if [[ ${name} == ${conv%%_conv*} ]]; then
-					printf "[+] File ${f} is already converted and saved as ${conv}\n"
-					c=1
-				fi
-			fi
-		done
-
-		# If previous checks passed, check for a different file with same name and same encoder as specified
 		if [[ ${c} == 0 ]]; then
-			for file in *.${ext}; do
-				if ! [[ ${file} == "*.${ext}" ]]; then
-					file_encoding=$(exiftool ${file} | grep -E 'Encoding|Encoder' | cut -d ":" -f 2 | cut -d " " -f 3)
-					if [[ ${file%%.*} == ${f%%.*} ]] && [[ ${file_encoding} == ${enc} ]]; then
-						printf "[+] File ${f} is already encoded with ${enc} and saved as ${file}\n"
+			for conv in *_conv*; do
+				if ! [[ ${conv} == "*_conv*" ]]; then
+					if [[ ${name} == ${conv%%_conv*} ]]; then
+						printf "%s\n" "${delimiter}"
+						printf "| [+] File ${f} is already converted and saved as ${conv}\n"
+						printf "%s\n" "${delimiter}"
 						c=1
 						break
 					fi
@@ -246,39 +305,69 @@ for f in *; do
 			done
 		fi
 
-		# Check if the file is a video file of a supported format
-		if ! [[ ${extensions[@]} =~ ${ext_orig} ]]; then
-			printf "[+] \"${f}\" is not a video file / unsupported extension \"${ext_orig}\"\n"
-			c=1
+		# If previous checks passed, check for a different file with same name and same encoder as specified
+		if [[ ${c} == 0 ]]; then
+			for file in *.${ext}; do
+				if ! [[ ${file} == "*.${ext}" ]]; then
+					file_encoding=$(exiftool ${file} | grep -E 'Encoding|Encoder' | cut -d ":" -f 2 | cut -d " " -f 3)
+					if [[ ${file%%.*} == ${f%%.*} ]] && [[ ${file_encoding} == ${enc} ]]; then
+						printf "%s\n" "${delimiter}"
+						printf "| [+] File ${f} is already encoded with ${enc} and saved as ${file}\n"
+						printf "%s\n" "${delimiter}"
+						c=1
+						break
+					fi
+				fi
+			done
 		fi
 
 		# If all checks are passed, convert the video file
 		if [[ ${c} == 0 ]]; then
-			printf "[+] Encoding ${f} (enc: ${f_enc}) to ${name}_conv.${ext} (enc: ${enc})\n"
+			printf "| [+] Encoding ${f} (enc: ${f_enc}) to ${name}_conv.${ext} (enc: ${enc})\n"
 			loglevel="quiet"
 			start=$(date +%s.%3N)
 			ffmpeg -stats -loglevel ${loglevel} -i ${f} -c:a ${audio} -c:v ${enc} -x265-params log-level=none -preset ${preset} -crf ${crf} ${name}"_conv".${ext}
 			end=$(date +%s.%3N)
 			time=$(formatTime $(echo "${end}-${start}" | bc -l))
-			printf "[+] File ${f} (enc: ${f_enc}) encoded to ${name}_conv.${ext} (enc: ${enc}) in ${time}\n"
+			printf "%s\n" "${delimiter}"
+			printf "| [+] File ${f} (enc: ${f_enc}) encoded to ${name}_conv.${ext} (enc: ${enc}) in ${time}\n"
+			printf "%s\n" "${delimiter}"
+			total=$(echo "${total} + ${end} - ${start}" | bc -l)
 		fi
 	fi
 done
 
+# Print total time
+if [[ -z ${total} ]]; then total=0; fi
+total=$(formatTime ${total})
+printf "%s\n" "${delimiter}"
+printf "| [+] All videos converted in ${total}\n"
+printf "%s\n" "${delimiter}"
+
 # Remove "_conv" suffix from filenames (optional)
 while true; do
-	read -p "[+] Do you want to remove \"_conv\" suffix from the converted files? [Y/N] " choice
+	printf "%s\n" "${delimiter}"
+	read -p "| [+] Do you want to remove \"_conv\" suffix from the converted files? [Y/N] " choice
+	printf "%s\n" "${delimiter}"
 	if [[ "${choice}" == "Y" || "${choice}" == "y" ]]; then
 		for f in *_conv*; do
 			if [ ${f} == "*_conv*" ]; then
-				printf "[+] No files to rename\n"
+				printf "%s\n" "${delimiter}"
+				printf "| [+] No files to rename\n"
+				printf "%s\n" "${delimiter}"
 			else
 				ext=${f##*.}
 				mv "${f}" "${f/_conv.${ext}/.${ext}}"
+				printf "%s\n" "${delimiter}"
+				printf "| [+] File ${f} renamed to ${f%%_conv*}.${f##*.}\n"
+				printf "%s\n" "${delimiter}"
 			fi
 		done
 		break
 	elif [[ "${choice}" == "N" || "${choice}" == "n" ]]; then
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Quitting...\n"
+		printf "%s\n" "${delimiter}"
 		break
 	fi
 done
