@@ -132,6 +132,95 @@ function formatTime {
 	fi
 }
 
+function checkConversion {
+	# Check if a file has been converted
+	local f=${1} # A file to convert
+	local name=${2} # Original filename
+	local ext_orig=${3} # Original extension
+	c=0 # Conversion flag. Set to 1 if a file is already converted
+
+	# Check if the file is a video file of a supported format
+	if [[ ${c} == 0 ]]; then
+		if ! [[ ${extensions[@]} =~ ${ext_orig} ]]; then
+			printf "%s\n" "${delimiter}"
+			printf "| [+] \"${f}\" is not a video file / unsupported extension \"${ext_orig}\"\n"
+			printf "%s\n" "${delimiter}"
+			c=1
+		fi
+	fi
+
+	# Check if current file has "_conv" suffix
+	if [[ ${c} == 0 ]]; then
+		if [[ ${name} =~ (_conv)$ ]]; then
+			printf "%s\n" "${delimiter}"
+			printf "| [+] File ${f} is already converted\n"
+			printf "%s\n" "${delimiter}"
+			c=1
+		fi
+	fi
+
+	# If a directory contains files with _conv suffix, check if filename matches current file
+	if [[ ${c} == 0 ]]; then
+		for conv in *_conv*; do
+			if ! [[ ${conv} == "*_conv*" ]]; then
+				if [[ ${name} == ${conv%%_conv*} ]]; then
+					printf "%s\n" "${delimiter}"
+					printf "| [+] File ${f} is already converted and saved as ${conv}\n"
+					printf "%s\n" "${delimiter}"
+					c=1
+					break
+				fi
+			fi
+		done
+	fi
+
+	# If previous checks passed, check for a different file with same name and same encoder as specified
+	if [[ ${c} == 0 ]]; then
+		for file in *.${ext}; do
+			if ! [[ ${file} == "*.${ext}" ]]; then
+				file_encoding=$(exiftool ${file} | grep -E 'Encoding|Encoder' | cut -d ":" -f 2 | cut -d " " -f 3)
+				if [[ ${file%%.*} == ${f%%.*} ]] && [[ ${file_encoding} == ${enc} ]]; then
+					printf "%s\n" "${delimiter}"
+					printf "| [+] File ${f} is already encoded with ${enc} and saved as ${file}\n"
+					printf "%s\n" "${delimiter}"
+					c=1
+					break
+				fi
+			fi
+		done
+	fi
+}
+
+function removeSuffix {
+	# Remove "_conv" suffix from filename
+	while true; do
+		printf "%s\n" "${delimiter}"
+		read -p "| [+] Do you want to remove \"_conv\" suffix from the converted files? [Y/N] " choice
+		printf "%s\n" "${delimiter}"
+		if [[ "${choice}" == "Y" || "${choice}" == "y" ]]; then
+			for f in *_conv*; do
+				if [ ${f} == "*_conv*" ]; then
+					printf "%s\n" "${delimiter}"
+					printf "| [+] No files to rename\n"
+					printf "%s\n" "${delimiter}"
+				else
+					ext=${f##*.}
+					mv "${f}" "${f/_conv.${ext}/.${ext}}"
+					printf "%s\n" "${delimiter}"
+					printf "| [+] File ${f} renamed to ${f%%_conv*}.${f##*.}\n"
+					printf "%s\n" "${delimiter}"
+				fi
+			done
+			break
+		elif [[ "${choice}" == "N" || "${choice}" == "n" ]]; then
+			printf "%s\n" "${delimiter}"
+			printf "| [+] Quitting...\n"
+			printf "%s\n" "${delimiter}"
+			break
+		fi
+	done
+}
+
 #  -------------------
 # | Dependency checks |
 #  -------------------
@@ -265,67 +354,17 @@ for f in *; do
 	# Get files in current directory
 	if [[ -f ${f} ]] && [[ ${f} =~ [A-Za-z0-9_\(\)]\.[A-Za-z0-9]+{3,4} ]]; then
 		# Get encoding
-		f_enc=$(exiftool ${f} | grep -E 'Encoding|Encoder' | cut -d ":" -f 2 | cut -d " " -f 3)
-		if [ -z ${f_enc} ]; then f_enc="None"; fi
 		# Split filename
 		name=${f%%.*} # Get file name
-		ext_orig=${f##*.} # Get file extension
+		ext_orig=${f##*.} # Original file extension
 		ext_orig=$(echo ${ext_orig} | tr '[:upper:]' '[:lower:]') # Convert extension to lowercase
-		c=0 # Conversion flag. Set to 1 if a file is already converted
-
-		# Check if the file is a video file of a supported format
-		if [[ ${c} == 0 ]]; then
-			if ! [[ ${extensions[@]} =~ ${ext_orig} ]]; then
-				printf "%s\n" "${delimiter}"
-				printf "| [+] \"${f}\" is not a video file / unsupported extension \"${ext_orig}\"\n"
-				printf "%s\n" "${delimiter}"
-				c=1
-			fi
-		fi
-
-		# Check if current file has "_conv" suffix
-		if [[ ${c} == 0 ]]; then
-			if [[ ${name} =~ (_conv)$ ]]; then
-				printf "%s\n" "${delimiter}"
-				printf "| [+] File ${f} is already converted\n"
-				printf "%s\n" "${delimiter}"
-				c=1
-			fi
-		fi
-
-		# If a directory contains files with _conv suffix, check if filename matches current file
-		if [[ ${c} == 0 ]]; then
-			for conv in *_conv*; do
-				if ! [[ ${conv} == "*_conv*" ]]; then
-					if [[ ${name} == ${conv%%_conv*} ]]; then
-						printf "%s\n" "${delimiter}"
-						printf "| [+] File ${f} is already converted and saved as ${conv}\n"
-						printf "%s\n" "${delimiter}"
-						c=1
-						break
-					fi
-				fi
-			done
-		fi
-
-		# If previous checks passed, check for a different file with same name and same encoder as specified
-		if [[ ${c} == 0 ]]; then
-			for file in *.${ext}; do
-				if ! [[ ${file} == "*.${ext}" ]]; then
-					file_encoding=$(exiftool ${file} | grep -E 'Encoding|Encoder' | cut -d ":" -f 2 | cut -d " " -f 3)
-					if [[ ${file%%.*} == ${f%%.*} ]] && [[ ${file_encoding} == ${enc} ]]; then
-						printf "%s\n" "${delimiter}"
-						printf "| [+] File ${f} is already encoded with ${enc} and saved as ${file}\n"
-						printf "%s\n" "${delimiter}"
-						c=1
-						break
-					fi
-				fi
-			done
-		fi
+		checkConversion "${f}" "${name}" "${ext_orig}"
 
 		# If all checks are passed, convert the video file
 		if [[ ${c} == 0 ]]; then
+			# Get encoding of a current file
+			f_enc=$(exiftool ${f} | grep -E 'Encoding|Encoder' | cut -d ":" -f 2 | cut -d " " -f 3)
+			if [ -z ${f_enc} ]; then f_enc="None"; fi # Set file encoding as None if no encoding data is found
 			printf "| [+] Encoding ${f} (enc: ${f_enc}) to ${name}_conv.${ext} (enc: ${enc})\n"
 			loglevel="quiet"
 			start=$(date +%s.%3N)
@@ -355,34 +394,9 @@ if [[ ${count} -gt 0 ]]; then
 	printf "%s\n" "${delimiter}"
 else
 	printf "%s\n" "${delimiter}"
-	printf "| [+] No videos encoded\n"
+	printf "| [+] Time error: no videos encoded\n"
 	printf "%s\n" "${delimiter}"
 fi
 
 # Remove "_conv" suffix from filenames (optional)
-while true; do
-	printf "%s\n" "${delimiter}"
-	read -p "| [+] Do you want to remove \"_conv\" suffix from the converted files? [Y/N] " choice
-	printf "%s\n" "${delimiter}"
-	if [[ "${choice}" == "Y" || "${choice}" == "y" ]]; then
-		for f in *_conv*; do
-			if [ ${f} == "*_conv*" ]; then
-				printf "%s\n" "${delimiter}"
-				printf "| [+] No files to rename\n"
-				printf "%s\n" "${delimiter}"
-			else
-				ext=${f##*.}
-				mv "${f}" "${f/_conv.${ext}/.${ext}}"
-				printf "%s\n" "${delimiter}"
-				printf "| [+] File ${f} renamed to ${f%%_conv*}.${f##*.}\n"
-				printf "%s\n" "${delimiter}"
-			fi
-		done
-		break
-	elif [[ "${choice}" == "N" || "${choice}" == "n" ]]; then
-		printf "%s\n" "${delimiter}"
-		printf "| [+] Quitting...\n"
-		printf "%s\n" "${delimiter}"
-		break
-	fi
-done
+removeSuffix
