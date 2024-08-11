@@ -120,7 +120,7 @@ downloadModel ${PWD} "embeddings/" ${token} ${embeddings[@]}
 printf "\n%s\n" "${delimiter}"
 printf "[+] Downloading Lora models"
 printf "\n%s\n" "${delimiter}"
-models=(135867 319697 116354 33381 509253 482268 165259 165424 118945 146600 62833 87153)
+models=(135867 319697 116354 33381 509253 482268 165259 165424 118945 146600 62833 87153 156286)
 downloadModel ${PWD} "models/Lora/" ${token} ${models[@]}
 
 # Download Checkpoints
