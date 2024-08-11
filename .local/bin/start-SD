@@ -6,7 +6,7 @@ delimiter="################################################################"
 # Check if jq is installed
 jq --version 2>/dev/null 1>&2
 if [[ ${?} != 0 ]]; then
-	echo "jq is not installed. Aborting script..." && exit 1
+	printf "[+] jq is not installed. Aborting script...\n" && exit 1
 fi
 
 # Specify a drive where Stable Diffusion is located
@@ -28,9 +28,14 @@ else
 fi
 
 printf "\n%s\n" "${delimiter}"
+
 # If drive is not mounted, mount it
 if ! grep -qs ${drive} /proc/mounts; then
+	printf "[+] Mounting drive ${drive}\n"
 	sudo /bin/sh -c "mount ${drive} ${mountpoint}"
+	if [[ ${?} != 0 ]]; then
+		printf "[+] Failed to mount drive ${drive}. Aborting script...\n" && exit 1
+	fi
 fi
 printf "[+] Drive ${drive} mounted\n"
 
