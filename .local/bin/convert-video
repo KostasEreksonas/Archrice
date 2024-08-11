@@ -3,46 +3,15 @@
 # Convert all video files in a given directory
 # Dependencies: ffmpeg, exiftool
 
-# Check if ffmpeg is installed
-ffmpeg -version 2>/dev/null 1>&2
-if [[ ${?} != 0 ]]; then
-        echo "[+] Package "ffmpeg" is not installed. Terminating script" && exit 1
-fi
-
-# Check if exiftool is installed
-exiftool -ver 2>/dev/null 1>&2
-if [[ ${?} != 0 ]]; then
-        echo "[+] Package "exiftool" is not installed. Terminating script" && exit 1
-fi
-
-# Choose an encoder
-if [ -z ${enc} ]; then
-	PS3="[+] Choose encoder: "
-	encoders=("libx264" "libx265")
-	select encoder in ${encoders[@]}; do
-		case ${encoder} in
-			"libx264")
-				enc=${encoder}
-				break
-				;;
-			"libx265")
-				enc=${encoder}
-				break
-				;;
-			*)
-				echo "[+] No such option ${REPLY}"
-				;;
-		esac
-	done
-fi
-
-# Print encoder
-printf "[+] Encoder: ${enc}\n"
+#  -----------
+# | Functions |
+#  -----------
 
 function setParameters {
 	# Set parameters for ffmpeg
-	audio_default=${1}
-	crf_default=${2}
+	enc=${1}
+	audio_default=${2}
+	crf_default=${3}
 
 	# Set audio parameter value
 	read -p "[+] Choose audio settings (default: ${audio_default}): " audio
@@ -50,8 +19,6 @@ function setParameters {
 	printf "[+] Audio: ${audio}\n"
 
 	# Set preset parameter value
-	#read -p "[+] Choose ffmpeg preset (default: ${preset_default}): " preset
-	#if [ -z ${preset} ]; then preset="${preset:-${preset_default}}"; fi
 	PS3="[+] Choose preset: "
 	values=("ultrafast" "superfast" "veryfast" "faster" "fast" "medium" "slow" "slower" "veryslow" "placebo")
 	select value in ${values[@]}; do
@@ -104,23 +71,100 @@ function setParameters {
 
 	printf "[+] Preset: ${preset}\n"
 
+	# Set max crf value based on encoder
+	if [ ${enc} == "libx264" ]; then
+		crf_max=53
+	elif [ ${enc} = "libx265" ]; then
+		crf_max=51
+	fi
+
 	# Set crf parameter value
-	while ! [[ ${crf} =~ [0-9] && ${crf} -ge 0 && ${crf} -le 53 ]]; do
-        read -p "[+] Choose CRF value (0-53, defult: ${crf_default}): " crf
+	while ! [[ ${crf} =~ [0-9] && ${crf} -ge 0 && ${crf} -le ${crf_max} ]]; do
+        read -p "[+] Choose CRF value (0-${crf_max}, defult: ${crf_default}): " crf
         if [ -z ${crf} ]; then crf="${crf:-${crf_default}}"; fi
-        if [[ ${crf} -lt 0 || ${crf} -gt 53 ]]; then
-                printf "[+] Please enter a crf value between 0 - 53\n"
+        if [[ ${crf} -lt 0 || ${crf} -gt ${crf_max} ]]; then
+                printf "[+] Please enter a CRF value between 0 - ${crf_max}\n"
         fi
 	done
-	printf "[+] Crf: ${crf}\n"
+	printf "[+] CRF: ${crf}\n"
 }
+
+function formatTime {
+	# Format time to <xx>h <xx>m <xx.xxx>s
+	time=${1}
+	seconds=${time%%.*}
+	miliseconds=${time##*.}
+	if [[ ${seconds} -lt 60 ]]; then
+		echo "${time} seconds"
+	elif [[ ${seconds} -ge 60 && ${seconds} -lt 3600 ]]; then
+		minutes=$(echo "${seconds}/60" | bc -l | cut -d "." -f 1)
+		seconds=$((${seconds}-60*${minutes}))
+		echo "${minutes} minutes ${seconds}.${miliseconds} seconds"
+	elif [[ ${seconds} -ge 3600 ]]; then
+		hours=$(echo "${seconds}/3600" | bc -l | cut -d "." -f 1)
+		seconds=$((${seconds}-3600*${hours}))
+		minutes=$(echo "${seconds}/60" | bc -l | cut -d "." -f 1)
+		seconds=$((${seconds}-60*${minutes}))
+		echo "${hours} hours ${minutes} minutes ${seconds}.${miliseconds} seconds"
+	fi
+}
+
+#  -------------------
+# | Dependency checks |
+#  -------------------
+
+# Check if ffmpeg is installed
+ffmpeg -version 2>/dev/null 1>&2
+if [[ ${?} != 0 ]]; then
+        printf "[+] Package ffmpeg is not installed. Terminating script\n" && exit 1
+fi
+
+# Check if exiftool is installed
+exiftool -ver 2>/dev/null 1>&2
+if [[ ${?} != 0 ]]; then
+        printf "[+] Package exiftool is not installed. Terminating script\n" && exit 1
+fi
+
+# Check if bc is installed
+bc -v 2>/dev/null 1>&2
+if [[ ${?} != 0 ]]; then
+	printf "[+] Package bc is not installed. Terminating script\n" && exit 1
+fi
+
+#  ------
+# | Main |
+#  ------
+
+# Choose an encoder
+if [ -z ${enc} ]; then
+	PS3="[+] Choose encoder: "
+	encoders=("libx264" "libx265")
+	select encoder in ${encoders[@]}; do
+		case ${encoder} in
+			"libx264")
+				enc=${encoder}
+				break
+				;;
+			"libx265")
+				enc=${encoder}
+				break
+				;;
+			*)
+				echo "[+] No such option ${REPLY}"
+				;;
+		esac
+	done
+fi
+
+# Print encoder
+printf "[+] Encoder: ${enc}\n"
 
 if [ ${enc} == "libx264" ]; then
 	# Set parameters for libx264
-	setParameters "copy" "17"
+	setParameters ${enc} "copy" "17"
 elif [ ${enc} == "libx265" ]; then
 	# Set parameters for libx265
-	setParameters "copy" "18"
+	setParameters ${enc} "copy" "18"
 fi
 
 if [ -z ${ext} ]; then
@@ -163,15 +207,23 @@ $(update-filename)
 for f in *; do
 	# Get files in current directory
 	if [[ -f ${f} ]] && [[ ${f} =~ [A-Za-z0-9_\(\)]\.[A-Za-z0-9]+{3,4} ]]; then
+		# Get encoding
+		f_enc=$(exiftool ${f} | grep -E 'Encoding|Encoder' | cut -d ":" -f 2 | cut -d " " -f 3)
+		if [ -z ${f_enc} ]; then f_enc="None"; fi
 		# Split filename
 		name=${f%%.*} # Get file name
 		ext_orig=${f##*.} # Get file extension
 		ext_orig=$(echo ${ext_orig} | tr '[:upper:]' '[:lower:]') # Convert extension to lowercase
+		c=0 # Conversion flag. Set to 1 if a file is already converted
 
-		# Check if current directory already has a converted video file with the same filename
-		c=0 # Set to 1 if a file is already converted
+		# Check if current file has "_conv" suffix
+		if [[ ${name} =~ (_conv)$ ]]; then
+			printf "[+] File ${f} is already converted\n"
+			c=1
+		fi
+
+		# If a directory contains files with _conv suffix, check if filename matches current file
 		for conv in *_conv*; do
-			# Check if directory has any filenames with _conv suffix
 			if ! [[ ${conv} == "*_conv*" ]]; then
 				if [[ ${name} == ${conv%%_conv*} ]]; then
 					printf "[+] File ${f} is already converted and saved as ${conv}\n"
@@ -180,10 +232,18 @@ for f in *; do
 			fi
 		done
 
-		# Check if a video is already converted
-		if [[ ${name} =~ (_conv)$ ]]; then
-			printf "[+] File ${f} is already converted\n"
-			c=1
+		# If previous checks passed, check for a different file with same name and same encoder as specified
+		if [[ ${c} == 0 ]]; then
+			for file in *.${ext}; do
+				if ! [[ ${file} == "*.${ext}" ]]; then
+					file_encoding=$(exiftool ${file} | grep -E 'Encoding|Encoder' | cut -d ":" -f 2 | cut -d " " -f 3)
+					if [[ ${file%%.*} == ${f%%.*} ]] && [[ ${file_encoding} == ${enc} ]]; then
+						printf "[+] File ${f} is already encoded with ${enc} and saved as ${file}\n"
+						c=1
+						break
+					fi
+				fi
+			done
 		fi
 
 		# Check if the file is a video file of a supported format
@@ -192,20 +252,15 @@ for f in *; do
 			c=1
 		fi
 
-		# Check if file is already encoded using the same encoder
-		if [[ ${c} == 0 ]]; then
-			current_encoding=$(exiftool ${f} | grep -E 'Encoding|Encoder' | cut -d ":" -f 2 | cut -d " " -f 3)
-			if [[ ${current_encoding} == ${enc} ]]; then
-				printf "[+] The video ${f} is already encoded with ${enc}\n"
-				c=1
-			fi
-		fi
-
 		# If all checks are passed, convert the video file
 		if [[ ${c} == 0 ]]; then
-			printf "[+] Converting ${f} to ${name}_conv.${ext}\n"
+			printf "[+] Encoding ${f} (enc: ${f_enc}) to ${name}_conv.${ext} (enc: ${enc})\n"
 			loglevel="quiet"
+			start=$(date +%s.%3N)
 			ffmpeg -stats -loglevel ${loglevel} -i ${f} -c:a ${audio} -c:v ${enc} -x265-params log-level=none -preset ${preset} -crf ${crf} ${name}"_conv".${ext}
+			end=$(date +%s.%3N)
+			time=$(formatTime $(echo "${end}-${start}" | bc -l))
+			printf "[+] File ${f} (enc: ${f_enc}) encoded to ${name}_conv.${ext} (enc: ${enc}) in ${time}\n"
 		fi
 	fi
 done
