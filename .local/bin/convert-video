@@ -257,6 +257,9 @@ printf "%s\n" "${delimiter}"
 # Total encoding duration
 total=0
 
+# Count encoded files
+count=0
+
 # Encode all video files
 for f in *; do
 	# Get files in current directory
@@ -333,16 +336,28 @@ for f in *; do
 			printf "| [+] File ${f} (enc: ${f_enc}) encoded to ${name}_conv.${ext} (enc: ${enc}) in ${time}\n"
 			printf "%s\n" "${delimiter}"
 			total=$(echo "${total} + ${end} - ${start}" | bc -l)
+			count=$((++count))
 		fi
 	fi
 done
 
+# Print count of encoded files
+printf "%s\n" "${delimiter}"
+printf "| [+] Econded ${count} files\n"
+printf "%s\n" "${delimiter}"
+
 # Print total time
-if [[ -z ${total} ]]; then total=0; fi
-total=$(formatTime ${total})
-printf "%s\n" "${delimiter}"
-printf "| [+] All videos converted in ${total}\n"
-printf "%s\n" "${delimiter}"
+if [[ ${count} -gt 0 ]]; then
+	if [[ -z ${total} ]]; then total=0; fi
+	total=$(formatTime ${total})
+	printf "%s\n" "${delimiter}"
+	printf "| [+] All videos converted in ${total}\n"
+	printf "%s\n" "${delimiter}"
+else
+	printf "%s\n" "${delimiter}"
+	printf "| [+] No videos encoded\n"
+	printf "%s\n" "${delimiter}"
+fi
 
 # Remove "_conv" suffix from filenames (optional)
 while true; do
