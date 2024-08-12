@@ -2,25 +2,15 @@
 
 # A script for standartizing filenames
 
-# Delete all hyphens in a filename
-for f in *-*; do
-	mv "${f}" "${f//-/}"
-done 2>/dev/null
-
-# Delete all plus symbols in a filename
-for f in *+*; do
-	mv "${f}" "${f//+/}"
-done 2>/dev/null
-
-# Delete all commas symbols in a filename
-for f in *,*; do
-	mv "${f}" "${f//,/}"
-done 2>/dev/null
-
-# Delete all exclamation points in a filename
-for f in *!*; do
-	mv "${f}" "${f//!/}"
-done 2>/dev/null
+# Delete -, +, !, ', ", \ and , symbols
+symbols=(\- \+ \! \' \" \\ \,)
+for symbol in ${symbols[@]}; do
+	for file in *${symbol}*; do # Get all filenames with a symbol
+		if ! [[ ${file} == "*${symbol}*" ]]; then
+			mv "${file}" "${file//${symbol}/}"
+		fi
+	done 2>/dev/null
+done
 
 # Delete square brackets with everything between them
 for f in *[*; do
