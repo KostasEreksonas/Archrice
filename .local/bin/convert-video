@@ -259,6 +259,138 @@ function deleteOriginal {
 	done
 }
 
+function setEncoder {
+	# Choose an encoder
+	if [ -z ${enc} ]; then
+		PS3="[+] Choose encoder: "
+		encoders=("libx264" "libx265")
+		select encoder in ${encoders[@]}; do
+			case ${encoder} in
+				"libx264")
+					enc=${encoder}
+					break
+					;;
+				"libx265")
+					enc=${encoder}
+					break
+					;;
+				*)
+					printf "%s\n" "${delimiter}"
+					echo "| [+] No such option ${REPLY}"
+					printf "%s\n" "${delimiter}"
+					;;
+			esac
+		done
+	fi
+
+	# Print encoder
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Encoder: ${enc}\n"
+	printf "%s\n" "${delimiter}"
+}
+
+function chooseExtension {
+	# Choose file extension to format
+	if [ -z ${ext} ]; then
+		# Choose a file extension to convert to
+		PS3="[+] Choose file extension to convert to: "
+		extensions=("mkv" "mp4" "webm" "avi" "mov" "m4v" "wmv")
+		select extension in ${extensions[@]}; do
+			case ${extension} in
+				"mp4")
+					ext=${extension}
+					break
+					;;
+				"mkv")
+					ext=${extension}
+					break
+					;;
+				"webm")
+					ext=${extension}
+					break
+					;;
+				"avi")
+					ext=${extension}
+					break
+					;;
+				*)
+					printf "%s\n" "${delimiter}"
+					printf "| [+] No such option ${REPLY}\n"
+					printf "%s\n" "${delimiter}"
+					;;
+			esac
+		done
+	fi
+
+	# Print extension
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Extension to convert: ${ext}\n"
+	printf "%s\n" "${delimiter}"
+}
+
+function updateName {
+	# Remove special characters from filenames and replace whitespaces with underscores
+	$(update-filename)
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Filenames updated\n"
+	printf "%s\n" "${delimiter}"
+}
+
+function countEncoded {
+	# Print count of encoded files
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Encoded ${count} files\n"
+	printf "%s\n" "${delimiter}"
+}
+
+function printTotal {
+	# Print total time
+	if [[ ${count} -gt 0 ]]; then
+		if [[ -z ${total} ]]; then total=0; fi
+		total=$(formatTime ${total})
+		printf "%s\n" "${delimiter}"
+		printf "| [+] All videos encoded in ${total}\n"
+		printf "%s\n" "${delimiter}"
+	else
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Time error: no videos encoded\n"
+		printf "%s\n" "${delimiter}"
+	fi
+}
+
+function encodeFiles {
+	# Encode all video files
+	for f in *; do
+		# Get files in current directory
+		if [[ -f ${f} ]] && [[ ${f} =~ [A-Za-z0-9_\(\)]\.[A-Za-z0-9]+{3,4} ]]; then
+			# Get encoding
+			# Split filename
+			name=${f%%.*} # Get file name
+			ext_orig=${f##*.} # Original file extension
+			ext_orig=$(echo ${ext_orig} | tr '[:upper:]' '[:lower:]') # Convert extension to lowercase
+			checkConversion "${f}" "${name}" "${ext_orig}"
+
+			# If all checks are passed, convert the video file
+			if [[ ${c} == 0 ]]; then
+				# Get encoding of a current file
+				f_enc=$(exiftool ${f} | grep -E 'Encoding|Encoder' | cut -d ":" -f 2 | cut -d " " -f 3 | tr -d ",")
+				if [ -z ${f_enc} ]; then f_enc="None"; fi # Set file encoding as None if no encoding data is found
+				printf "| [+] Encoding ${f} (enc: ${f_enc}) to ${name}_conv.${ext} (enc: ${enc})\n"
+				loglevel="quiet"
+				start=$(date +%s.%3N)
+				ffmpeg -stats -loglevel ${loglevel} -i ${f} -c:a ${audio} -c:v ${enc} -x265-params log-level=none -preset ${preset} -crf ${crf} ${name}"_conv".${ext}
+				end=$(date +%s.%3N)
+				time=$(formatTime $(echo "${end}-${start}" | bc -l))
+				printf "%s\n" "${delimiter}"
+				printf "| [+] File ${f} (enc: ${f_enc}) encoded to ${name}_conv.${ext} (enc: ${enc}) in ${time}\n"
+				printf "%s\n" "${delimiter}"
+				total=$(echo "${total} + ${end} - ${start}" | bc -l)
+				count=$((++count))
+			fi
+		fi
+	done
+}
+
 #  -------------------
 # | Dependency checks |
 #  -------------------
@@ -303,138 +435,38 @@ fi
 # | Main |
 #  ------
 
-# Choose an encoder
-if [ -z ${enc} ]; then
-	PS3="[+] Choose encoder: "
-	encoders=("libx264" "libx265")
-	select encoder in ${encoders[@]}; do
-		case ${encoder} in
-			"libx264")
-				enc=${encoder}
-				break
-				;;
-			"libx265")
-				enc=${encoder}
-				break
-				;;
-			*)
-				printf "%s\n" "${delimiter}"
-				echo "| [+] No such option ${REPLY}"
-				printf "%s\n" "${delimiter}"
-				;;
-		esac
-	done
-fi
-
-# Print encoder
-printf "%s\n" "${delimiter}"
-printf "| [+] Encoder: ${enc}\n"
-printf "%s\n" "${delimiter}"
-
-if [ ${enc} == "libx264" ]; then
-	# Set parameters for libx264
-	setParameters ${enc} "copy" "17"
-elif [ ${enc} == "libx265" ]; then
-	# Set parameters for libx265
-	setParameters ${enc} "copy" "18"
-fi
-
-if [ -z ${ext} ]; then
-	# Choose a file extension to convert to
-	PS3="[+] Choose file extension to convert to: "
-	extensions=("mkv" "mp4" "webm" "avi" "mov" "m4v" "wmv")
-	select extension in ${extensions[@]}; do
-		case ${extension} in
-			"mp4")
-				ext=${extension}
-				break
-				;;
-			"mkv")
-				ext=${extension}
-				break
-				;;
-			"webm")
-				ext=${extension}
-				break
-				;;
-			"avi")
-				ext=${extension}
-				break
-				;;
-			*)
-				printf "%s\n" "${delimiter}"
-				printf "| [+] No such option ${REPLY}\n"
-				printf "%s\n" "${delimiter}"
-				;;
-		esac
-	done
-fi
-
-# Print extension
-printf "%s\n" "${delimiter}"
-printf "| [+] Extension to convert: ${ext}\n"
-printf "%s\n" "${delimiter}"
-
-# Remove special characters from filenames and replace whitespaces with underscores
-$(update-filename)
-printf "%s\n" "${delimiter}"
-printf "| [+] Filenames updated\n"
-printf "%s\n" "${delimiter}"
-
 # Total encoding duration
 total=0
 
 # Count encoded files
 count=0
 
-# Encode all video files
-for f in *; do
-	# Get files in current directory
-	if [[ -f ${f} ]] && [[ ${f} =~ [A-Za-z0-9_\(\)]\.[A-Za-z0-9]+{3,4} ]]; then
-		# Get encoding
-		# Split filename
-		name=${f%%.*} # Get file name
-		ext_orig=${f##*.} # Original file extension
-		ext_orig=$(echo ${ext_orig} | tr '[:upper:]' '[:lower:]') # Convert extension to lowercase
-		checkConversion "${f}" "${name}" "${ext_orig}"
+# Choose an encoder
+setEncoder
 
-		# If all checks are passed, convert the video file
-		if [[ ${c} == 0 ]]; then
-			# Get encoding of a current file
-			f_enc=$(exiftool ${f} | grep -E 'Encoding|Encoder' | cut -d ":" -f 2 | cut -d " " -f 3 | tr -d ",")
-			if [ -z ${f_enc} ]; then f_enc="None"; fi # Set file encoding as None if no encoding data is found
-			printf "| [+] Encoding ${f} (enc: ${f_enc}) to ${name}_conv.${ext} (enc: ${enc})\n"
-			loglevel="quiet"
-			start=$(date +%s.%3N)
-			ffmpeg -stats -loglevel ${loglevel} -i ${f} -c:a ${audio} -c:v ${enc} -x265-params log-level=none -preset ${preset} -crf ${crf} ${name}"_conv".${ext}
-			end=$(date +%s.%3N)
-			time=$(formatTime $(echo "${end}-${start}" | bc -l))
-			printf "%s\n" "${delimiter}"
-			printf "| [+] File ${f} (enc: ${f_enc}) encoded to ${name}_conv.${ext} (enc: ${enc}) in ${time}\n"
-			printf "%s\n" "${delimiter}"
-			total=$(echo "${total} + ${end} - ${start}" | bc -l)
-			count=$((++count))
-		fi
-	fi
-done
+# Set default parameters for an encoder
+if [ ${enc} == "libx264" ]; then
+	# Set default parameters for libx264
+	setParameters ${enc} "copy" "17"
+elif [ ${enc} == "libx265" ]; then
+	# Set default parameters for libx265
+	setParameters ${enc} "copy" "18"
+fi
+
+# Choose an extension
+chooseExtension
+
+# Update filename
+updateName
+
+# Encode all video files
+encodeFiles
 
 # Print count of encoded files
-printf "%s\n" "${delimiter}"
-printf "| [+] Encoded ${count} files\n"
-printf "%s\n" "${delimiter}"
+countEncoded
 
 # Print total time
-if [[ ${count} -gt 0 ]]; then
-	if [[ -z ${total} ]]; then total=0; fi
-	total=$(formatTime ${total})
-	printf "%s\n" "${delimiter}"
-	printf "| [+] All videos encoded in ${total}\n"
-	printf "%s\n" "${delimiter}"
-else
-	printf "%s\n" "${delimiter}"
-	printf "| [+] Time error: no videos encoded\n"
-	printf "%s\n" "${delimiter}"
-fi
+printTotal
 
 # Remove original video files
 deleteOriginal
