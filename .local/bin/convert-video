@@ -116,18 +116,25 @@ function formatTime {
 	# Format time to <xx>h <xx>m <xx.xxx>s
 	time=${1}
 	seconds=${time%%.*}
+	if [[ -z ${seconds} ]]; then seconds=0; fi
 	miliseconds=${time##*.}
+	if [[ -z ${miliseconds} ]]; then miliseconds=0; fi
 	if [[ ${seconds} -lt 60 ]]; then
-		echo "${time} seconds"
+		echo "${seconds}.${miliseconds} seconds"
 	elif [[ ${seconds} -ge 60 && ${seconds} -lt 3600 ]]; then
 		minutes=$(echo "${seconds}/60" | bc -l | cut -d "." -f 1)
+		if [[ -z ${minutes} ]]; then minutes=0; fi
 		seconds=$((${seconds}-60*${minutes}))
+		if [[ -z ${seconds} ]]; then seconds=0; fi
 		echo "${minutes} minutes ${seconds}.${miliseconds} seconds"
 	elif [[ ${seconds} -ge 3600 ]]; then
 		hours=$(echo "${seconds}/3600" | bc -l | cut -d "." -f 1)
+		if [[ -z ${hours} ]]; then hours=0; fi
 		seconds=$((${seconds}-3600*${hours}))
 		minutes=$(echo "${seconds}/60" | bc -l | cut -d "." -f 1)
+		if [[ -z ${minutes} ]]; then minutes=0; fi
 		seconds=$((${seconds}-60*${minutes}))
+		if [[ -z ${seconds} ]]; then seconds=0; fi
 		echo "${hours} hours ${minutes} minutes ${seconds}.${miliseconds} seconds"
 	fi
 }
@@ -215,6 +222,37 @@ function removeSuffix {
 		elif [[ "${choice}" == "N" || "${choice}" == "n" ]]; then
 			printf "%s\n" "${delimiter}"
 			printf "| [+] Quitting...\n"
+			printf "%s\n" "${delimiter}"
+			break
+		fi
+	done
+}
+
+function deleteOriginal {
+	# Delete original video files
+	while true; do
+		printf "%s\n" "${delimiter}"
+		read -p "| [+] Do you want to delete original files? [Y/N] " choice
+		printf "%s\n" "${delimiter}"
+		if [[ "${choice}" == "Y" || "${choice}" == "y" ]]; then
+			for conv in *_conv.mkv; do
+				for f in *; do
+					conv_name=${conv%%_conv*}
+					org_name=${f%%.*}
+					org_ext=${f##*.}
+					if [[ ${conv_name} == ${org_name} ]] && [[ ${extensions[@]} =~ ${org_ext} ]]; then
+						rm ${f}
+						printf "%s\n" "${delimiter}"
+						printf "[+] File ${f} deleted\n"
+						printf "%s\n" "${delimiter}"
+						break
+					fi
+				done
+			done
+			break
+		elif [[ "${choice}" == "N" || "${choice}" == "n" ]]; then
+			printf "%s\n" "${delimiter}"
+			printf "[+] Keeping the original files\n"
 			printf "%s\n" "${delimiter}"
 			break
 		fi
@@ -363,7 +401,7 @@ for f in *; do
 		# If all checks are passed, convert the video file
 		if [[ ${c} == 0 ]]; then
 			# Get encoding of a current file
-			f_enc=$(exiftool ${f} | grep -E 'Encoding|Encoder' | cut -d ":" -f 2 | cut -d " " -f 3)
+			f_enc=$(exiftool ${f} | grep -E 'Encoding|Encoder' | cut -d ":" -f 2 | cut -d " " -f 3 | tr -d ",")
 			if [ -z ${f_enc} ]; then f_enc="None"; fi # Set file encoding as None if no encoding data is found
 			printf "| [+] Encoding ${f} (enc: ${f_enc}) to ${name}_conv.${ext} (enc: ${enc})\n"
 			loglevel="quiet"
@@ -382,7 +420,7 @@ done
 
 # Print count of encoded files
 printf "%s\n" "${delimiter}"
-printf "| [+] Econded ${count} files\n"
+printf "| [+] Encoded ${count} files\n"
 printf "%s\n" "${delimiter}"
 
 # Print total time
@@ -390,13 +428,16 @@ if [[ ${count} -gt 0 ]]; then
 	if [[ -z ${total} ]]; then total=0; fi
 	total=$(formatTime ${total})
 	printf "%s\n" "${delimiter}"
-	printf "| [+] All videos converted in ${total}\n"
+	printf "| [+] All videos encoded in ${total}\n"
 	printf "%s\n" "${delimiter}"
 else
 	printf "%s\n" "${delimiter}"
 	printf "| [+] Time error: no videos encoded\n"
 	printf "%s\n" "${delimiter}"
 fi
+
+# Remove original video files
+deleteOriginal
 
 # Remove "_conv" suffix from filenames (optional)
 removeSuffix
