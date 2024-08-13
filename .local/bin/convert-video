@@ -231,24 +231,25 @@ function removeSuffix {
 function deleteOriginal {
 	# Delete original video files
 	while true; do
+		count_original=0
 		printf "%s\n" "${delimiter}"
 		read -p "| [+] Do you want to delete original files? [Y/N] " choice
 		printf "%s\n" "${delimiter}"
 		if [[ "${choice}" == "Y" || "${choice}" == "y" ]]; then
-			for conv in *_conv.mkv; do
-				for f in *; do
-					conv_name=${conv%%_conv*}
-					org_name=${f%%.*}
-					org_ext=${f##*.}
-					if [[ ${conv_name} == ${org_name} ]] && [[ ${extensions[@]} =~ ${org_ext} ]]; then
-						rm ${f}
-						printf "%s\n" "${delimiter}"
-						printf "[+] File ${f} deleted\n"
-						printf "%s\n" "${delimiter}"
-						break
-					fi
-				done
+			for key in ${!conv_array[@]}; do
+				if [[ ${conv_array[$key]} == 0 ]]; then
+					rm ${key}
+					printf "%s\n" "${delimiter}"
+					printf "[+] File ${key} deleted\n"
+					printf "%s\n" "${delimiter}"
+					count_original=$((++count_original))
+				fi
 			done
+			if [[ ${count_original} == 0 ]]; then
+				printf "%s\n" "${delimiter}"
+				printf "| [+] No video files to delete\n"
+				printf "%s\n" "${delimiter}"
+			fi
 			break
 		elif [[ "${choice}" == "N" || "${choice}" == "n" ]]; then
 			printf "%s\n" "${delimiter}"
@@ -363,24 +364,28 @@ function encodeFiles {
 	for f in *; do
 		# Get files in current directory
 		if [[ -f ${f} ]] && [[ ${f} =~ [A-Za-z0-9_\(\)]\.[A-Za-z0-9]+{3,4} ]]; then
-			# Get encoding
 			# Split filename
 			name=${f%%.*} # Get file name
 			ext_orig=${f##*.} # Original file extension
 			ext_orig=$(echo ${ext_orig} | tr '[:upper:]' '[:lower:]') # Convert extension to lowercase
-			checkConversion "${f}" "${name}" "${ext_orig}"
+			checkConversion "${f}" "${name}" "${ext_orig}" # Check if file is already converted
+			conv_array["${f}"]+="${c}" # Append to conv_array
 
 			# If all checks are passed, convert the video file
 			if [[ ${c} == 0 ]]; then
 				# Get encoding of a current file
 				f_enc=$(exiftool ${f} | grep -E 'Encoding|Encoder' | cut -d ":" -f 2 | cut -d " " -f 3 | tr -d ",")
+				# Get duration of a current file
+				duration=$(exiftool ${f} | grep "Track Duration" | cut -d ":" -f 2,3,4 | tr -d " ")
 				if [ -z ${f_enc} ]; then f_enc="None"; fi # Set file encoding as None if no encoding data is found
 				printf "| [+] Encoding ${f} (enc: ${f_enc}) to ${name}_conv.${ext} (enc: ${enc})\n"
+				printf "| [+] Duration: ${duration}\n"
+				printf "| [+] "
 				loglevel="quiet"
-				start=$(date +%s.%3N)
+				start=$(date +%s.%3N) # Start time
 				ffmpeg -stats -loglevel ${loglevel} -i ${f} -c:a ${audio} -c:v ${enc} -x265-params log-level=none -preset ${preset} -crf ${crf} ${name}"_conv".${ext}
-				end=$(date +%s.%3N)
-				time=$(formatTime $(echo "${end}-${start}" | bc -l))
+				end=$(date +%s.%3N) # End time
+				time=$(formatTime $(echo "${end}-${start}" | bc -l)) # Encoding time
 				printf "%s\n" "${delimiter}"
 				printf "| [+] File ${f} (enc: ${f_enc}) encoded to ${name}_conv.${ext} (enc: ${enc}) in ${time}\n"
 				printf "%s\n" "${delimiter}"
@@ -389,6 +394,16 @@ function encodeFiles {
 			fi
 		fi
 	done
+}
+
+function printStatus {
+	# Print video file names and their conversion status (0 - encoded, 1 - not encoded)
+	printf "%s\n" "${delimiter}"
+	printf "| [+] File names and their conversion status (0 - encoded, 1 - not encoded)\n"
+	for key in ${!conv_array[@]}; do
+		printf "| [+] ${key} => ${conv_array[${key}]}\n"
+	done
+	printf "%s\n" "${delimiter}"
 }
 
 #  -------------------
@@ -435,6 +450,9 @@ fi
 # | Main |
 #  ------
 
+#  Declare an associative array for storing file names and their conversion status (${status} => ${file})
+declare -A conv_array
+
 # Total encoding duration
 total=0
 
@@ -461,6 +479,9 @@ updateName
 
 # Encode all video files
 encodeFiles
+
+# Print video file names and their conversion status (0 - encoded, 1 - not encoded)
+printStatus
 
 # Print count of encoded files
 countEncoded
