@@ -417,6 +417,39 @@ function printTotal {
 	fi
 }
 
+function encodeStatus {
+	# Pretty print encoding status
+	# Declare local variables
+	local f="${1}"
+	local audio="${2}"
+	local enc="${3}"
+	local preset="${4}"
+	local crf="${5}"
+	local name="${6}"
+	local ext="${7}"
+	local loglevel="${8}"
+
+	# Create a file descriptor 3 and point it to temporary file with encoding data
+	exec 3<> /tmp/encoding_data
+
+	# Start ffmpeg encoding process and move it to background, save encoding data to temporary file
+	( nohup 1>/dev/null ffmpeg -stats -loglevel ${loglevel} -i ${f} -c:a ${audio} -c:v ${enc} -x265-params log-level=none -preset ${preset} -crf ${crf} ${name}"_conv".${ext} 2>&3 & )
+
+	# While ffmpeg encoding process is running, rewrite terminal output with latest encoding data every half a second
+	while [[ $(ps -ef | grep ffmpeg | wc -l) -gt 1 ]]; do
+		line=$(sed 's/\r/\n/g' /tmp/encoding_data | tail -1)
+		text=$(echo ${line} | awk '{print "| [+] " $0}')
+		printf "${text}\r"
+		sleep .5
+	done
+
+	# Delete file descriptor 3
+	exec 3>&-
+
+	# Remove temporary file for encoding data
+	rm /tmp/encoding_data
+}
+
 function encodeFiles {
 	# Encode all video files
 	for f in *; do
@@ -436,15 +469,16 @@ function encodeFiles {
 				# Get duration of a current file
 				duration=$(exec 3<> /tmp/metadata; ffprobe -show_entries stream_tags:format_tags -of json ${f} 1>&3 2>&1; grep Duration /tmp/metadata | cut -d ":" -f 2,3,4 | cut -d "," -f 1 | tr -d " "; exec 3>&-; rm /tmp/metadata)
 				if [ -z ${f_enc} ]; then f_enc="None"; fi # Set file encoding as None if no encoding data is found
+				printf "%s\n" "${delimiter}"
 				printf "| [+] Encoding ${f} (enc: ${f_enc}) to ${name}_conv.${ext} (enc: ${enc})\n"
 				printf "| [+] Duration: ${duration}\n"
 				loglevel="quiet"
 				start=$(date +%s.%3N) # Start time
-				ffmpeg -stats -loglevel ${loglevel} -i ${f} -c:a ${audio} -c:v ${enc} -x265-params log-level=none -preset ${preset} -crf ${crf} ${name}"_conv".${ext}
+				#ffmpeg -stats -loglevel ${loglevel} -i ${f} -c:a ${audio} -c:v ${enc} -x265-params log-level=none -preset ${preset} -crf ${crf} ${name}"_conv".${ext}
+				encodeStatus "${f}" "${audio}" "${enc}" "${preset}" "${crf}" "${name}" "${ext}" "${loglevel}"
 				end=$(date +%s.%3N) # End time
 				time=$(formatTime $(echo "${end}-${start}" | bc -l)) # Encoding time
-				printf "%s\n" "${delimiter}"
-				printf "| [+] File ${f} (enc: ${f_enc}) encoded to ${name}_conv.${ext} (enc: ${enc}) in ${time}\n"
+				printf "\n| [+] File ${f} (enc: ${f_enc}) encoded to ${name}_conv.${ext} (enc: ${enc}) in ${time}\n"
 				printf "%s\n" "${delimiter}"
 				total=$(echo "${total} + ${end} - ${start}" | bc -l)
 				count=$((++count))
@@ -456,7 +490,7 @@ function encodeFiles {
 function printStatus {
 	# Print video file names and their conversion status (0 - encoded, 1 - not encoded)
 	printf "%s\n" "${delimiter}"
-	printf "| [+] File names and their conversion status (0 - encoded, 1 - not encoded)\n"
+	printf "| [+] File names and their conversion status (0 - encoded, 1 - not encoded):\n"
 	for key in ${!conv_array[@]}; do
 		printf "| [+] ${key} => ${conv_array[${key}]}\n"
 	done
