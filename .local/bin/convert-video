@@ -23,6 +23,8 @@ function getInfo {
 	min_freq=$(echo "$(lscpu | grep "CPU min" | cut -d ":" -f 2 | cut -d "." -f 1 | tr -d " ")/1000" | bc -l)
 	max_freq=$(echo "$(lscpu | grep "CPU max" | cut -d ":" -f 2 | cut -d "." -f 1 | tr -d " ")/1000" | bc -l)
 	uptime=$(formatTime $(cat /proc/uptime | cut -d " " -f 1))
+	gpus=$(lspci | grep VGA | cut -d ":" -f 3 | awk '{$1=$1;print}')
+	IFS=$'\n' read -d '' -r -a gpus <<<"$gpus" # Read found GPU's into an array
 	# Print system info
 	printf "%s\n" "${delimiter}"
 	printf "| [+] System info:\n"
@@ -35,6 +37,9 @@ function getInfo {
 	printf "| [+] Max frequency: %0.2f GHz\n" ${max_freq}
 	printf "| [+] Memory: %.2f GB\n" ${memory}
 	printf "| [+] Uptime: ${uptime}\n"
+	for (( i=0; i<${#gpus[@]}; i++ )); do
+		printf "| [+] GPU: ${gpus[${i}]}\n"
+	done
 	printf "%s\n" "${delimiter}"
 }
 
