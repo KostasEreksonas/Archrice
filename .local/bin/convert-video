@@ -433,15 +433,24 @@ function encodeStatus {
 	exec 3<> /tmp/encoding_data
 
 	# Start ffmpeg encoding process and move it to background, save encoding data to temporary file
-	( nohup 1>/dev/null ffmpeg -stats -loglevel ${loglevel} -i ${f} -c:a ${audio} -c:v ${enc} -x265-params log-level=none -preset ${preset} -crf ${crf} ${name}"_conv".${ext} 2>&3 & )
+	nohup 1>/dev/null ffmpeg -stats -loglevel ${loglevel} -i ${f} -c:a ${audio} -c:v ${enc} -x265-params log-level=none -preset ${preset} -crf ${crf} ${name}"_conv".${ext} 2>&3 &
+
+	# Get pid of the backgrounded process
+	pid=${!}
+
+	# If the script is killed, kill ffmpeg also
+	trap "kill ${pid} 2> /dev/null" EXIT
 
 	# While ffmpeg encoding process is running, rewrite terminal output with latest encoding data every half a second
-	while [[ $(ps -ef | grep ffmpeg | wc -l) -gt 1 ]]; do
+	while kill -0 ${pid} 2> /dev/null; do
 		line=$(sed 's/\r/\n/g' /tmp/encoding_data | tail -1)
 		text=$(echo ${line} | awk '{print "| [+] " $0}')
 		printf "${text}\r"
 		sleep .5
 	done
+
+	# Disable the trap on a normal exit.
+	trap - EXIT
 
 	# Delete file descriptor 3
 	exec 3>&-
