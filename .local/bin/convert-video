@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Convert all video files in a given directory
-# Dependencies: ffmpeg, exiftool, bc
+# Dependencies: ffmpeg, bc
 
 #  -----------
 # | Delimiter |
@@ -169,6 +169,34 @@ function formatTime {
 	fi
 }
 
+function getEncoding {
+	# Get encoding data of a video file
+	local f=${1} # Create a local variable for filename
+
+	# Create a new file descriptor and point it to temporary metadata file
+	exec 3<> /tmp/metadata
+
+	# Get metadata from ffmpeg and point it to FD 3
+	ffmpeg -i ${f} 2>&3 1>&2
+
+	# Get encoder data
+	video=$(grep "Video:" /tmp/metadata | cut -d ":" -f 4 | cut -d " " -f 2)
+	encoder=$(grep "ENCODER" /tmp/metadata | awk 'NR==2{print}' | cut -d " " -f 20)
+
+	# Return encoder data
+	if [[ -z ${encoder} ]]; then
+		echo "${video}"
+	else
+		echo "${video}-${encoder}"
+	fi
+
+	# Remove FD 3
+	exec 3>&-
+
+	# Remove temporary file
+	rm /tmp/metadata
+}
+
 function checkConversion {
 	# Check if a file has been converted
 	local f=${1} # A file to convert
@@ -215,10 +243,10 @@ function checkConversion {
 	if [[ ${c} == 0 ]]; then
 		for file in *.${ext}; do
 			if ! [[ ${file} == "*.${ext}" ]]; then
-				file_encoding=$(exiftool ${file} | grep -E 'Encoding|Encoder' | cut -d ":" -f 2 | cut -d " " -f 3)
-				if [[ ${file%%.*} == ${f%%.*} ]] && [[ ${file_encoding} == ${enc} ]]; then
+				file_encoding=$(getEncoding ${file})
+				if [[ ${file%%.*} == ${f%%.*} ]] && [[ ${file_encoding} =~ ${enc} ]]; then
 					printf "%s\n" "${delimiter}"
-					printf "| [+] File ${f} is already encoded with ${enc} and saved as ${file}\n"
+					printf "| [+] File ${f} (enc: ${file_encoding}) is already encoded with ${enc} and saved as ${file}\n"
 					printf "%s\n" "${delimiter}"
 					c=1
 					break
@@ -404,9 +432,9 @@ function encodeFiles {
 			# If all checks are passed, convert the video file
 			if [[ ${c} == 0 ]]; then
 				# Get encoding of a current file
-				f_enc=$(exiftool ${f} | grep -E 'Encoding|Encoder' | cut -d ":" -f 2 | cut -d " " -f 3 | tr -d ",")
+				f_enc=$(getEncoding ${f})
 				# Get duration of a current file
-				duration=$(exiftool ${f} | grep -wE "Track Duration" | cut -d ":" -f 2,3,4 | tr -d " ")
+				duration=$(exec 3<> /tmp/metadata; ffprobe -show_entries stream_tags:format_tags -of json ${f} 1>&3 2>&1; grep Duration /tmp/metadata | cut -d ":" -f 2,3,4 | cut -d "," -f 1 | tr -d " "; exec 3>&-; rm /tmp/metadata)
 				if [ -z ${f_enc} ]; then f_enc="None"; fi # Set file encoding as None if no encoding data is found
 				printf "| [+] Encoding ${f} (enc: ${f_enc}) to ${name}_conv.${ext} (enc: ${enc})\n"
 				printf "| [+] Duration: ${duration}\n"
@@ -446,18 +474,6 @@ function checkDeps {
 	else
 		printf "%s\n" "${delimiter}"
 		printf "| [+] Package ffmpeg installed\n"
-		printf "%s\n" "${delimiter}"
-	fi
-
-	# Check if exiftool is installed
-	exiftool -ver 2>/dev/null 1>&2
-	if [[ ${?} != 0 ]]; then
-		printf "%s\n" "${delimiter}"
-		printf "| [+] Package exiftool is not installed. Terminating script\n" && exit 1
-		printf "%s\n" "${delimiter}"
-	else
-		printf "%s\n" "${delimiter}"
-		printf "| [+] Package exiftool installed\n"
 		printf "%s\n" "${delimiter}"
 	fi
 
