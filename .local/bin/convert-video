@@ -43,6 +43,41 @@ function getInfo {
 	printf "%s\n" "${delimiter}"
 }
 
+function defaultDirectory {
+	# Set default directory to put video files
+	defaultDir="${HOME}/Documents/encodes"
+	while true; do
+		printf "%s\n" "${delimiter}"
+		read -p "Do you want to use default directory for encoding files? [Y/N] " choice
+		printf "%s\n" "${delimiter}"
+		if [[ ${choice} == "Y" ]] || [[ ${choice} == "y" ]]; then
+			# Create default directory, if it doesn't exist
+			if ! [[ -d ${defaultDir} ]]; then
+				mkdir -p ${defaultDir}
+				printf "%s\n" "${delimiter}"
+				printf "| [+] Directory ${defaultDir} created\n"
+				printf "%s\n" "${delimiter}"
+			else
+				printf "%s\n" "${delimiter}"
+				printf "| [+] Directory ${defaultDir} exists\n"
+				printf "%s\n" "${delimiter}"
+			fi
+
+			# Change into default directory
+			cd ${defaultDir}
+			printf "%s\n" "${delimiter}"
+			printf "| [+] Changed into ${defaultDir}\n"
+			printf "%s\n" "${delimiter}"
+			break
+		elif [[ ${choice} == "N" ]] || [[ ${choice} == "n" ]]; then
+			printf "%s\n" "${delimiter}"
+			printf "| [+] Default directory not used\n"
+			printf "%s\n" "${delimiter}"
+			break
+		fi
+	done
+}
+
 function setParameters {
 	# Set parameters for ffmpeg
 	enc=${1}
@@ -512,8 +547,9 @@ function checkDeps {
 	ffmpeg -version 2>/dev/null 1>&2
 	if [[ ${?} != 0 ]]; then
 		printf "%s\n" "${delimiter}"
-		printf "| [+] Package ffmpeg is not installed. Terminating script\n" && exit 1
+		printf "| [+] Package ffmpeg is not installed. Terminating script\n"
 		printf "%s\n" "${delimiter}"
+		exit 1
 	else
 		printf "%s\n" "${delimiter}"
 		printf "| [+] Package ffmpeg installed\n"
@@ -524,8 +560,9 @@ function checkDeps {
 	bc -v 2>/dev/null 1>&2
 	if [[ ${?} != 0 ]]; then
 		printf "%s\n" "${delimiter}"
-		printf "| [+] Package bc is not installed. Terminating script\n" && exit 1
+		printf "| [+] Package bc is not installed. Terminating script\n"
 		printf "%s\n" "${delimiter}"
+		exit 1
 	else
 		printf "%s\n" "${delimiter}"
 		printf "| [+] Package bc installed\n"
@@ -546,11 +583,14 @@ total=0
 # Count encoded files
 count=0
 
+# Check dependencies
+checkDeps
+
 # Print system info
 getInfo
 
-# Check dependencies
-checkDeps
+# Set default directory
+defaultDirectory
 
 # Choose an encoder
 setEncoder
