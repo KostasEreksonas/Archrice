@@ -13,6 +13,31 @@ delimiter="----------------------------------------------------------------"
 # | Functions |
 #  -----------
 
+function getInfo {
+	# Get system info
+	os=$(grep -w ID /etc/os-release | cut -d "=" -f 2)
+	cpu=$(grep "model name" /proc/cpuinfo | head -1 | cut -d " " -f 5)
+	cores=$(grep "cpu cores" /proc/cpuinfo | head -1 | cut -d ":" -f 2 | tr -d " ")
+	threads=$(grep processor /proc/cpuinfo | wc -l)
+	memory=$(echo "$(grep MemTotal /proc/meminfo | cut -d " " -f 8)/1024/1024" | bc -l)
+	min_freq=$(echo "$(lscpu | grep "CPU min" | cut -d ":" -f 2 | cut -d "." -f 1 | tr -d " ")/1000" | bc -l)
+	max_freq=$(echo "$(lscpu | grep "CPU max" | cut -d ":" -f 2 | cut -d "." -f 1 | tr -d " ")/1000" | bc -l)
+	uptime=$(formatTime $(cat /proc/uptime | cut -d " " -f 1))
+	# Print system info
+	printf "%s\n" "${delimiter}"
+	printf "| [+] System info:\n"
+	printf "%s\n" "${delimiter}"
+	printf "| [+] OS: ${os}\n"
+	printf "| [+] CPU: ${cpu}\n"
+	printf "| [+] Cores: ${cores}\n"
+	printf "| [+] Threads: ${threads}\n"
+	printf "| [+] Min frequency: %0.2f GHz\n" ${min_freq}
+	printf "| [+] Max frequency: %0.2f GHz\n" ${max_freq}
+	printf "| [+] Memory: %.2f GB\n" ${memory}
+	printf "| [+] Uptime: ${uptime}\n"
+	printf "%s\n" "${delimiter}"
+}
+
 function setParameters {
 	# Set parameters for ffmpeg
 	enc=${1}
@@ -376,11 +401,10 @@ function encodeFiles {
 				# Get encoding of a current file
 				f_enc=$(exiftool ${f} | grep -E 'Encoding|Encoder' | cut -d ":" -f 2 | cut -d " " -f 3 | tr -d ",")
 				# Get duration of a current file
-				duration=$(exiftool ${f} | grep "Track Duration" | cut -d ":" -f 2,3,4 | tr -d " ")
+				duration=$(exiftool ${f} | grep -wE "Track Duration" | cut -d ":" -f 2,3,4 | tr -d " ")
 				if [ -z ${f_enc} ]; then f_enc="None"; fi # Set file encoding as None if no encoding data is found
 				printf "| [+] Encoding ${f} (enc: ${f_enc}) to ${name}_conv.${ext} (enc: ${enc})\n"
 				printf "| [+] Duration: ${duration}\n"
-				printf "| [+] "
 				loglevel="quiet"
 				start=$(date +%s.%3N) # Start time
 				ffmpeg -stats -loglevel ${loglevel} -i ${f} -c:a ${audio} -c:v ${enc} -x265-params log-level=none -preset ${preset} -crf ${crf} ${name}"_conv".${ext}
@@ -406,45 +430,44 @@ function printStatus {
 	printf "%s\n" "${delimiter}"
 }
 
-#  -------------------
-# | Dependency checks |
-#  -------------------
+function checkDeps {
+	# Check dependencies
+	# Check if ffmpeg is installed
+	ffmpeg -version 2>/dev/null 1>&2
+	if [[ ${?} != 0 ]]; then
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Package ffmpeg is not installed. Terminating script\n" && exit 1
+		printf "%s\n" "${delimiter}"
+	else
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Package ffmpeg installed\n"
+		printf "%s\n" "${delimiter}"
+	fi
 
-# Check if ffmpeg is installed
-ffmpeg -version 2>/dev/null 1>&2
-if [[ ${?} != 0 ]]; then
-	printf "%s\n" "${delimiter}"
-    printf "| [+] Package ffmpeg is not installed. Terminating script\n" && exit 1
-	printf "%s\n" "${delimiter}"
-else
-	printf "%s\n" "${delimiter}"
-	printf "| [+] Package ffmpeg installed\n"
-	printf "%s\n" "${delimiter}"
-fi
+	# Check if exiftool is installed
+	exiftool -ver 2>/dev/null 1>&2
+	if [[ ${?} != 0 ]]; then
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Package exiftool is not installed. Terminating script\n" && exit 1
+		printf "%s\n" "${delimiter}"
+	else
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Package exiftool installed\n"
+		printf "%s\n" "${delimiter}"
+	fi
 
-# Check if exiftool is installed
-exiftool -ver 2>/dev/null 1>&2
-if [[ ${?} != 0 ]]; then
-	printf "%s\n" "${delimiter}"
-    printf "| [+] Package exiftool is not installed. Terminating script\n" && exit 1
-	printf "%s\n" "${delimiter}"
-else
-	printf "%s\n" "${delimiter}"
-	printf "| [+] Package exiftool installed\n"
-	printf "%s\n" "${delimiter}"
-fi
-
-# Check if bc is installed
-bc -v 2>/dev/null 1>&2
-if [[ ${?} != 0 ]]; then
-	printf "%s\n" "${delimiter}"
-	printf "| [+] Package bc is not installed. Terminating script\n" && exit 1
-	printf "%s\n" "${delimiter}"
-else
-	printf "%s\n" "${delimiter}"
-	printf "| [+] Package bc installed\n"
-	printf "%s\n" "${delimiter}"
-fi
+	# Check if bc is installed
+	bc -v 2>/dev/null 1>&2
+	if [[ ${?} != 0 ]]; then
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Package bc is not installed. Terminating script\n" && exit 1
+		printf "%s\n" "${delimiter}"
+	else
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Package bc installed\n"
+		printf "%s\n" "${delimiter}"
+	fi
+}
 
 #  ------
 # | Main |
@@ -458,6 +481,12 @@ total=0
 
 # Count encoded files
 count=0
+
+# Print system info
+getInfo
+
+# Check dependencies
+checkDeps
 
 # Choose an encoder
 setEncoder
