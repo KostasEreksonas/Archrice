@@ -19,9 +19,9 @@ function getInfo {
 	cpu=$(grep "model name" /proc/cpuinfo | head -1 | cut -d " " -f 5)
 	cores=$(grep "cpu cores" /proc/cpuinfo | head -1 | cut -d ":" -f 2 | tr -d " ")
 	threads=$(grep processor /proc/cpuinfo | wc -l)
-	memory=$(echo "$(grep MemTotal /proc/meminfo | cut -d " " -f 8)/1024/1024" | bc -l)
-	min_freq=$(echo "$(lscpu | grep "CPU min" | cut -d ":" -f 2 | cut -d "." -f 1 | tr -d " ")/1000" | bc -l)
-	max_freq=$(echo "$(lscpu | grep "CPU max" | cut -d ":" -f 2 | cut -d "." -f 1 | tr -d " ")/1000" | bc -l)
+	min_freq=$(echo "$(lscpu | grep "CPU min" | cut -d ":" -f 2 | cut -d "." -f 1 | tr -d " ")/1000" | bc -l 2>/dev/null)
+	max_freq=$(echo "$(lscpu | grep "CPU max" | cut -d ":" -f 2 | cut -d "." -f 1 | tr -d " ")/1000" | bc -l 2>/dev/null)
+	memory=$(echo "$(grep MemTotal /proc/meminfo | cut -d " " -f 8)/1024/1024" | bc -l 2>/dev/null)
 	uptime=$(formatTime $(cat /proc/uptime | cut -d " " -f 1))
 	gpus=$(lspci | grep VGA | cut -d ":" -f 3 | awk '{$1=$1;print}')
 	IFS=$'\n' read -d '' -r -a gpus <<<"$gpus" # Read found GPU's into an array
@@ -33,9 +33,9 @@ function getInfo {
 	printf "| [+] CPU: ${cpu}\n"
 	printf "| [+] Cores: ${cores}\n"
 	printf "| [+] Threads: ${threads}\n"
-	printf "| [+] Min frequency: %0.2f GHz\n" ${min_freq}
-	printf "| [+] Max frequency: %0.2f GHz\n" ${max_freq}
-	printf "| [+] Memory: %.2f GB\n" ${memory}
+	printf "| [+] Min frequency: %0.2f GHz\n" ${min_freq:-NaN}
+	printf "| [+] Max frequency: %0.2f GHz\n" ${max_freq:-NaN}
+	printf "| [+] Memory: %.2f GB\n" ${memory:-NaN}
 	printf "| [+] Uptime: ${uptime}\n"
 	for (( i=0; i<${#gpus[@]}; i++ )); do
 		printf "| [+] GPU: ${gpus[${i}]}\n"
@@ -46,35 +46,39 @@ function getInfo {
 function defaultDirectory {
 	# Set default directory to put video files
 	defaultDir="${HOME}/Documents/encodes"
-	while true; do
-		printf "%s\n" "${delimiter}"
-		read -p "Do you want to use default directory for encoding files? [Y/N] " choice
-		printf "%s\n" "${delimiter}"
-		if [[ ${choice} == "Y" ]] || [[ ${choice} == "y" ]]; then
-			# Create default directory, if it doesn't exist
-			if ! [[ -d ${defaultDir} ]]; then
-				mkdir -p ${defaultDir}
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Select a directory:\n"
+	printf "%s\n" "${delimiter}"
+	PS3="[+] Choose a directory for encoding files: "
+	directories=("Default_(${defaultDir})" "Current_(${PWD})")
+	select dir in ${directories[@]}; do
+		case ${dir} in
+			"Default_(${defaultDir})")
+				# Print delimiter
 				printf "%s\n" "${delimiter}"
-				printf "| [+] Directory ${defaultDir} created\n"
+				# Create default directory if it doesn't exist
+				if ! [[ -d ${defaultDir} ]]; then
+					mkdir -p ${defaultDir}
+					printf "| [+] Created directory ${defaultDir}\n"
+				fi
+				# Change to default directory
+				cd ${defaultDir}
+				printf "| [+] Changed directory to ${defaultDir}\n"
 				printf "%s\n" "${delimiter}"
-			else
+				break
+				;;
+			"Current_(${PWD})")
 				printf "%s\n" "${delimiter}"
-				printf "| [+] Directory ${defaultDir} exists\n"
+				printf "| [+] Stay on current directory (${PWD})\n"
 				printf "%s\n" "${delimiter}"
-			fi
-
-			# Change into default directory
-			cd ${defaultDir}
-			printf "%s\n" "${delimiter}"
-			printf "| [+] Changed into ${defaultDir}\n"
-			printf "%s\n" "${delimiter}"
-			break
-		elif [[ ${choice} == "N" ]] || [[ ${choice} == "n" ]]; then
-			printf "%s\n" "${delimiter}"
-			printf "| [+] Default directory not used\n"
-			printf "%s\n" "${delimiter}"
-			break
-		fi
+				break
+				;;
+			*)
+				printf "%s\n" "${delimiter}"
+                printf "| [+] No such option ${REPLY}\n"
+                printf "%s\n" "${delimiter}"
+				;;
+		esac
 	done
 }
 
@@ -94,48 +98,51 @@ function setParameters {
 	printf "%s\n" "${delimiter}"
 
 	# Set preset parameter value
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Select a preset:\n"
+	printf "%s\n" "${delimiter}"
 	PS3="[+] Choose preset: "
-	values=("ultrafast" "superfast" "veryfast" "faster" "fast" "medium" "slow" "slower" "veryslow" "placebo")
-	select value in ${values[@]}; do
-		case ${value} in
+	presets=("ultrafast" "superfast" "veryfast" "faster" "fast" "medium" "slow" "slower" "veryslow" "placebo")
+	select preset in ${presets[@]}; do
+		case ${preset} in
 			"ultrafast")
-				preset=${value}
+				preset=${preset}
 				break
 				;;
 			"superfast")
-				preset=${value}
+				preset=${preset}
 				break
 				;;
 			"veryfast")
-				preset=${value}
+				preset=${preset}
 				break
 				;;
 			"faster")
-				preset=${value}
+				preset=${preset}
 				break
 				;;
 			"fast")
-				preset=${value}
+				preset=${preset}
 				break
 				;;
 			"medium")
-				preset=${value}
+				preset=${preset}
 				break
 				;;
 			"slow")
-				preset=${value}
+				preset=${preset}
 				break
 				;;
 			"slower")
-				preset=${value}
+				preset=${preset}
 				break
 				;;
 			"veryslow")
-				preset=${value}
+				preset=${preset}
 				break
 				;;
 			"placebo")
-				preset=${value}
+				preset=${preset}
 				break
 				;;
 			*)
@@ -212,7 +219,7 @@ function getEncoding {
 	exec 3<> /tmp/metadata
 
 	# Get metadata from ffmpeg and point it to FD 3
-	ffmpeg -i ${f} 2>&3 1>&2
+	ffmpeg -i "${f}" 2>&3 1>&2
 
 	# Get encoder data
 	video=$(grep "Video:" /tmp/metadata | cut -d ":" -f 4 | cut -d " " -f 2)
@@ -232,63 +239,87 @@ function getEncoding {
 	rm /tmp/metadata
 }
 
-function checkConversion {
-	# Check if a file has been converted
-	local f=${1} # A file to convert
-	local name=${2} # Original filename
-	local ext_orig=${3} # Original extension
-	c=0 # Conversion flag. Set to 1 if a file is already converted
+function checkEncodingStatus {
+	# Loop through files within a current working directory and determine the ones to be encoded
+	# Put file name and file encoding status into an associative array
+	# Encoding status codes: 0 - can encode file, 1 - can not encode file
+	# When encoding status code = 1, append a message to an associative array explaining why file will not be encoded
+	# If a check fails, skip all subsequent tests
+	for f in *; do
+		# Split filename
+		local name="${f%%.*}" # Strip file extension from file name
+		local ext_orig="${f##*.}" # Original file extension
+		local ext_orig=$(echo "${ext_orig}" | tr '[:upper:]' '[:lower:]') # Convert extension to lowercase
+		local name_upd=$(updateName "${f}") # Get updated file name
 
-	# Check if the file is a video file of a supported format
-	if [[ ${c} == 0 ]]; then
-		if ! [[ ${extensions[@]} =~ ${ext_orig} ]]; then
-			printf "%s\n" "${delimiter}"
-			printf "| [+] \"${f}\" is not a video file / unsupported extension \"${ext_orig}\"\n"
-			printf "%s\n" "${delimiter}"
-			c=1
-		fi
-	fi
+		# Strip file extension from updated file name
+		name_upd=${name_upd%%.*}
 
-	# Check if current file has "_conv" suffix
-	if [[ ${c} == 0 ]]; then
-		if [[ ${name} =~ (_conv)$ ]]; then
-			printf "%s\n" "${delimiter}"
-			printf "| [+] File ${f} is already converted\n"
-			printf "%s\n" "${delimiter}"
-			c=1
-		fi
-	fi
+		# Encoding status flag
+		e=0
 
-	# If a directory contains files with _conv suffix, check if filename matches current file
-	if [[ ${c} == 0 ]]; then
-		for conv in *_conv*; do
-			if ! [[ ${conv} == "*_conv*" ]]; then
-				if [[ ${name} == ${conv%%_conv*} ]]; then
-					printf "%s\n" "${delimiter}"
-					printf "| [+] File ${f} is already converted and saved as ${conv}\n"
-					printf "%s\n" "${delimiter}"
-					c=1
-					break
-				fi
+		# Check for a directory
+		if [[ ${e} == 0 ]]; then
+			if [[ -d "${f}" ]]; then
+				e=1
+				enc_array["${f}"]+="${e} - directory;\"${f}\" is a directory"
 			fi
-		done
-	fi
+		fi
 
-	# If previous checks passed, check for a different file with same name and same encoder as specified
-	if [[ ${c} == 0 ]]; then
-		for file in *.${ext}; do
-			if ! [[ ${file} == "*.${ext}" ]]; then
-				file_encoding=$(getEncoding ${file})
-				if [[ ${file%%.*} == ${f%%.*} ]] && [[ ${file_encoding} =~ ${enc} ]]; then
-					printf "%s\n" "${delimiter}"
-					printf "| [+] File ${f} (enc: ${file_encoding}) is already encoded with ${enc} and saved as ${file}\n"
-					printf "%s\n" "${delimiter}"
-					c=1
-					break
-				fi
+		# Check if file has an extension
+		if [[ ${e} == 0 ]]; then
+			if [[ "${f%%.*}" == "${f##*.}" ]]; then
+				e=1
+				enc_array["${f}"]+="${e} - no extension;File \"${f}\" has no extension"
 			fi
-		done
-	fi
+		fi
+		# Check if the file is a video file of a supported format
+		if [[ ${e} == 0 ]]; then
+			if ! [[ ${extensions[@]} =~ ${ext_orig} ]]; then
+				e=1
+				enc_array["${f}"]+="${e} - unsupported extension \"${ext_orig}\";\"${f}\" is not a video file / unsupported extension \"${ext_orig}\""
+			fi
+		fi
+
+		# Check if current file has "_conv" suffix
+		if [[ ${e} == 0 ]]; then
+			if [[ "${name_upd}" =~ (_conv)$ ]]; then
+				e=1
+				enc_array["${f}"]+="${e} - already encoded;File \"${f}\" already encoded"
+			fi
+		fi
+
+		# Check if directory contains file with same filename, desired format and "_conv" suffix
+		if [[ ${e} == 0 ]]; then
+			for conv in *_conv.${ext}; do
+				# Check if loop is not empty
+				if ! [[ conv == "*_conv.${ext}" ]]; then
+					if [[ "${name_upd}" == "${conv%%_conv*}" ]] && [[ "${ext_orig}" == "${ext}" ]] && [[ "${name}" =~ (_conv)$ ]]; then
+						e=1
+						enc_array["${f}"]+="${e} - already encoded;File \"${f}\" is already encoded and saved as \"${conv}\""
+						break
+					fi
+				fi
+			done
+		fi
+
+		# Check if directory contains file with updated filename and desired format
+		if [[ ${e} == 0 ]]; then
+			for file in *.${ext}; do
+				# Check if loop is not empty
+				if ! [[ "${file}" == "*.${ext}" ]]; then
+					if [[ "${name_upd}" == "${file%%.*}" ]]; then
+						e=1
+						enc_array["${f}"]+="${e} - already encoded;File \"${f}\" is already encoded and saved as \"${file}\""
+						break
+					fi
+				fi
+			done
+		fi
+
+		# If all checks passed, append ecoding flag "0" to the associative array
+		enc_array["${f}"]+="${e}"
+	done
 }
 
 function removeSuffix {
@@ -307,7 +338,7 @@ function removeSuffix {
 					ext=${f##*.}
 					mv "${f}" "${f/_conv.${ext}/.${ext}}"
 					printf "%s\n" "${delimiter}"
-					printf "| [+] File ${f} renamed to ${f%%_conv*}.${f##*.}\n"
+					printf "| [+] File \"${f}\" renamed to \"${f%%_conv*}.${f##*.}\"\n"
 					printf "%s\n" "${delimiter}"
 				fi
 			done
@@ -324,29 +355,39 @@ function removeSuffix {
 function deleteOriginal {
 	# Delete original video files
 	while true; do
-		count_original=0
+		# Count of original fies
+		local count_original=0
+
+		# Get count of original files
+		for f in ${!enc_array[@]}; do
+			if [[ ${enc_array[${f}]} == 0 ]]; then ((++count_original)); fi
+		done
+
+		# Break loop if there are no files to delete
+		if [[ ${count_original} == 0 ]]; then
+			printf "%s\n" "${delimiter}"
+			printf "| [+] Deleting original files: no video files to delete\n"
+			printf "%s\n" "${delimiter}"
+			break
+		fi
+
+		# Prompt user to delete original files
 		printf "%s\n" "${delimiter}"
 		read -p "| [+] Do you want to delete original files? [Y/N] " choice
 		printf "%s\n" "${delimiter}"
 		if [[ "${choice}" == "Y" || "${choice}" == "y" ]]; then
-			for key in ${!conv_array[@]}; do
-				if [[ ${conv_array[$key]} == 0 ]]; then
+			for key in ${!enc_array[@]}; do
+				if [[ ${enc_array[$key]} == 0 ]]; then
 					rm ${key}
 					printf "%s\n" "${delimiter}"
-					printf "[+] File ${key} deleted\n"
+					printf "[+] File \"${key}\" deleted\n"
 					printf "%s\n" "${delimiter}"
-					count_original=$((++count_original))
 				fi
 			done
-			if [[ ${count_original} == 0 ]]; then
-				printf "%s\n" "${delimiter}"
-				printf "| [+] No video files to delete\n"
-				printf "%s\n" "${delimiter}"
-			fi
 			break
 		elif [[ "${choice}" == "N" || "${choice}" == "n" ]]; then
 			printf "%s\n" "${delimiter}"
-			printf "[+] Keeping the original files\n"
+			printf "| [+] Keeping the original files\n"
 			printf "%s\n" "${delimiter}"
 			break
 		fi
@@ -356,6 +397,9 @@ function deleteOriginal {
 function setEncoder {
 	# Choose an encoder
 	if [ -z ${enc} ]; then
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Select an encoder:\n"
+		printf "%s\n" "${delimiter}"
 		PS3="[+] Choose encoder: "
 		encoders=("libx264" "libx265")
 		select encoder in ${encoders[@]}; do
@@ -370,7 +414,7 @@ function setEncoder {
 					;;
 				*)
 					printf "%s\n" "${delimiter}"
-					echo "| [+] No such option ${REPLY}"
+					printf "| [+] No such option \"${REPLY}\"\n"
 					printf "%s\n" "${delimiter}"
 					;;
 			esac
@@ -387,6 +431,9 @@ function chooseExtension {
 	# Choose file extension to format
 	if [ -z ${ext} ]; then
 		# Choose a file extension to convert to
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Select a file extension:\n"
+		printf "%s\n" "${delimiter}"
 		PS3="[+] Choose file extension to convert to: "
 		extensions=("mkv" "mp4" "webm" "avi" "mov" "m4v" "wmv")
 		select extension in ${extensions[@]}; do
@@ -424,10 +471,38 @@ function chooseExtension {
 
 function updateName {
 	# Remove special characters from filenames and replace whitespaces with underscores
-	$(update-filename)
-	printf "%s\n" "${delimiter}"
-	printf "| [+] Filenames updated\n"
-	printf "%s\n" "${delimiter}"
+	# Split file name and file extension
+	local name="${@}"
+	local ext="${name##*.}"
+	name="${name%%.*}"
+
+	# Delete -, +, !, ', ", \ and , symbols
+	symbols=(\- \+ \! \' \" \\ \, \.)
+	for symbol in "${symbols[@]}"; do
+        name="${name//${symbol}/}"
+	done 2>/dev/null
+
+	# Delete square brackets (if present) with everything between them
+	if [[ ${name} =~ [\[] ]]; then
+		name=$(printf "${name}" | sed 's/\[[^]]*\]//g')
+	fi
+
+	# Delete curly brackets (if present) with everything between them
+	if [[ ${name} =~ [\{] ]]; then
+		name=$(printf "${name}" | sed 's/\{{^}}*\}//g')
+	fi
+
+	# Replace multiple subsequent whitespaces with a single whitespace
+	name=$(printf "${name}" | awk '{$1=$1;print}')
+
+	# Replace whitespaces with undersocres in filename
+	name="${name// /_}"
+
+	# Rejoin file name with a file extension
+	name="${name}.${ext}"
+
+	# Return name
+	echo ${name}
 }
 
 function countEncoded {
@@ -468,12 +543,12 @@ function encodeStatus {
 	exec 3<> /tmp/encoding_data
 
 	# Start ffmpeg encoding process and move it to background, save encoding data to temporary file
-	nohup 1>/dev/null ffmpeg -stats -loglevel ${loglevel} -i ${f} -c:a ${audio} -c:v ${enc} -x265-params log-level=none -preset ${preset} -crf ${crf} ${name}"_conv".${ext} 2>&3 &
+	nohup 1>/dev/null ffmpeg -stats -loglevel ${loglevel} -i "${f}" -c:a ${audio} -c:v ${enc} -x265-params log-level=none -preset ${preset} -crf ${crf} ${name}"_conv".${ext} 2>&3 &
 
-	# Get pid of the backgrounded process
+	# Get pid of the backgrounded ffmpeg process
 	pid=${!}
 
-	# If the script is killed, kill ffmpeg also
+	# If the script is killed, kill ffmpeg process also
 	trap "kill ${pid} 2> /dev/null" EXIT
 
 	# While ffmpeg encoding process is running, rewrite terminal output with latest encoding data every half a second
@@ -494,51 +569,95 @@ function encodeStatus {
 	rm /tmp/encoding_data
 }
 
-function encodeFiles {
-	# Encode all video files
-	for f in *; do
-		# Get files in current directory
-		if [[ -f ${f} ]] && [[ ${f} =~ [A-Za-z0-9_\(\)]\.[A-Za-z0-9]+{3,4} ]]; then
-			# Split filename
-			name=${f%%.*} # Get file name
-			ext_orig=${f##*.} # Original file extension
-			ext_orig=$(echo ${ext_orig} | tr '[:upper:]' '[:lower:]') # Convert extension to lowercase
-			checkConversion "${f}" "${name}" "${ext_orig}" # Check if file is already converted
-			conv_array["${f}"]+="${c}" # Append to conv_array
+function getDuration {
+	# Get duration of a video file
+	# Create local variable to store filename
+	local f="${1}"
 
-			# If all checks are passed, convert the video file
-			if [[ ${c} == 0 ]]; then
-				# Get encoding of a current file
-				f_enc=$(getEncoding ${f})
-				# Get duration of a current file
-				duration=$(exec 3<> /tmp/metadata; ffprobe -show_entries stream_tags:format_tags -of json ${f} 1>&3 2>&1; grep Duration /tmp/metadata | cut -d ":" -f 2,3,4 | cut -d "," -f 1 | tr -d " "; exec 3>&-; rm /tmp/metadata)
-				if [ -z ${f_enc} ]; then f_enc="None"; fi # Set file encoding as None if no encoding data is found
-				printf "%s\n" "${delimiter}"
-				printf "| [+] Encoding ${f} (enc: ${f_enc}) to ${name}_conv.${ext} (enc: ${enc})\n"
-				printf "| [+] Duration: ${duration}\n"
-				loglevel="quiet"
-				start=$(date +%s.%3N) # Start time
-				#ffmpeg -stats -loglevel ${loglevel} -i ${f} -c:a ${audio} -c:v ${enc} -x265-params log-level=none -preset ${preset} -crf ${crf} ${name}"_conv".${ext}
-				encodeStatus "${f}" "${audio}" "${enc}" "${preset}" "${crf}" "${name}" "${ext}" "${loglevel}"
-				end=$(date +%s.%3N) # End time
-				time=$(formatTime $(echo "${end}-${start}" | bc -l)) # Encoding time
-				printf "\n| [+] File ${f} (enc: ${f_enc}) encoded to ${name}_conv.${ext} (enc: ${enc}) in ${time}\n"
-				printf "%s\n" "${delimiter}"
-				total=$(echo "${total} + ${end} - ${start}" | bc -l)
-				count=$((++count))
-			fi
-		fi
-	done
+	# Open file descriptor 3 and point it to temporary file
+	exec 3<> /tmp/duration
+
+	# Get metadata from ffprobe and redirect it to temporary file
+	ffprobe -show_entries stream_tags:format_tags -of json "${f}" 1>&3 2>&1
+
+	# Parse duration data from the temporary file
+	duration=$(grep Duration /tmp/duration | cut -d ":" -f 2,3,4 | cut -d "," -f 1 | tr -d " ")
+
+	# Close file descriptor 3
+	exec 3>&-
+
+	# Remove temporary file
+	rm /tmp/duration
+
+	# Return duration value
+	echo ${duration}
 }
 
-function printStatus {
-	# Print video file names and their conversion status (0 - encoded, 1 - not encoded)
-	printf "%s\n" "${delimiter}"
-	printf "| [+] File names and their conversion status (0 - encoded, 1 - not encoded):\n"
-	for key in ${!conv_array[@]}; do
-		printf "| [+] ${key} => ${conv_array[${key}]}\n"
+function encodeFiles {
+	# Encode all video files
+	for f in "${!enc_array[@]}"; do
+		# Save original file name to a local variable
+		local org=${f%%.*}
+
+		# If all checks are passed, convert the video file
+		if [[ ${enc_array[${f}]} == 0 ]]; then
+			# Update filename
+			local name=$(updateName "${f}")
+
+			# Strip extension from filename
+			name="${name%%.*}"
+
+			# Print message
+			printf "%s\n" "${delimiter}"
+			printf "| [+] Name \"${org}\" updated to \"${name}\"\n"
+			printf "| [+] Original filename: ${f}\n"
+			printf "%s\n" "${delimiter}"
+
+			# Get encoding of a current file
+			f_enc=$(getEncoding "${f}")
+
+			# Get duration of a current file
+			duration=$(getDuration "${f}")
+
+			# Set file encoding as None if no encoding data is found
+			if [ -z "${f_enc}" ]; then
+				f_enc="None"
+			fi
+
+			# Print initial info about file encoding
+			printf "%s\n" "${delimiter}"
+			printf "| [+] Encoding ${f} (enc: ${f_enc}) to ${name}_conv.${ext} (enc: ${enc})\n"
+			printf "%s\n" "${delimiter}"
+			printf "| [+] Video duration: ${duration}\n"
+
+			# Set ffmpeg log level
+			loglevel="quiet"
+
+			# Encode file and measure encoding time
+			start=$(date +%s.%3N) # Start time
+			encodeStatus "${f}" "${audio}" "${enc}" "${preset}" "${crf}" "${name}" "${ext}" "${loglevel}"
+			end=$(date +%s.%3N) # End time
+
+			# Get time of a current encode
+			time=$(formatTime $(echo "${end}-${start}" | bc -l))
+
+			# Print encoding results
+			printf "\n| [+] File ${f} (enc: ${f_enc}) encoded to ${name}_conv.${ext} (enc: ${enc}) in ${time}\n"
+			printf "%s\n" "${delimiter}"
+
+			# Update total encoding time of all videos
+			total=$(echo "${total} + ${end} - ${start}" | bc -l)
+
+			# Count encoded files
+			count=$((++count))
+		else
+			# Print error message why file is not being encoded
+			local value=$(echo "${enc_array[${f}]}" | cut -d ";" -f 2 | sed 's/.$//')
+			printf "%s\n" "${delimiter}"
+			printf "| [+] ${value}\n"
+			printf "%s\n" "${delimiter}"
+		fi
 	done
-	printf "%s\n" "${delimiter}"
 }
 
 function checkDeps {
@@ -570,12 +689,38 @@ function checkDeps {
 	fi
 }
 
+function printEncodingStatus {
+	# Print files and their encoding status
+	local count=0
+	# Print encoding stats
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Files in a directory and their encoding status (0 - will encode, 1 - will not encode)\n"
+	printf "%s\n" "${delimiter}"
+	printf "%s\n" "${delimiter}"
+	for key in "${!enc_array[@]}"; do
+		value1=$(echo "${enc_array[${key}]}" | cut -d ";" -f 1)
+		printf "| [+] ${key} => ${value1}\n"
+		# Count files yet to be encoded
+		if [[ ${value1} == 0 ]]; then
+			((++count))
+		elif ! [[ ${value1} == 0 ]]; then
+			value2=$(echo "${enc_array[${key}]}" | cut -d ";" -f 2 | sed 's/.$//g')
+			printf "| [+] ${value2}\n"
+		fi
+	done
+	printf "%s\n" "${delimiter}"
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Found ${#enc_array[@]} files\n"
+	printf "| [+] Encoding ${count} files\n"
+	printf "%s\n" "${delimiter}"
+}
+
 #  ------
 # | Main |
 #  ------
 
 #  Declare an associative array for storing file names and their conversion status (${status} => ${file})
-declare -A conv_array
+declare -A enc_array
 
 # Total encoding duration
 total=0
@@ -607,14 +752,35 @@ fi
 # Choose an extension
 chooseExtension
 
-# Update filename
-updateName
+# Create an associative array of files and their encoding status
+checkEncodingStatus
 
-# Encode all video files
-encodeFiles
+# Print encoding status
+printEncodingStatus
 
-# Print video file names and their conversion status (0 - encoded, 1 - not encoded)
-printStatus
+# Encode video files
+while true; do
+	printf "%s\n" "${delimiter}"
+	read -p "| [+] Do you want to encode the files? [Y/N] " choice
+	printf "%s\n" "${delimiter}"
+	if [[ ${choice} == "Y" ]] || [[ ${choice} == "y" ]]; then
+		encodeFiles
+		break
+	elif [[ ${choice} == "N" ]] || [[ ${choice} == "n" ]]; then
+		# Update encoding flags in associative array
+		for key in ${!enc_array[@]}; do
+			if [[ ${enc_array[${key}]} == 0 ]]; then
+				enc_array["${key}"]="1"
+			fi
+		done
+
+		# Print message
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Files not encoded\n"
+		printf "%s\n" "${delimiter}"
+		break
+	fi
+done
 
 # Print count of encoded files
 countEncoded
@@ -627,3 +793,8 @@ deleteOriginal
 
 # Remove "_conv" suffix from filenames (optional)
 removeSuffix
+
+# Print ending banner
+printf "%s\n" "${delimiter}"
+printf "| [+] Encoding done\n"
+printf "%s\n" "${delimiter}"
