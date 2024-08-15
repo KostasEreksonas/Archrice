@@ -320,6 +320,13 @@ function checkEncodingStatus {
 		# If all checks passed, append ecoding flag "0" to the associative array
 		enc_array["${f}"]+="${e}"
 	done
+	# Count of original fies
+	count_original=0
+
+	# Get count of original files
+	for f in ${!enc_array[@]}; do
+		if [[ ${enc_array[${f}]} == 0 ]]; then ((++count_original)); fi
+	done
 }
 
 function removeSuffix {
@@ -355,14 +362,6 @@ function removeSuffix {
 function deleteOriginal {
 	# Delete original video files
 	while true; do
-		# Count of original fies
-		local count_original=0
-
-		# Get count of original files
-		for f in ${!enc_array[@]}; do
-			if [[ ${enc_array[${f}]} == 0 ]]; then ((++count_original)); fi
-		done
-
 		# Break loop if there are no files to delete
 		if [[ ${count_original} == 0 ]]; then
 			printf "%s\n" "${delimiter}"
