@@ -1,0 +1,143 @@
+#!/bin/sh
+
+# Show progress for cp command on Linux
+#Dependencies: bc
+
+# Delimiter
+delimiter="----------------------------------------------------------------"
+
+# Check if bc is installed
+bc -v 2>/dev/null 1>&2
+if [[ ${?} != 0 ]]; then
+    printf "%s\n" "${delimiter}"
+    printf "| [+] Package bc is not installed. Terminating script\n"
+    printf "%s\n" "${delimiter}"
+    exit 1
+else
+    printf "%s\n" "${delimiter}"
+    printf "| [+] Package bc installed\n"
+    printf "%s\n" "${delimiter}"
+fi
+
+# Show error messages and exit script if required arguments are missing
+if [[ ${#@} == 0 ]]; then
+    printf "%s\n" "${delimiter}"
+	printf "| [+] No source and destination files provided\n"
+	printf "| [+] Usage: cp-stats <source file> <destination file>\n"
+    printf "%s\n" "${delimiter}"
+	exit 1
+elif [[ ${#@} == 1 ]]; then
+    printf "%s\n" "${delimiter}"
+	printf "| [+] No destination file provided\n"
+	printf "| [+] Usage: cp-stats <source file> <destination file>\n"
+    printf "%s\n" "${delimiter}"
+	exit 1
+fi
+
+function formatTime {
+	# Format time to <xx>h <xx>m <xx.xxx>s
+	time=${1}
+	seconds=${time%%.*}
+	if [[ -z ${seconds} ]]; then seconds=0; fi
+	miliseconds=${time##*.}
+	if [[ -z ${miliseconds} ]]; then miliseconds=0; fi
+	if [[ ${seconds} -lt 60 ]]; then
+		echo "${seconds}.${miliseconds}s"
+	elif [[ ${seconds} -ge 60 && ${seconds} -lt 3600 ]]; then
+		minutes=$(echo "${seconds}/60" | bc -l | cut -d "." -f 1)
+		if [[ -z ${minutes} ]]; then minutes=0; fi
+		seconds=$((${seconds}-60*${minutes}))
+		if [[ -z ${seconds} ]]; then seconds=0; fi
+		echo "${minutes}m ${seconds}.${miliseconds}s"
+	elif [[ ${seconds} -ge 3600 ]]; then
+		hours=$(echo "${seconds}/3600" | bc -l | cut -d "." -f 1)
+		if [[ -z ${hours} ]]; then hours=0; fi
+		seconds=$((${seconds}-3600*${hours}))
+		minutes=$(echo "${seconds}/60" | bc -l | cut -d "." -f 1)
+		if [[ -z ${minutes} ]]; then minutes=0; fi
+		seconds=$((${seconds}-60*${minutes}))
+		if [[ -z ${seconds} ]]; then seconds=0; fi
+		echo "${hours}h ${minutes}m ${seconds}.${miliseconds}s"
+	fi
+}
+
+function showProgress {
+	# Show progress of cp command
+	# Get destination file size
+	dst_size=$(du -b ${target_dir}${src_file} | tail -1 | xargs echo | cut -d " " -f 1)
+	dst_size_pretty=$(prettyPrint "${dst_size}")
+
+	# Count progress %
+	progress=$(echo "${dst_size}/${src_size}*100" | bc -l)
+
+	# Duration of copy process
+	duration=$(echo "$(date +%s.%2N) - ${start}" | bc -l)
+	duration_pretty=$(formatTime "${duration}")
+
+	# Speed of copy process (MB/s)
+	speed=$(echo "${dst_size}/1024/1024/${duration}" | bc -l 2>/dev/null)
+
+	# Print progress (<copied size/total size> <completion percentage>%)
+	printf "| [+] Progress: ${dst_size_pretty}/${src_size_pretty} Completed: %.2f%% Duration: ${duration_pretty} Speed: %.2f MB/s     " ${progress} ${speed}
+}
+
+function prettyPrint {
+	# Pretty print file sizes when showing progress
+	local size="${1}"
+	if [[ ${size} -lt 1024 ]]; then
+		printf "%0.2f B" ${size};
+	elif [[ ${size} -ge 1024 ]] && [[ ${size} -lt 1024*1024 ]]; then
+		printf "%0.2f KB" "$(echo "${size}/1024" | bc -l)"
+	elif [[ ${size} -ge 1024*1024 ]] && [[ ${size} -lt 1024*1024*1024 ]]; then
+		printf "%0.2f MB" "$(echo "${size}/1024/1024" | bc -l)"
+	elif [[ ${size} -ge 1024*1024*1024 ]] && [[ ${size} -lt 1024*1024*1024*1024 ]]; then
+		printf "%0.2f GB" "$(echo "${size}/1024/1024/1024" | bc -l)"
+	fi
+}
+
+# Get command line arguments and put them to an array
+read -d '' -r -a files <<< "${@}"
+
+# Count command line arguments provided
+length=$((${#files[@]}-1))
+
+# Last command line argument - target directory for copying files
+target_dir="${files[${length}]}"
+
+for (( i=0; i<${length}; i++ )); do
+	# Get source file
+	src_file="${files[${i}]}"
+
+	# Get source file size
+	src_size=$(du -b ${src_file} | tail -1 | xargs echo | cut -d " " -f 1)
+	src_size_pretty=$(prettyPrint "${src_size}")
+
+	# Start time of copy command
+	start=$(date +%s.%2N)
+
+	# Start cp process and background it
+	cp -nr "${src_file}" "${target_dir}" &
+
+	# Get PID of backgrounded process
+	pid=${!}
+
+	# If the script is killed, kill cp process also
+	trap "kill ${pid} 2> /dev/null" EXIT
+
+	# Print info about copied files
+    printf "%s\n" "${delimiter}"
+	printf "| [+] Copying ${src_file} to ${target_dir}${src_file}\n"
+
+	# Show progress while cp is running in the background
+	while kill -0 ${pid} 2> /dev/null; do
+		showProgress && printf "\r"
+	done
+
+	# Show completed progress
+	showProgress && printf "\n"
+	printf "| [+] Copy of ${src_file} done\n"
+    printf "%s\n" "${delimiter}"
+
+	# Disable the trap on a normal exit
+	trap - EXIT
+done
