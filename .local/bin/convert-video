@@ -247,7 +247,7 @@ function checkEncodingStatus {
 	# If a check fails, skip all subsequent tests
 	for f in *; do
 		# Split filename
-		local name="${f%%.*}" # Strip file extension from file name
+		local name="${f%.*}" # Strip file extension from file name
 		local ext_orig="${f##*.}" # Original file extension
 		local ext_orig=$(echo "${ext_orig}" | tr '[:upper:]' '[:lower:]') # Convert extension to lowercase
 		local name_upd=$(updateName "${f}") # Get updated file name
@@ -473,10 +473,10 @@ function updateName {
 	# Split file name and file extension
 	local name="${@}"
 	local ext="${name##*.}"
-	name="${name%%.*}"
+	name="${name%.*}"
 
 	# Delete -, +, !, ', ", \ and , symbols
-	symbols=(\- \+ \! \' \" \\ \, \.)
+	symbols=(\- \+ \! \~ "&amp;" \& \: \; \' \" \\ \, \.)
 	for symbol in "${symbols[@]}"; do
         name="${name//${symbol}/}"
 	done 2>/dev/null
@@ -593,13 +593,17 @@ function getDuration {
 }
 
 function encodeFiles {
+	# Encode selected files
+	# Count encoded files
+	local count=1
+
 	# Encode all video files
 	for f in "${!enc_array[@]}"; do
 		# Save original file name to a local variable
-		local org=${f%%.*}
+		local org=${f%.*}
 
 		# If all checks are passed, convert the video file
-		if [[ ${enc_array[${f}]} == 0 ]]; then
+		if [[ ${enc_array["${f}"]} == 0 ]]; then
 			# Update filename
 			local name=$(updateName "${f}")
 
@@ -625,7 +629,7 @@ function encodeFiles {
 
 			# Print initial info about file encoding
 			printf "%s\n" "${delimiter}"
-			printf "| [+] Encoding ${f} (enc: ${f_enc}) to ${name}_conv.${ext} (enc: ${enc})\n"
+			printf "| [+] (File ${count} of ${count_encodes}) Encoding ${f} (enc: ${f_enc}) to ${name}_conv.${ext} (enc: ${enc})\n"
 			printf "%s\n" "${delimiter}"
 			printf "| [+] Video duration: ${duration}\n"
 
@@ -651,7 +655,7 @@ function encodeFiles {
 			count=$((++count))
 		else
 			# Print error message why file is not being encoded
-			local value=$(echo "${enc_array[${f}]}" | cut -d ";" -f 2 | sed 's/.$//')
+			local value=$(echo "${enc_array["${f}"]}" | cut -d ";" -f 2,3 | sed 's/.$//')
 			printf "%s\n" "${delimiter}"
 			printf "| [+] ${value}\n"
 			printf "%s\n" "${delimiter}"
@@ -690,7 +694,8 @@ function checkDeps {
 
 function printEncodingStatus {
 	# Print files and their encoding status
-	local count=0
+	# Count files elligible for encoding
+	count_encodes=0
 	# Print encoding stats
 	printf "%s\n" "${delimiter}"
 	printf "| [+] Files in a directory and their encoding status (0 - will encode, 1 - will not encode)\n"
@@ -701,7 +706,7 @@ function printEncodingStatus {
 		printf "| [+] ${key} => ${value1}\n"
 		# Count files yet to be encoded
 		if [[ ${value1} == 0 ]]; then
-			((++count))
+			((++count_encodes))
 		elif ! [[ ${value1} == 0 ]]; then
 			value2=$(echo "${enc_array[${key}]}" | cut -d ";" -f 2 | sed 's/.$//g')
 			printf "| [+] ${value2}\n"
@@ -710,7 +715,7 @@ function printEncodingStatus {
 	printf "%s\n" "${delimiter}"
 	printf "%s\n" "${delimiter}"
 	printf "| [+] Found ${#enc_array[@]} files\n"
-	printf "| [+] Encoding ${count} files\n"
+	printf "| [+] Encoding ${count_encodes} files\n"
 	printf "%s\n" "${delimiter}"
 }
 
