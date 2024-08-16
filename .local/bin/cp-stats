@@ -68,17 +68,21 @@ function showProgress {
 	dst_size_pretty=$(prettyPrint "${dst_size}")
 
 	# Count progress %
-	progress=$(echo "${dst_size}/${src_size}*100" | bc -l)
+	progress=$(echo "${dst_size}/${src_size}*100" | bc -l 2>/dev/null)
 
 	# Duration of copy process
-	duration=$(echo "$(date +%s.%2N) - ${start}" | bc -l)
+	duration=$(echo "$(date +%s.%2N) - ${start}" | bc -l 2>/dev/null)
 	duration_pretty=$(formatTime "${duration}")
+
+	# Get estimated time
+	estimated=$(echo "scale=2; (${src_size} - ${dst_size}) * ${duration} / ${dst_size}" | bc -l 2>/dev/null)
+	estimated=$(formatTime ${estimated})
 
 	# Speed of copy process (MB/s)
 	speed=$(echo "${dst_size}/1024/1024/${duration}" | bc -l 2>/dev/null)
 
 	# Print progress (<copied size/total size> <completion percentage>%)
-	printf "| [+] Progress: ${dst_size_pretty}/${src_size_pretty} Completed: %.2f%% Duration: ${duration_pretty} Speed: %.2f MB/s     " ${progress} ${speed}
+	printf "| [+] Progress: ${dst_size_pretty}/${src_size_pretty} Completed: %.2f%% Duration: ${duration_pretty} Speed: %.2f MB/s Estimated time: ${estimated}     " ${progress} ${speed}
 }
 
 function prettyPrint {
@@ -95,11 +99,14 @@ function prettyPrint {
 	fi
 }
 
+# Initialize variable for total duration
+total=0
+
 # Get command line arguments and put them to an array
 read -d '' -r -a files <<< "${@}"
 
 # Count command line arguments provided
-length=$((${#files[@]}-1))
+length=$(("${#files[@]}"-1))
 
 # Last command line argument - target directory for copying files
 target_dir="${files[${length}]}"
@@ -109,7 +116,7 @@ for (( i=0; i<${length}; i++ )); do
 	src_file="${files[${i}]}"
 
 	# Get source file size
-	src_size=$(du -b ${src_file} | tail -1 | xargs echo | cut -d " " -f 1)
+	src_size=$(du -b "${src_file}" | tail -1 | xargs echo | cut -d " " -f 1)
 	src_size_pretty=$(prettyPrint "${src_size}")
 
 	# Start time of copy command
@@ -119,7 +126,7 @@ for (( i=0; i<${length}; i++ )); do
 	cp -nr "${src_file}" "${target_dir}" &
 
 	# Get PID of backgrounded process
-	pid=${!}
+	pid="${!}"
 
 	# If the script is killed, kill cp process also
 	trap "kill ${pid} 2> /dev/null" EXIT
@@ -135,9 +142,20 @@ for (( i=0; i<${length}; i++ )); do
 
 	# Show completed progress
 	showProgress && printf "\n"
-	printf "| [+] Copy of ${src_file} done\n"
+
+	# Get total time
+	total=$(echo "${total} + ${duration}" | bc -l)
+	total_pretty=$(formatTime "${total}")
+
+	# Print stats
+	printf "| [+] Copy of ${src_file} done, total time: ${total_pretty}\n"
     printf "%s\n" "${delimiter}"
 
 	# Disable the trap on a normal exit
 	trap - EXIT
 done
+
+# Print exit message
+printf "%s\n" "${delimiter}"
+printf "| [+] cp done. Total time: ${total_pretty}\n"
+printf "%s\n" "${delimiter}"
