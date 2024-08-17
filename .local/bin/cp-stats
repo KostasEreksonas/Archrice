@@ -65,6 +65,8 @@ function showProgress {
 	# Show progress of cp command
 	# Get destination file size
 	dst_size=$(du -b ${target_dir}${src_file} | tail -1 | xargs echo | cut -d " " -f 1)
+
+	# Pretty print destination size
 	dst_size_pretty=$(prettyPrint "${dst_size}")
 
 	# Count progress %
@@ -72,18 +74,36 @@ function showProgress {
 
 	# Duration of copy process
 	duration=$(echo "$(date +%s.%2N) - ${start}" | bc -l 2>/dev/null)
+
+	# Pretty print duration
 	duration_pretty=$(formatTime "${duration}")
 
 	# Get estimated time
 	estimated=$(echo "scale=2; (${src_size} - ${dst_size}) * ${duration} / ${dst_size}" | bc -l 2>/dev/null)
+
+	# Format estimated time
 	estimated=$(formatTime ${estimated})
 
-	# Speed of copy process (MB/s)
-	speed=$(echo "${dst_size}/${duration}" | bc -l 2>/dev/null)
-	speed=$(prettyPrint ${speed})
+	# Average speed of copy process
+	avg_speed=$(echo "${dst_size}/${duration}" | bc -l 2>/dev/null)
+
+	# Pretty print average speed
+	avg_speed=$(prettyPrint ${avg_speed})
+
+	# Current speed of copy process
+	if [[ -z ${old_size} ]]; then old_size=0; fi
+
+	# Calculate current speed
+	current_speed=$(echo "(${dst_size}-${old_size})*100/${duration}" | bc -l 2>/dev/null)
+
+	# Set old size as current speed
+	old_size=${dst_size}
+
+	# Pretty print current speed
+	current_speed=$(prettyPrint ${current_speed})
 
 	# Print progress (<copied size/total size> <completion percentage>%)
-	printf "| [+] Progress: ${dst_size_pretty}/${src_size_pretty} Completed: %.2f%% Duration: ${duration_pretty} Speed: ${speed}/s Estimated time: ${estimated}     " ${progress}
+	printf "| [+] Progress: ${dst_size_pretty}/${src_size_pretty} Completed: %.2f%% Duration: ${duration_pretty} Average speed: ${avg_speed}/s Current speed: ${current_speed}/s Estimated time: ${estimated}     " ${progress}
 }
 
 function prettyPrint {
