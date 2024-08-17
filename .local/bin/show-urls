@@ -1,0 +1,209 @@
+#!/bin/sh
+
+# Show urls from url file
+
+# Delimiter
+delimiter="----------------------------------------------------------------"
+
+# Path for temporary file
+tmp="/tmp/metadata"
+
+# Initialize count variable
+count=0
+
+function formatTime {
+    # Format time to <xx>h <xx>m <xx.xxx>s
+    time=${1}
+    seconds=${time%%.*}
+    if [[ -z ${seconds} ]]; then seconds=0; fi
+    miliseconds=${time##*.}
+    if [[ -z ${miliseconds} ]]; then miliseconds=0; fi
+    if [[ ${seconds} -lt 60 ]]; then
+        echo "${seconds}.${miliseconds} seconds"
+    elif [[ ${seconds} -ge 60 && ${seconds} -lt 3600 ]]; then
+        minutes=$(echo "${seconds}/60" | bc -l | cut -d "." -f 1)
+        if [[ -z ${minutes} ]]; then minutes=0; fi
+        seconds=$((${seconds}-60*${minutes}))
+        if [[ -z ${seconds} ]]; then seconds=0; fi
+        echo "${minutes} minutes ${seconds}.${miliseconds} seconds"
+    elif [[ ${seconds} -ge 3600 ]]; then
+        hours=$(echo "${seconds}/3600" | bc -l | cut -d "." -f 1)
+        if [[ -z ${hours} ]]; then hours=0; fi
+        seconds=$((${seconds}-3600*${hours}))
+        minutes=$(echo "${seconds}/60" | bc -l | cut -d "." -f 1)
+        if [[ -z ${minutes} ]]; then minutes=0; fi
+        seconds=$((${seconds}-60*${minutes}))
+        if [[ -z ${seconds} ]]; then seconds=0; fi
+        echo "${hours} hours ${minutes} minutes ${seconds}.${miliseconds} seconds"
+    fi
+
+	# Unset variables
+	unset time
+}
+
+function prettyPrint {
+    # Pretty print file sizes when showing progress
+    local size="${1}"
+    # If size < 1024 == true
+    if [[ $(echo "${size} < 1024" | bc -l) -eq 1 ]]; then
+        printf "%0.2f B" ${size};
+    # If size >= 1024 && size < 1024*1024 == true
+	elif [[ $(echo "${size} >= 1024" | bc -l) -eq 1 ]] && [[ $(echo "${size} < 1024*1024" | bc -l) -eq 1 ]]; then
+        printf "%0.2f KB" "$(echo "${size}/1024" | bc -l 2>/dev/null)"
+    # If size >= 1024*1024 && size < 1024*1024*1024 == true
+    elif [[ $(echo "${size} >= 1024*1024" | bc -l) -eq 1 ]] && [[ $(echo "${size} < 1024*1024*1024" | bc -l) -eq 1 ]]; then
+		printf "%0.2f MB" "$(echo "${size}/1024/1024" | bc -l 2>/dev/null)"
+    # If size >= 1024*1024*1024 && size < 1024*1024*1024*1024 == true
+    elif [[ $(echo "${size} >= 1024*1024*1024" | bc -l) -eq 1 ]] && [[ $(echo "${size} < 1024*1024*1024*1024" | bc -l) -eq 1 ]]; then
+        printf "%0.2f GB" "$(echo "${size}/1024/1024/1024" | bc -l 2>/dev/null)"
+    fi
+
+	# Unset variables
+	unset size
+}
+
+function showProgress {
+	# Show download progress
+	# Assign local variables
+	local file_size="${1}"
+	local file_size_pretty="${2}"
+	local file_name="${3}"
+
+	# Get current size
+	current_size=0 # Default
+	if ! [[ -f "${file_name}" ]]; then
+		current_size=0
+	else
+		current_size=$(du -b "${file_name}" | xargs echo | cut -d " " -f 1)
+		current_size_pretty=$(prettyPrint ${current_size})
+	fi
+
+	# Get progress
+	progress=$(echo "${current_size}/${file_size}*100" | bc -l 2>/dev/null)
+
+	# Print stats
+	printf "| [+] Downloading: ${file_name} Status: ${current_size_pretty:-0}/${file_size_pretty}; Progress: %0.2f%%     " ${progress}
+
+	# Unset variables
+	unset current_size
+	unset current_size_pretty
+	unset file_size
+	unset file_size_pretty
+	unset file_name
+}
+
+function downloadAudio {
+	# Download audio file from Youtube URL
+	# Set local variables
+	local title="${1}"
+	local url="${2}"
+	local file_size="${3}"
+	local file_size_pretty="${4}"
+	local format="mp3"
+	local file_name="${title}.${format}"
+
+	# If audio file does not exist, start download process and background it
+	if [[ -f "${file_name}" ]]; then
+		printf "| [+] File ${file_name} already exists\n"
+	else
+		# Count a file
+		((++count))
+
+		# Start download process and background it
+		yt-dlp --quiet -x --audio-format "${format}" -o "${file_name}" "${url}" &
+
+		# Get PID of backgrounded process
+		pid="${!}"
+
+		# If the script is killed, kill download as well
+		trap "kill ${pid} 2> /dev/null" EXIT
+
+		# Show download progress
+		while kill -0 ${pid} 2> /dev/null; do
+			showProgress "${file_size}" "${file_size_pretty}" "${file_name}" && printf "\r"
+		done
+
+		# Print last message
+		showProgress "${file_size}" "${file_size_pretty}" "${file_name}" && printf "\n"
+
+		# Disable trap on normal exit
+		trap - EXIT
+	fi
+
+	# Unset variables
+	unset title
+	unset url
+	unset file_size
+	unset file_size_pretty
+	unset format
+	unset file_name
+}
+
+# Search for directories
+for dir in *; do
+	# If a directory is found, cd to it
+	if [[ -d "${dir}" ]]; then
+		cd "${dir}"
+
+		# Search for "urls" file
+		for dir_file in *; do
+			if [[ "${dir_file}" == "urls" ]]; then
+
+				# Print info
+				printf "%s\n" "${delimiter}"
+				printf "| [+] Url file detected: ${dir} => ${dir_file}\n"
+				printf "%s\n" "${delimiter}"
+
+				# Get urls from file and read it into an array
+				data=$(cat ${dir_file})
+				read -d '' -r -a urls <<< ${data}
+
+				# Print file url and some of it's metadata
+				printf "%s\n" "${delimiter}"
+				printf "| [+] Urls for ${dir}:\n"
+				for url in ${urls[@]}; do
+					# Open file descriptor 3 and point it to temporary metadata file
+					exec 3<> ${tmp}
+
+					# Dump url's metadata to the temporary file
+					yt-dlp --dump-json ${url} 1>&3
+
+					# Get title
+					title=$(cat "${tmp}" | jq '.title' | tr -d "\"")
+
+					# Get duration
+					duration=$(cat "${tmp}" | jq '.formats[].fragments[].duration' 2>/dev/null | head -1)
+					duration=$(formatTime ${duration})
+
+					# Get filesize
+					file_size=$(cat "${tmp}" | jq '.filesize_approx')
+					file_size_pretty=$(prettyPrint ${file_size})
+
+					# Print metadata
+					printf "%s\n" "${delimiter}"
+					printf "| [+] URL: ${url}\n"
+					printf "%s\n" "${delimiter}"
+					printf "%s\n" "${delimiter}"
+					printf "| [+] Title: ${title}\n"
+					printf "| [+] Duration: ${duration}\n"
+					printf "| [+] File size (approx.): ${file_size_pretty}\n"
+					downloadAudio "${title}" "${url}" "${file_size}" "${file_size_pretty}"
+					printf "%s\n" "${delimiter}"
+
+					# Close file descriptor 3
+					exec 3>&-
+
+					# Remove temporary metadata file
+					rm ${tmp}
+				done
+			fi
+		done
+
+		# Change to original directory
+		cd ../
+	fi
+done
+
+printf "%s\n" "${delimiter}"
+printf "| [+] Done downloading ${count} files\n"
+printf "%s\n" "${delimiter}"
