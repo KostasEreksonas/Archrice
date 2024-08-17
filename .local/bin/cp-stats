@@ -79,23 +79,25 @@ function showProgress {
 	estimated=$(formatTime ${estimated})
 
 	# Speed of copy process (MB/s)
-	speed=$(echo "${dst_size}/1024/1024/${duration}" | bc -l 2>/dev/null)
+	speed=$(echo "${dst_size}/${duration}" | bc -l 2>/dev/null)
+	speed=$(prettyPrint ${speed})
 
 	# Print progress (<copied size/total size> <completion percentage>%)
-	printf "| [+] Progress: ${dst_size_pretty}/${src_size_pretty} Completed: %.2f%% Duration: ${duration_pretty} Speed: %.2f MB/s Estimated time: ${estimated}     " ${progress} ${speed}
+	printf "| [+] Progress: ${dst_size_pretty}/${src_size_pretty} Completed: %.2f%% Duration: ${duration_pretty} Speed: ${speed}/s Estimated time: ${estimated}     " ${progress}
 }
 
 function prettyPrint {
 	# Pretty print file sizes when showing progress
 	local size="${1}"
-	if [[ ${size} -lt 1024 ]]; then
+	# If size < 1024 == true
+	if [[ $(echo "${size} < 1024" | bc -l) -eq 1 ]]; then
 		printf "%0.2f B" ${size};
-	elif [[ ${size} -ge 1024 ]] && [[ ${size} -lt 1024*1024 ]]; then
-		printf "%0.2f KB" "$(echo "${size}/1024" | bc -l)"
-	elif [[ ${size} -ge 1024*1024 ]] && [[ ${size} -lt 1024*1024*1024 ]]; then
-		printf "%0.2f MB" "$(echo "${size}/1024/1024" | bc -l)"
-	elif [[ ${size} -ge 1024*1024*1024 ]] && [[ ${size} -lt 1024*1024*1024*1024 ]]; then
-		printf "%0.2f GB" "$(echo "${size}/1024/1024/1024" | bc -l)"
+	elif [[ $(echo "${size} >= 1024" | bc -l) -eq 1 ]] && [[ $(echo "${size} < 1024*1024" | bc -l) -eq 1 ]]; then
+		printf "%0.2f KB" "$(echo "${size}/1024" | bc -l 2>/dev/null)"
+	elif [[ $(echo "${size} >= 1024*1024" | bc -l) -eq 1 ]] && [[ $(echo "${size} < 1024*1024*1024" | bc -l) -eq 1 ]]; then
+		printf "%0.2f MB" "$(echo "${size}/1024/1024" | bc -l 2>/dev/null)"
+	elif [[ $(echo "${size} >= 1024*1024*1024" | bc -l) -eq 1 ]] && [[ $(echo "${size} < 1024*1024*1024*1024" | bc -l) -eq 1 ]]; then
+		printf "%0.2f GB" "$(echo "${size}/1024/1024/1024" | bc -l 2>/dev/null)"
 	fi
 }
 
@@ -110,6 +112,14 @@ length=$(("${#files[@]}"-1))
 
 # Last command line argument - target directory for copying files
 target_dir="${files[${length}]}"
+
+# If target directory does not exist - create it
+if ! [[ -d ${target_dir} ]]; then
+	mkdir -p ${target_dir}
+    printf "%s\n" "${delimiter}"
+	printf "| [+] Directory ${target_dir} created\n"
+    printf "%s\n" "${delimiter}"
+fi
 
 for (( i=0; i<${length}; i++ )); do
 	# Get source file
