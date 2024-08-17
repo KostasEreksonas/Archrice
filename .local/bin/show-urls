@@ -11,6 +11,9 @@ tmp="/tmp/metadata"
 # Initialize count variable
 count=0
 
+# Initialize variable for total size
+total_size=0
+
 function formatTime {
     # Format time to <xx>h <xx>m <xx.xxx>s
     time=${1}
@@ -85,7 +88,7 @@ function showProgress {
 	printf "| [+] Downloading: ${file_name} Status: ${current_size_pretty:-0}/${file_size_pretty}; Progress: %0.2f%%     " ${progress}
 
 	# Unset variables
-	unset current_size
+	#unset current_size
 	unset current_size_pretty
 	unset file_size
 	unset file_size_pretty
@@ -125,6 +128,9 @@ function downloadAudio {
 
 		# Print last message
 		showProgress "${file_size}" "${file_size_pretty}" "${file_name}" && printf "\n"
+
+		# Count total size
+		total_size=$((${total_size} + ${current_size}))
 
 		# Disable trap on normal exit
 		trap - EXIT
@@ -171,6 +177,12 @@ for dir in *; do
 					# Get title
 					title=$(cat "${tmp}" | jq '.title' | tr -d "\"")
 
+					# Replace whitespaces with underscores in title
+					title=${title// /_}
+
+					# Remove single quote from filename
+					title=${title//\'/}
+
 					# Get duration
 					duration=$(cat "${tmp}" | jq '.formats[].fragments[].duration' 2>/dev/null | head -1)
 					duration=$(formatTime ${duration})
@@ -204,6 +216,10 @@ for dir in *; do
 	fi
 done
 
+# Format total size
+total_size_pretty=$(prettyPrint ${total_size})
+
+# Print final message
 printf "%s\n" "${delimiter}"
-printf "| [+] Done downloading ${count} files\n"
+printf "| [+] Done downloading ${count} files, final size: ${total_size_pretty}\n"
 printf "%s\n" "${delimiter}"
