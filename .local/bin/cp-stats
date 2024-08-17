@@ -6,6 +6,9 @@
 # Delimiter
 delimiter="----------------------------------------------------------------"
 
+# Initial total size
+total=0
+
 # Check if bc is installed
 bc -v 2>/dev/null 1>&2
 if [[ ${?} != 0 ]]; then
@@ -137,8 +140,11 @@ function prettyPrint {
 	fi
 }
 
+# Initialize variable for total size
+total_size=0
+
 # Initialize variable for total duration
-total=0
+total_duration=0
 
 # Get command line arguments and put them to an array
 read -d '' -r -a files <<< "${@}"
@@ -192,12 +198,16 @@ for (( i=0; i<${length}; i++ )); do
 	# Show completed progress
 	showProgress && printf "\n"
 
+	# Get total size
+	total_size=$((${total_size} + ${dst_size}))
+	total_size_pretty=$(prettyPrint "${total_size}")
+
 	# Get total time
-	total=$(echo "${total} + ${duration}" | bc -l)
-	total_pretty=$(formatTime "${total}")
+	total_duration=$(echo "${total_duration} + ${duration}" | bc -l)
+	total_duration_pretty=$(formatTime "${total_duration}")
 
 	# Print stats
-	printf "| [+] Copy of ${src_file} done, total time: ${total_pretty}\n"
+	printf "| [+] Copy of ${src_file} done, total size: ${total_size_pretty}, total time: ${total_duration_pretty}\n"
     printf "%s\n" "${delimiter}"
 
 	# Disable the trap on a normal exit
@@ -206,5 +216,5 @@ done
 
 # Print exit message
 printf "%s\n" "${delimiter}"
-printf "| [+] cp done. Total time: ${total_pretty}\n"
+printf "| [+] cp done. Total size: ${total_size_pretty}, total time: ${total_duration_pretty}\n"
 printf "%s\n" "${delimiter}"
