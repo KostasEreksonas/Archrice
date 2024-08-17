@@ -507,7 +507,7 @@ function updateName {
 function countEncoded {
 	# Print count of encoded files
 	printf "%s\n" "${delimiter}"
-	printf "| [+] Encoded ${count} files\n"
+	printf "| [+] Encoded $((${count}-1)) files\n"
 	printf "%s\n" "${delimiter}"
 }
 
@@ -595,7 +595,7 @@ function getDuration {
 function encodeFiles {
 	# Encode selected files
 	# Count encoded files
-	local count=1
+	count=1
 
 	# Encode all video files
 	for f in "${!enc_array[@]}"; do
