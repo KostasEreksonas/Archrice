@@ -63,6 +63,10 @@ function formatTime {
 
 function showProgress {
 	# Show progress of cp command
+
+	# Get interval between current time and timer
+	interval=$(echo "$(date +%s.%2N)-${timer}" | bc -l)
+
 	# Get destination file size
 	dst_size=$(du -b ${target_dir}${src_file} | tail -1 | xargs echo | cut -d " " -f 1)
 
@@ -90,17 +94,29 @@ function showProgress {
 	# Pretty print average speed
 	avg_speed=$(prettyPrint ${avg_speed})
 
-	# Current speed of copy process
-	if [[ -z ${old_size} ]]; then old_size=0; fi
+	# Every second - 1) Reset timer; 2) Reset interval; 3) Update current speed
+	if [[ $(echo "${interval} >= 1" | bc -l) -eq 1 ]]; then
+		# Reset timer
+		timer=$(date +%s.%2N)
 
-	# Calculate current speed
-	current_speed=$(echo "(${dst_size}-${old_size})*100/${duration}" | bc -l 2>/dev/null)
+		# Reset interval
+		interval=0
 
-	# Set old size as current speed
-	old_size=${dst_size}
+		# Update current speed
+		# Set variable for old size
+		if [[ -z ${old_size} ]]; then
+			old_size=0
+		fi
 
-	# Pretty print current speed
-	current_speed=$(prettyPrint ${current_speed})
+		# Calculate current speed
+		current_speed=$(echo "(${dst_size}-${old_size})" | bc -l 2>/dev/null)
+
+		# Set old size as current speed
+		old_size="${dst_size}"
+
+		# Pretty print current speed
+		current_speed=$(prettyPrint "${current_speed}")
+	fi
 
 	# Print progress (<copied size/total size> <completion percentage>%)
 	printf "| [+] Progress: ${dst_size_pretty}/${src_size_pretty} Completed: %.2f%% Duration: ${duration_pretty} Average speed: ${avg_speed}/s Current speed: ${current_speed}/s Estimated time: ${estimated}     " ${progress}
@@ -151,6 +167,9 @@ for (( i=0; i<${length}; i++ )); do
 
 	# Start time of copy command
 	start=$(date +%s.%2N)
+
+	# Timer for getting current speed (bytes per second)
+	timer="${start}"
 
 	# Start cp process and background it
 	cp -nr "${src_file}" "${target_dir}" &
