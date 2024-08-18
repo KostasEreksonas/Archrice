@@ -65,6 +65,30 @@ function prettyPrint {
 	unset size
 }
 
+function updateName {
+	# Update a given string
+	local string="${1}"
+
+	# Replace whitespaces with underscores in string
+	string=${string// /_}
+
+	# Remove single quote from filename
+	string=${string//\'/}
+
+	# Remove special characters from a string
+	for (( i=0; i<${#string}; i++ )); do
+		if [[ ${string:${i}:1} =~ [A-Za-z0-9_]+ ]]; then
+			newString+=${string:${i}:1}
+		fi
+	done
+
+	# Return updated string
+	echo ${newString}
+
+	# Clear the ${newString} variable
+	newString=
+}
+
 function showProgress {
 	# Show download progress
 	# Assign local variables
@@ -177,11 +201,8 @@ for dir in *; do
 					# Get title
 					title=$(cat "${tmp}" | jq '.title' | tr -d "\"")
 
-					# Replace whitespaces with underscores in title
-					title=${title// /_}
-
-					# Remove single quote from filename
-					title=${title//\'/}
+					# Update title
+					title=$(updateName "${title}")
 
 					# Get duration
 					duration=$(cat "${tmp}" | jq '.formats[].fragments[].duration' 2>/dev/null | head -1)
