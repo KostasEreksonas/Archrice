@@ -16,15 +16,15 @@ directory="/home/kostas/Videos/OBS/"
 
 function record_audio () {
 	if [[ $state == 'RUNNING' ]]; then
-		ffmpeg -f pulse -i $(pacmd list-sources | grep -PB 1 "analog.*monitor" | head -n 1 | sed 's/.* //g') $name_audio.$ext_audio
+		ffmpeg -f pulse -i $(pacmd list-sources | grep -PB 1 "analog.*monitor" | head -n 1 | sed 's/.* //g') ${name_audio}.${ext_audio}
 	fi
 }
 
 function check_state () {
-	while [[ $state == 'RUNNING' ]]; do
+	while [[ ${state} == 'RUNNING' ]]; do
 		sleep .1
 		state="$(pacmd list-sink-inputs | grep state | awk '{print $2}')"
-		if [[ $state != 'RUNNING' ]]; then
+		if [[ ${state} != 'RUNNING' ]]; then
 			trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
 		fi
 	done
@@ -54,41 +54,42 @@ function record_video() {
 	bframes="4"
 	cq="19"
 	cd $directory
-	ffmpeg -loglevel $loglevel \
-		-video_size $size \
-		-f $method \
+	ffmpeg -loglevel ${loglevel} \
+		-video_size ${size} \
+		-f ${method} \
 		-i :0.0+1920,0 \
-		-hwaccel $hwaccel \
-		-hwaccel_output_format $hwaccel \
-		-f $audio \
-		-i $sink \
-		-preset $preset \
-		-profile:v $profile \
-		-tune $tune \
-		-rc-lookahead $lookahead \
-		-bf $bframes \
-		-rc $rc \
-		-cq $cq \
-		-b:v $bitrate \
-		-maxrate $maxrate \
-		-bufsize $buffer \
-		-c:v $video \
-		$name.$ext
+		-hwaccel ${hwaccel} \
+		-hwaccel_output_format ${hwaccel} \
+		-f ${audio} \
+		-i ${sink} \
+		-preset ${preset} \
+		-profile:v ${profile} \
+		-tune ${tune} \
+		-rc-lookahead ${lookahead} \
+		-bf ${bframes} \
+		-rc ${rc} \
+		-cq ${cq} \
+		-b:v ${bitrate} \
+		-maxrate ${maxrate} \
+		-bufsize ${buffer} \
+		-c:v ${video} \
+		${name}.${ext}
 }
 
 function webcam() {
-	cd $directory
+	cd ${directory}
 	audio="alsa"
 	audio_device="default"
 	video="v4l2"
 	video_device="/dev/video0"
-	ffmpeg -loglevel $loglevel \
-		-f $audio \
+	ffmpeg -stats \
+		-loglevel ${loglevel} \
+		-f ${audio} \
 		-ac 2 \
-		-i $audio_device \
-		-f $video \
-		-i $video_device \
-		$name.$ext
+		-i ${audio_device} \
+		-f ${video} \
+		-i ${video_device} \
+		${name}.${ext}
 }
 
 #  ------
@@ -102,22 +103,22 @@ then
 else
 	printf "Choose option: (a) record audio, (r) record video, (w) webcam\n"
 	read key
-	case $key in
+	case ${key} in
 		a)
-			while [ -z $name_audio ]; do
+			while [ -z ${name_audio} ]; do
 				read -p "Name of the audio recording: " name_audio
 			done
-			while [ -z $ext_audio ]; do
+			while [ -z ${ext_audio} ]; do
 				read -p "Extension of the audio recording: " ext_audio
 			done
 			state="$(pacmd list-sink-inputs | grep state | awk '{print $2}')"
-			if [[ -z $state ]]; then
+			if [[ -z ${state} ]]; then
 				state="IDLE"
 			fi
-			while [[ $state != "RUNNING" ]]; do
+			while [[ ${state} != "RUNNING" ]]; do
 				sleep .1
 				state="$(pacmd list-sink-inputs | grep state | awk '{print $2}')"
-				if [[ -z $state ]]; then
+				if [[ -z ${state} ]]; then
 					state="IDLE"
 				fi
 			done
