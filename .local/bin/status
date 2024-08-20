@@ -6,8 +6,9 @@
 # Delimiter
 delimiter="----------------------------------------------------------------"
 
-# Initial total size
-total=0
+#  ------------------
+# | Dependency checks |
+#  ------------------
 
 # Check if bc is installed
 bc -v 2>/dev/null 1>&2
@@ -39,7 +40,7 @@ fi
 
 function formatTime {
 	# Format time to <xx>h <xx>m <xx.xxx>s
-	time=${1}
+	time="${1}"
 	seconds=${time%%.*}
 	if [[ -z ${seconds} ]]; then seconds=0; fi
 	miliseconds=${time##*.}
@@ -71,7 +72,7 @@ function showProgress {
 	interval=$(echo "$(date +%s.%2N)-${timer}" | bc -l)
 
 	# Get destination file size
-	dst_size=$(du -b ${target_dir}${src_file} | tail -1 | xargs echo | cut -d " " -f 1)
+	dst_size=$(du -b ${target}${src_file##*/} | tail -1 | xargs echo | cut -d " " -f 1)
 
 	# Pretty print destination size
 	dst_size_pretty=$(prettyPrint "${dst_size}")
@@ -118,12 +119,19 @@ function showProgress {
 		old_size="${dst_size}"
 
 		# Pretty print current speed
-		if [[ -z ${current_speed} ]]; then current_speed=${avg_speed}; fi
 		current_speed=$(prettyPrint "${current_speed}")
+	fi
+
+	# If current speed is empty, then current speed = average speed
+	if [[ -z ${current_speed} ]]; then
+		current_speed=${avg_speed}
 	fi
 
 	# Print progress (<copied size/total size> <completion percentage>%)
 	printf "| [+] Progress: ${dst_size_pretty}/${src_size_pretty} Completed: %.2f%% Duration: ${duration_pretty} Average speed: ${avg_speed}/s Current speed: ${current_speed}/s Estimated time: ${estimated}     " ${progress}
+
+	# Unset variables
+	unset current_speed
 }
 
 function prettyPrint {
@@ -141,39 +149,161 @@ function prettyPrint {
 	fi
 }
 
+#  ----------------------
+# | Initialize variables |
+#  ----------------------
+
+# Initial total size
+total=0
+
+# Count files
+count=0
+
+# Count errors for getopts
+c=0
+
 # Initialize variable for total size
 total_size=0
 
 # Initialize variable for total duration
 total_duration=0
 
-# Get command line arguments and put them to an array
-read -d '' -r -a files <<< "${@}"
+# Set up getopts
+# c - command (required)
+# p - parameters (optional)
+# f - files to copy (required)
+# t - target directory (required)
 
-# Count command line arguments provided
-length=$(("${#files[@]}"-1))
+# Printing messages
+printf "%s\n" ${delimiter}
+printf "| [+] Selected parameters\n"
+printf "%s\n" ${delimiter}
 
-# Last command line argument - target directory for copying files
-target_dir="${files[${length}]}"
+# Opstring
+OPTSTRING=":c:p:f:t:"
+
+while getopts ${OPTSTRING} opt; do
+	case ${opt} in
+		c)
+			cmd=${OPTARG}
+			printf "| [+] Command ${cmd} was selected\n"
+			;;
+		p)
+			parameters+=(${OPTARG})
+			printf "| [+] Parameters ${parameters} were selected\n"
+			;;
+		f)
+			files+=(${OPTARG})
+			printf "| [+] File ${files[$((${#files[@]} - 1))]} was selected\n"
+			;;
+		t)
+			target=${OPTARG}
+			printf "| [+] Target directory ${target} was selected\n"
+			;;
+		:)
+			printf "| [!] Option -${OPTARG} requires an argument\n"
+			exit 1
+			;;
+		?)
+			printf "| [!] Invalid option: -${OPTARG}\n"
+			exit 1
+			;;
+	esac
+done
+
+# Print delimiter
+printf "%s\n" ${delimiter}
+
+# Available commands
+commands=("cp", "mv", "rm")
+
+# Errors
+printf "%s\n" ${delimiter}
+printf "| [+] Errors\n"
+printf "%s\n" ${delimiter}
+
+# Check if mandatory options were selected
+if [[ -z ${cmd} ]]; then
+	printf "| [!] No command was selected\n"
+	c=1
+fi
+
+if ! [[ ${commands[@]} =~ ${cmd} ]]; then
+	printf "| [!] Command ${cmd} not supported (Choose one from: cp, mv or rm)\n"
+	c=1
+fi
+
+if [[ -z ${files[@]} ]]; then
+	printf "| [!] No files specified\n"
+	c=1
+fi
+
+if [[ -z ${target} ]]; then
+	printf "| [!] No target specified\n"
+	c=1
+fi
+
+# Print delimiter
+printf "%s\n" ${delimiter}
+
+if [[ ${c} == 1 ]]; then
+	printf "%s\n" ${delimiter}
+	printf "| [!] One or more errors found. Quitting...\n"
+	printf "%s\n" ${delimiter}
+	exit 1
+else
+	printf "%s\n" ${delimiter}
+	printf "| [+] No errors found\n"
+	printf "%s\n" ${delimiter}
+fi
 
 # If target directory does not exist - create it
-if ! [[ -d ${target_dir} ]]; then
-	mkdir -p ${target_dir}
+if ! [[ -d ${target} ]]; then
+	mkdir -p ${target}
     printf "%s\n" "${delimiter}"
-	printf "| [+] Directory ${target_dir} created\n"
+	printf "| [+] Directory ${target} created\n"
     printf "%s\n" "${delimiter}"
 fi
 
-for (( i=0; i<${length}; i++ )); do
-	# Get source file
-	src_file="${files[${i}]}"
-
-	# Append forward slash to a source directory name, if doesn't exist
-	if [[ -d ${src_file} ]]; then
-		if [[ ${src_file:$((${#src_file}-1)):1} != "/" ]]; then
-			src_file+="/"
-		fi
+# Append forward slash to a target directory name, if doesn't exist
+if [[ -d ${target} ]]; then
+	if [[ ${target:$((${#target}-1)):1} != "/" ]]; then
+		target+="/"
 	fi
+fi
+
+# Add cmd
+full_command+="${cmd} "
+
+for x in ${parameters[@]}; do
+	full_command+="-${x} "
+done
+
+for src_file in ${files[@]}; do
+	# Add file to count
+	((++count))
+
+	# Get original command without files
+	full_command_org=${full_command}
+
+	# Append file to command
+	full_command+="${src_file} "
+
+	# Remove last char from file
+	if [[ ${src_file:$((${#src_file}-1)):1} == "/" ]]; then
+		src_file=$(echo ${src_file} | sed 's/.$//')
+	fi
+
+	# Append target to command
+	full_command+="${target}"
+
+	# Append target file
+	full_command+="${src_file##*/}"
+
+	# Print info
+	printf "%s\n" ${delimiter}
+	printf "| [+] Full command: ${full_command}\n"
+	printf "%s\n" ${delimiter}
 
 	# Get source file size
 	src_size=$(du -b "${src_file}" | tail -1 | xargs echo | cut -d " " -f 1)
@@ -186,7 +316,7 @@ for (( i=0; i<${length}; i++ )); do
 	timer="${start}"
 
 	# Start cp process and background it
-	cp -nr "${src_file}" "${target_dir}" &
+	${full_command} &
 
 	# Get PID of backgrounded process
 	pid="${!}"
@@ -196,7 +326,7 @@ for (( i=0; i<${length}; i++ )); do
 
 	# Print info about copied files
     printf "%s\n" "${delimiter}"
-	printf "| [+] Copying ${src_file} to ${target_dir}${src_file}\n"
+	printf "| [+] Copying ${src_file} to ${target}${src_file##*/}\n"
 
 	# Show progress while cp is running in the background
 	while kill -0 ${pid} 2> /dev/null; do
@@ -220,9 +350,12 @@ for (( i=0; i<${length}; i++ )); do
 
 	# Disable the trap on a normal exit
 	trap - EXIT
+
+	# Restore original command
+	full_command=${full_command_org}
 done
 
 # Print exit message
 printf "%s\n" "${delimiter}"
-printf "| [+] cp done. Total size: ${total_size_pretty}, total time: ${total_duration_pretty}\n"
+printf "| [+] ${cmd} done. ${count} files, total size: ${total_size_pretty}, total time: ${total_duration_pretty}\n"
 printf "%s\n" "${delimiter}"
