@@ -53,11 +53,11 @@ printf "\n%s\n" "${delimiter}"
 cd ${path}
 printf "[+] Changed directory to ${path}\n"
 
-# Check if python 3.11 is installed, if not - install it
-python3.11 --version 2>/dev/null 1>&2
+# Check if python 3.10 is installed, if not - install it
+python3.10 --version 2>/dev/null 1>&2
 if [[ ${?} != 0 ]]; then
 	printf "\n%s\n" "${delimiter}"
-	pkg=python311
+	pkg=python310
 	printf "[+] Cloning ${pkg} to ${pkg}/"
 	git clone https://aur.archlinux.org/${pkg}.git
 	cd ${pkg}/
@@ -74,7 +74,7 @@ fi
 if ! [ -d ${path}/bin ]; then
 	printf "\n%s\n" "${delimiter}"
 	printf "[+] Creating virtual environment\n"
-	python3.11 -m venv .
+	python3.10 -m venv .
 	printf "\n%s\n" "${delimiter}"
 	printf "[+] Virtual environment created\n"
 fi
