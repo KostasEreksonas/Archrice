@@ -1,0 +1,150 @@
+#!/bin/sh
+
+# Delimiter
+delimiter="----------------------------------------------------------------"
+
+#  ------------
+# | Parameters |
+#  ------------
+loglevel="error"
+name="$(date +'%Y-%m-%d_%H-%M-%S')"
+ext="mkv"
+directory="${HOME}/Videos/OBS/"
+size="1920x1080"
+method="x11grab"
+crf="17"
+hwaccel="cuda"
+video="h264_nvenc"
+audio="pulse"
+sink="$(pacmd list-sources | grep -PB 1 "analog.*monitor" | head -n 1 | sed 's/.* //g')"
+preset="slow"
+bitrate="120M"
+maxrate="120M"
+buffer="240M"
+profile="high"
+tune="hq"
+rc="vbr"
+lookahead="8"
+bframes="4"
+cq="19"
+
+# Change to save directory
+cd ${directory}
+
+function cleanup {
+	# Clean up files after recording
+	exec 3>&-
+	rm /tmp/recording_data
+	printf "\n%s" ${delimiter}
+}
+
+function encode {
+	# Encode recorded file
+	# Input file name
+	input="${name}.${ext}"
+	output="${name}_conv.${ext}"
+
+	# Open file descriptor 3 and point to temporary file
+	exec 3<> /tmp/encoding_data
+
+	# Start ffmpeg encoding process and move it to background, save encoding data to temporary file
+    nohup 1>/dev/null ffmpeg -stats -loglevel "error" -i "${input}" -c:a "copy" -c:v libx265 -x265-params log-level=none -preset "medium" -crf "18" ${output} 2>&3 &
+
+    # Get pid of the backgrounded ffmpeg process
+    pid=${!}
+
+    # If the script is killed, kill ffmpeg process also
+    trap "kill ${pid} 2> /dev/null" EXIT
+
+    # Print info
+    printf "\n%s\n" "${delimiter}"
+    printf "| [+] Encoding ${input}"
+	printf "\n%s\n" "${delimiter}"
+
+    # While ffmpeg encoding process is running, rewrite terminal output with latest encoding data every half a second
+    while kill -0 ${pid} 2> /dev/null; do
+        line=$(sed 's/\r/\n/g' /tmp/encoding_data | tail -1)
+        text=$(echo ${line} | awk '{print "| [+] " $0}')
+        printf "${text}\r"
+        sleep .5
+    done
+
+    # Print delimiter
+    printf "\n%s" "${delimiter}"
+
+    # Disable the trap on a normal exit.
+    trap - EXIT
+
+	# Close FD3
+	exec 3>&-
+
+	# Remove temporary file
+	rm /tmp/encoding_data
+
+	# Replace encoded file with original one
+	mv "${output}" "${input}"
+}
+
+function exitMsg {
+    # Print info
+    printf "\n%s\n" "${delimiter}"
+    printf "| [+] Encoding done"
+	printf "\n%s" "${delimiter}"
+}
+
+function record {
+    # Create file descriptor 3 and point it to temporary file
+    exec 3<> /tmp/recording_data
+
+    # Start ffmpeg recording process and background it
+    nohup 1>/dev/null ffmpeg -stats \
+                -loglevel ${loglevel} \
+                -video_size ${size} \
+                -f ${method} \
+                -i :0.0+1920,0 \
+                -hwaccel ${hwaccel} \
+                -hwaccel_output_format ${hwaccel} \
+                -f ${audio} \
+                -i ${sink} \
+                -preset ${preset} \
+                -profile:v ${profile} \
+                -tune ${tune} \
+                -rc-lookahead ${lookahead} \
+                -bf ${bframes} \
+                -rc ${rc} \
+                -cq ${cq} \
+                -b:v ${bitrate} \
+                -maxrate ${maxrate} \
+                -bufsize ${buffer} \
+                -c:v ${video} \
+                ${name}.${ext} 2>&3 &
+
+    # Get pid of a backgrounded process
+    pid=${!}
+
+    # Kill recording process if the script is killed
+    trap "kill ${pid} 2> /dev/null" EXIT
+
+	# Get pid of a backgrounded process
+    pid=${!}
+
+    # Kill recording process if the script is killed
+    trap "kill ${pid} 2> /dev/null" EXIT
+
+    # Print info
+    printf "%s\n" "${delimiter}"
+	printf "| [+] Recording to ${name}.${ext}\n"
+    printf "%s\n" "${delimiter}"
+
+	trap "cleanup; encode; exitMsg" EXIT
+
+	# While ffmpeg encoding process is running, rewrite terminal output with latest encoding data every half a second
+    while kill -0 ${pid} 2> /dev/null; do
+        line=$(sed 's/\r/\n/g' /tmp/recording_data | tail -1)
+        text=$(echo ${line} | awk '{print "| [+] " $0}')
+        printf "${text}\r"
+        sleep .5
+    done
+}
+
+record
