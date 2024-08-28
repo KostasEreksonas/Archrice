@@ -3,16 +3,16 @@
 # Download additional models for Stable Diffusion
 
 # Add a CivitAI token
-token=$1
+token=${1}
 
 # Pretty print
 delimiter="################################################################"
 
 function downloadModel {
 	# Downloads Stable Diffusion models to a specified location
-	dir=$1 # Current directory
-	folder=$2 # Download folder for models
-	token=$3 # CivitAI token
+	dir=${1} # Current directory
+	folder=${2} # Download folder for models
+	token=${3} # CivitAI token
 	shift 3 # Delete first 3 values from function's input array
 	versionID=$@ # Array of model version ID's to download
 
@@ -127,7 +127,7 @@ downloadModel ${PWD} "models/Lora/" ${token} ${models[@]}
 printf "\n%s\n" "${delimiter}"
 printf "[+] Downloading Checkpoint models"
 printf "\n%s\n" "${delimiter}"
-models=(511677 429454 361593 627807 495273)
+models=(429454 361593 627807 495273 720342)
 downloadModel ${PWD} "models/Stable-diffusion/" ${token} ${models[@]}
 
 # Download additional Hires upscalers
