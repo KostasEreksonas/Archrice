@@ -1,0 +1,815 @@
+#!/bin/sh
+
+# Benchmark ffmpeg performance
+
+# Delimiter
+delimiter="------------------------------------------------------------------------------------------------------------"
+
+function getInfo {
+    # Get system info
+    os=$(grep -w ID /etc/os-release | cut -d "=" -f 2)
+    cpu=$(grep "model name" /proc/cpuinfo | head -1 | cut -d " " -f 5)
+    cores=$(grep "cpu cores" /proc/cpuinfo | head -1 | cut -d ":" -f 2 | tr -d " ")
+    threads=$(grep processor /proc/cpuinfo | wc -l)
+    min_freq=$(echo "$(lscpu | grep "CPU min" | cut -d ":" -f 2 | cut -d "." -f 1 | tr -d " ")/1000" | bc -l 2>/dev/null)
+    max_freq=$(echo "$(lscpu | grep "CPU max" | cut -d ":" -f 2 | cut -d "." -f 1 | tr -d " ")/1000" | bc -l 2>/dev/null)
+    memory=$(echo "$(grep MemTotal /proc/meminfo | cut -d " " -f 8)/1024/1024" | bc -l 2>/dev/null)
+    uptime=$(formatTime $(cat /proc/uptime | cut -d " " -f 1))
+    gpus=$(lspci | grep VGA | cut -d ":" -f 3 | awk '{$1=$1;print}')
+    IFS=$'\n' read -d '' -r -a gpus <<<"$gpus" # Read found GPU's into an array
+
+	# Print system info to screen
+    printf "%s\n" "${delimiter}"
+    printf "| [+] System info\n"
+    printf "%s\n" "${delimiter}"
+    printf "| [+] OS: ${os}\n"
+    printf "| [+] CPU: ${cpu}\n"
+    printf "| [+] Cores: ${cores}\n"
+    printf "| [+] Threads: ${threads}\n"
+    printf "| [+] Min frequency: %0.2f GHz\n" "${min_freq:-NaN}"
+	printf "| [+] Max frequency: %0.2f GHz\n" "${max_freq:-NaN}"
+    printf "| [+] Memory: %.2f GB\n" "${memory:-NaN}"
+    printf "| [+] Uptime: ${uptime}\n"
+    for (( i=0; i<${#gpus[@]}; i++ )); do
+        printf "| [+] GPU: ${gpus[${i}]}\n"
+    done
+    printf "%s\n" "${delimiter}"
+
+	# Print system info to file
+    printf "%s\n" "${delimiter}" >> "${result_file}"
+    printf "| [+] System info\n" >> "${result_file}"
+    printf "%s\n" "${delimiter}" >> "${result_file}"
+    printf "| [+] OS: ${os}\n" >> "${result_file}"
+    printf "| [+] CPU: ${cpu}\n" >> "${result_file}"
+    printf "| [+] Cores: ${cores}\n" >> "${result_file}"
+    printf "| [+] Threads: ${threads}\n" >> "${result_file}"
+    printf "| [+] Min frequency: %0.2f GHz\n" "${min_freq:-NaN}" >> "${result_file}"
+	printf "| [+] Max frequency: %0.2f GHz\n" "${max_freq:-NaN}" >> "${result_file}"
+    printf "| [+] Memory: %.2f GB\n" "${memory:-NaN}" >> "${result_file}"
+    printf "| [+] Uptime: ${uptime}\n" >> "${result_file}"
+    for (( i=0; i<${#gpus[@]}; i++ )); do
+        printf "| [+] GPU: ${gpus[${i}]}\n" >> "${result_file}"
+    done
+    printf "%s\n" "${delimiter}" >> "${result_file}"
+}
+
+function formatTime {
+    # Format time to <xx>h <xx>m <xx.xxx>s
+    time="${1}"
+    seconds="${time%%.*}"
+    if [[ -z "${seconds}" ]]; then seconds=0; fi # Seconds = 0 if variable is empty
+    miliseconds="${time##*.}"
+    if [[ -z "${miliseconds}" ]]; then miliseconds=0; fi # Miliseconds = 0 if variable is empty
+    if [[ "${seconds}" -lt 60 ]]; then
+        printf "${seconds}.${miliseconds} seconds\n"
+    elif [[ "${seconds}" -ge 60 && "${seconds}" -lt 3600 ]]; then
+        minutes=$(echo "${seconds}/60" | bc -l | cut -d "." -f 1)
+        if [[ -z "${minutes}" ]]; then minutes=0; fi # Minutes = 0 if variable is empty
+		seconds=$((${seconds}-60*${minutes}))
+        if [[ -z "${seconds}" ]]; then seconds=0; fi # Seconds = 0 if variable is empty
+		if [[ "${minutes}" == 1 ]]; then
+			printf "${minutes} minute ${seconds}.${miliseconds} seconds\n"
+		else
+			printf "${minutes} minutes ${seconds}.${miliseconds} seconds\n"
+		fi
+	elif [[ "${seconds}" -ge 3600 ]]; then
+        hours=$(echo "${seconds}/3600" | bc -l | cut -d "." -f 1)
+        if [[ -z "${hours}" ]]; then hours=0; fi # Hours = 0 if variable is empty
+        seconds=$((${seconds}-3600*${hours}))
+        minutes=$(echo "${seconds}/60" | bc -l | cut -d "." -f 1)
+        if [[ -z "${minutes}" ]]; then minutes=0; fi # Minutes = 0 if variable is empty
+        seconds=$((${seconds}-60*${minutes}))
+        if [[ -z "${seconds}" ]]; then seconds=0; fi # Seconds = 0 if variable is empty
+		if [[ "${hours}" == 1 ]] && [[ "${minutes}" == 1 ]]; then
+			printf "${hours} hour ${minutes} minute ${seconds}.${miliseconds} seconds\n"
+		elif [[ "${hours}" == 1 ]] && [[ "${minutes}" > 1 ]]; then
+			printf "${hours} hour ${minutes} minutes ${seconds}.${miliseconds} seconds\n"
+		elif [[ "${hours}" > 1 ]] && [[ "${minutes}" == 1 ]]; then
+			printf "${hours} hours ${minutes} minute ${seconds}.${miliseconds} seconds\n"
+		else
+			printf "${hours} hours ${minutes} minute ${seconds}.${miliseconds} seconds\n"
+		fi
+	fi
+}
+
+function selectBenchmark {
+    # Select benchmark video to encode
+    PS3="[+] Choose resolution: "
+    resolutions=("320x180" "640x360" "480p" "720p" "1080p" "2160p")
+    select resolution in ${resolutions[@]}; do
+        case ${resolution} in
+            "320x180")
+				res="${resolution}"
+				break
+                ;;
+            "640x360")
+				res="${resolution}"
+                break
+                ;;
+            "480p")
+				res="${resolution}"
+                break
+                ;;
+            "720p")
+				res="${resolution}"
+                break
+                ;;
+			"1080p")
+				res="${resolution}"
+                break
+                ;;
+            "2160p")
+				res="${resolution}"
+                break
+                ;;
+		esac
+    done
+
+	# Return resolution
+	printf "${res}\n"
+}
+
+function defaultDir {
+	# Create default directories for benchmark
+	if ! [[ -d "${directory}" ]]; then
+		mkdir -p "${directory}"
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Directory ${directory} created\n"
+		printf "%s\n" "${delimiter}"
+	else
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Directory ${directory} exists\n"
+		printf "%s\n" "${delimiter}"
+	fi
+
+	if ! [[ -d "${directory}/data/" ]]; then
+		mkdir -p "${directory}/data/"
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Directory ${directory}/data/ created\n"
+		printf "%s\n" "${delimiter}"
+	else
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Directory ${directory}/data/ exists\n"
+		printf "%s\n" "${delimiter}"
+	fi
+
+	# Change to default directory
+	cd "${directory}"
+}
+
+function download {
+	# Download video to encode
+	# Change to data directory
+	cd "data/"
+
+	# Check if file already exists
+	if [[ "${file##*.}" == "zip" ]]; then
+		if [[ -f "${file%.*}" ]]; then
+			c=1
+		fi
+	elif [[ -f "${file}" ]]; then
+		c=1
+	fi
+
+	# Download file if it does not exist
+	if [[ "${c}" == 1 ]]; then
+		printf "%s\n" "${delimiter}"
+		printf "| [+] ${file} exists\n"
+		printf "%s\n" "${delimiter}"
+	else
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Downloading ${file}\n"
+		printf "%s\n" "${delimiter}"
+		curl -O "${url}"
+		printf "%s\n" "${delimiter}"
+	fi
+
+	# Change to original directory
+	cd "../"
+}
+
+function unpack {
+	# Unpack a zip file
+	cd "data/"
+
+	# Get file list
+	readarray -d '' files < <(find . -maxdepth 1 -type f -exec basename {} \;)
+
+	# Unpack file
+	if [[ "${files[@]}" =~ "zip" ]]; then
+		7z x "${file}" >/dev/null && rm "${file}"
+		file=$(find . -maxdepth 1 -type f -name "bbb_sunflower_2160p_60fps_normal.mp4" -exec basename {} \;)
+	fi
+
+	# Return filename
+	if [[ "${file##*.}" == "zip" ]]; then
+		printf "${file%.*}\n"
+	else
+		printf "${file}\n"
+	fi
+
+	cd "../"
+}
+
+function cpuPreset {
+	# Select preset for CPU encode
+	PS3="[+] Choose preset: "
+    presets=("ultrafast" "superfast" "veryfast" "faster" "fast" "medium" "slow" "slower" "veryslow" "placebo")
+    select preset in "${presets[@]}"; do
+        case "${preset}" in
+			"ultrafast")
+                preset="${preset}"
+                break
+                ;;
+            "superfast")
+                preset="${preset}"
+                break
+                ;;
+            "veryfast")
+                preset="${preset}"
+                break
+                ;;
+            "faster")
+                preset="${preset}"
+                break
+                ;;
+            "fast")
+                preset="${preset}"
+                break
+                ;;
+            "medium")
+                preset="${preset}"
+                break
+                ;;
+            "slow")
+                preset="${preset}"
+                break
+                ;;
+            "slower")
+                preset="${preset}"
+                break
+                ;;
+            "veryslow")
+                preset="${preset}"
+                break
+                ;;
+			"placebo")
+                preset="${preset}"
+                break
+                ;;
+		esac
+	done
+
+	# Return preset
+	printf "${preset}\n"
+}
+
+function cpuEncoder {
+	# Choose encoder for cpu
+	PS3="[+] Choose encoder: "
+    encoders=("libx264" "libx265")
+    select encoder in "${encoders[@]}"; do
+        case "${encoder}" in
+            "libx264")
+                enc="${encoder}"
+                break
+                ;;
+            "libx265")
+                enc="${encoder}"
+                break
+                ;;
+        esac
+	done
+
+	# Return encoder
+	printf "${encoder}\n"
+}
+
+function setCRF {
+	# Set crf value for CPU encoding
+	local enc="${1}"
+
+	# Set max crf value based on encoder
+    if [ "${enc}" == "libx264" ]; then
+        crf_max=53
+		crf_default=17
+    elif [ "${enc}" = "libx265" ]; then
+        crf_max=51
+		crf_default=18
+    fi
+
+    # Set crf parameter value
+    while ! [[ "${crf}" =~ [0-9] && "${crf}" -ge 0 && "${crf}" -le "${crf_max}" ]]; do
+		read -p "[+] Choose CRF value (0-"${crf_max}", defult: "${crf_default}"): " crf
+		if [ -z "${crf}" ]; then crf="${crf:-"${crf_default}"}"; fi
+	done
+
+	# Return crf value
+	printf "${crf}\n"
+}
+
+function cpuBench {
+	# Benchmark CPU
+
+	cd "data/"
+
+	# Get encoder
+	local encoder="${1}"
+
+	# Get preset
+	local preset="${2}"
+
+	# Get crf
+	local crf="${3}"
+
+	# Open file descriptor 3 and point it to temporary file
+	exec 3<> /tmp/bench_data
+
+	# Final command
+	nohup 1>/dev/null ffmpeg -hide_banner \
+		-stats \
+		-loglevel "error" \
+		-i "${file}" \
+		-vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" \
+		-c:a "copy" \
+		-c:v "${encoder}" \
+		-preset "${preset}" \
+		-crf "${crf}" \
+		-f null - 2>&3 &
+
+	# Get pid of the backgrounded ffmpeg process
+    pid="${!}"
+
+    # If the script is killed, kill ffmpeg process also
+    trap "kill ${pid} 2> /dev/null" EXIT
+
+    # While ffmpeg encoding process is running, rewrite terminal output with latest encoding data every half a second
+    while kill -0 "${pid}" 2> /dev/null; do
+		# Get last line of tmp file
+        line=$(sed 's/\r/\n/g' /tmp/bench_data | tail -1)
+
+		# Update text
+        text=$(echo "${line}" | awk '{print "| [+] " $0}')
+
+		# Rewrite text
+		printf "${text}\r"
+
+		# Re-check condition after .5 seconds
+		sleep .5
+    done
+
+	# Get last line of tmp file
+    line=$(sed 's/\r/\n/g' /tmp/bench_data | tail -1)
+
+	# Update text
+    text=$(echo "${line}" | awk '{print "| [+] " $0}')
+
+	# Print newline at the end of an encode
+	printf "${text}\n"
+
+    # Disable the trap on a normal exit.
+    trap - EXIT
+
+	# Close FD3
+	exec 3>&-
+
+	cd "../"
+}
+
+function gpuPreset {
+	# Select preset for GPU encode
+	PS3="[+] Select preset: "
+	presets=("p1" "p2" "p3" "p4" "p5" "p6" "p7")
+	select preset in "${presets[@]}"; do
+		case "${preset}" in
+			"p1")
+				preset="${preset}"
+				break
+				;;
+			"p2")
+				preset="${preset}"
+				break
+				;;
+			"p3")
+				preset="${preset}"
+				break
+				;;
+			"p4")
+				preset="${preset}"
+				break
+				;;
+			"p5")
+				preset="${preset}"
+				break
+				;;
+			"p6")
+				preset="${preset}"
+				break
+				;;
+			"p7")
+				preset="${preset}"
+				break
+				;;
+		esac
+	done
+
+	# Return preset
+	printf "${preset}\n"
+}
+
+function gpuEncoder {
+	# Set encoding for GPU benchmark
+	PS3="[+] Select encoding: "
+	encoders=("cuda" "h264_nvenc" "hevc_nvenc")
+	select encoder in "${encoders[@]}"; do
+		case ${encoder} in
+			"cuda")
+				printf "${encoder}\n"
+				break
+				;;
+			"h264_nvenc")
+				printf "${encoder}\n"
+				break
+				;;
+			"hevc_nvenc")
+				printf "${encoder}\n"
+				break
+				;;
+		esac
+	done
+}
+
+function gpuTune {
+	# Get tune level for gpu benchmark
+	PS3="[+] Select tune: "
+	tunes=("hq" "ll" "ull" "lossless")
+	select tune in "${tunes[@]}"; do
+		case "${tune}" in
+			"hq")
+				tune="${tune}"
+				break
+				;;
+			"ll")
+				tune="${tune}"
+				break
+				;;
+			"ull")
+				tune="${tune}"
+				break
+				;;
+			"lossless")
+				tune="${tune}"
+				break
+				;;
+		esac
+	done
+
+	# Return tune
+	printf "${tune}\n"
+}
+
+function gpuLevel {
+	# Set encoding level restriction
+	PS3="[+] Set encoding level: "
+	levels=("3.1" "4.0" "4.1" "5.0" "5.1" "5.2")
+	select level in "${levels[@]}"; do
+		case "${level}" in
+			"3.1")
+				level="${level}"
+				break
+				;;
+			"4.0")
+				level="${level}"
+				break
+				;;
+			"4.1")
+				level="${level}"
+				break
+				;;
+			"5.0")
+				level="${level}"
+				break
+				;;
+			"5.1")
+				level="${level}"
+				break
+				;;
+			"5.2")
+				level="${level}"
+				break
+				;;
+		esac
+	done
+
+	# Return encoding level
+	printf "${level}\n"
+}
+
+function gpuBench {
+	# Benchmark GPU
+	cd "data/"
+
+	# Get encoder
+	encoder="${1}"
+
+	# Get preset
+	preset="${2}"
+
+	# Get tune
+	tune="${3}"
+
+	# Get level
+	level="${4}"
+
+	# Open file descriptor 3 and point it to temporary file
+	exec 3<> /tmp/bench_data
+
+	# Final command
+	if [[ "${encoder}" != "cuda" ]]; then
+		nohup 1>/dev/null ffmpeg -hide_banner \
+			-stats \
+			-loglevel "error" \
+			-hwaccel "cuda" \
+			-hwaccel_output_format "cuda" \
+			-i "${file}" \
+			-vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" \
+			-c:a "copy" \
+			-c:v "${encoder}" \
+			-preset "${preset}" \
+			-tune "${tune}" \
+			-level "${level}" \
+			-2pass true \
+			-f null - 2>&3 &
+	else
+		nohup 1>/dev/null ffmpeg -hide_banner \
+			-stats \
+			-loglevel "error" \
+			-hwaccel "cuda" \
+			-hwaccel_output_format "cuda" \
+			-i "${file}" \
+			-c:a "copy" \
+			-preset "${preset}" \
+			-tune "${tune}" \
+			-level "${level}" \
+			-2pass true \
+			-f null - 2>&3 &
+	fi
+
+	# Get pid of the backgrounded ffmpeg process
+    pid="${!}"
+
+    # If the script is killed, kill ffmpeg process also
+    trap "kill ${pid} 2> /dev/null" EXIT
+
+    # While ffmpeg encoding process is running, rewrite terminal output with latest encoding data every half a second
+    while kill -0 "${pid}" 2> /dev/null; do
+		# Get last line of tmp file
+        line=$(sed 's/\r/\n/g' /tmp/bench_data | tail -1)
+
+		# Update text
+        text=$(echo "${line}" | awk '{print "| [+] " $0}')
+
+		# Rewrite text
+		printf "${text}\r"
+
+		# Re-check condition after .5 seconds
+		sleep .5
+    done
+
+	# Get last line of tmp file
+    line=$(sed 's/\r/\n/g' /tmp/bench_data | tail -1)
+
+	# Update text
+    text=$(echo "${line}" | awk '{print "| [+] " $0}')
+
+	# Print newline at the end of an encode
+	printf "${text}\n"
+
+    # Disable the trap on a normal exit.
+    trap - EXIT
+
+	# Close FD3
+	exec 3>&-
+
+	cd "../"
+}
+
+function benchmark {
+	# Benchmark ffmpeg
+	PS3="[+] Select benchmark: "
+	benchmarks=("CPU" "GPU")
+	select benchmark in "${benchmarks[@]}"; do
+		case "${benchmark}" in
+			"CPU")
+				# Set benchmark
+				bench="${benchmark}"
+				printf "%s\n" "${delimiter}"
+				printf "| [+] Selected benchmark: ${bench}\n"
+				printf "%s\n" "${delimiter}"
+
+				# Set encoder
+				encoder=$(cpuEncoder)
+				printf "%s\n" "${delimiter}"
+				printf "| [+] Selected encoder: ${encoder}\n"
+				printf "%s\n" "${delimiter}"
+
+				# Set preset
+				preset=$(cpuPreset)
+				printf "%s\n" "${delimiter}"
+				printf "| [+] Selected preset: ${preset}\n"
+				printf "%s\n" "${delimiter}"
+
+				# Set CRF value
+				crf=$(setCRF "${encoder}")
+				printf "%s\n" "${delimiter}"
+				printf "| [+] Selected CRF: ${crf}\n"
+				printf "%s\n" "${delimiter}"
+
+				# Write parameters to results file
+				printf "%s\n" "${delimiter}" >> "${result_file}"
+				printf "| [+] Encoder parameters\n" >> "${result_file}"
+				printf "%s\n" "${delimiter}" >> "${result_file}"
+				printf "| [+] Benchmark: ${bench}\n" >> "${result_file}"
+				printf "| [+] Encoder: ${encoder}\n" >> "${result_file}"
+				printf "| [+] Preset: ${preset}\n" >> "${result_file}"
+				printf "| [+] CRF: ${crf}\n" >> "${result_file}"
+				printf "%s\n" "${delimiter}" >> "${result_file}"
+
+				break
+				;;
+			"GPU")
+				# Set benchmark
+				bench="${benchmark}"
+				printf "%s\n" "${delimiter}"
+				printf "| [+] Selected benchmark: ${bench}\n"
+				printf "%s\n" "${delimiter}"
+
+				# Get encoder
+				encoder="$(gpuEncoder)"
+				printf "%s\n" "${delimiter}"
+				printf "| [+] Selected encoder: ${encoder}\n"
+				printf "%s\n" "${delimiter}"
+
+				# Get preset
+				preset="$(gpuPreset)"
+				printf "%s\n" "${delimiter}"
+				printf "| [+] Selected preset: ${preset}\n"
+				printf "%s\n" "${delimiter}"
+
+				# Get tune
+				tune="$(gpuTune)"
+				printf "%s\n" "${delimiter}"
+				printf "| [+] Selected tune: ${tune}\n"
+				printf "%s\n" "${delimiter}"
+
+				# Get level
+				level="$(gpuLevel)"
+				printf "%s\n" "${delimiter}"
+				printf "| [+] Selected level: ${level}\n"
+				printf "%s\n" "${delimiter}"
+
+				# Write parameters to results file
+				printf "%s\n" "${delimiter}" >> "${result_file}"
+				printf "| [+] Encoder parameters\n" >> "${result_file}"
+				printf "%s\n" "${delimiter}" >> "${result_file}"
+				printf "| [+] Benchmark: ${bench}\n" >> "${result_file}"
+				printf "| [+] Encoder: ${encoder}\n" >> "${result_file}"
+				printf "| [+] Preset: ${preset}\n" >> "${result_file}"
+				printf "| [+] Tune: ${tune}\n" >> "${result_file}"
+				printf "| [+] Level: ${level}\n" >> "${result_file}"
+				printf "%s\n" "${delimiter}" >> "${result_file}"
+
+				break
+				;;
+		esac
+	done
+
+	# Benchmark start message
+	printf "%s\n" "${delimiter}" >> "${result_file}"
+	printf "| [+] Starting benchmark\n" >> "${result_file}"
+	printf "%s\n" "${delimiter}" >> "${result_file}"
+
+	# Main loop
+	for (( i=0; i<${iterations}; i++ )); do
+		# Print iteration
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Iteration $((${i}+1))\n"
+		printf "%s\n" "${delimiter}"
+
+		# Benchmark
+		if [[ "${bench}" == "CPU" ]]; then
+			# Start benchmark
+			cpuBench "${encoder}" "${preset}" "${crf}"
+		elif [[ "${bench}" == "GPU" ]]; then
+			gpuBench "${encoder}" "${preset}" "${tune}" "${level}"
+		fi
+
+		# Time of current iteration
+		data=$(sed 's/\r/\n/g' /tmp/bench_data | tail -1)
+		frames=$(echo "${data}" | cut -d "=" -f 2 | cut -d " " -f 1)
+		if [[ -z "${frames}" ]]; then
+			frames=$(echo "${data}" | cut -d "=" -f 2 | cut -d " " -f 3)
+		fi
+		fps=$(echo "${data}" | cut -d "=" -f 3 | cut -d " " -f 1)
+		time=$(echo "${frames}/${fps}" | bc -l 2> /dev/null)
+		time=$(printf "%.3f" "${time}")
+
+		if [[ "${time}" == "0.000" ]]; then
+			time="$(echo "${data}" | cut -d " " -f 5 | tr -d "s")"
+		fi
+		if [[ "${fps}" == "encoded" ]]; then
+			fps="$(echo "${data}" | cut -d " " -f 6 | tr -d "(")"
+		fi
+
+		# Total time
+		total="$(echo "${total} + ${time}" | bc -l 2> /dev/null)"
+
+		# Average time
+		average="$(echo "${total} / (${i} + 1)" | bc -l 2> /dev/null)"
+		average="$(printf "%.3f" "${average}")"
+
+		# Remove temporary file
+		rm "/tmp/bench_data"
+
+		# Print time
+		printf "| [+] Iteration $((${i} + 1)) time: $(formatTime ${time}), total time: $(formatTime ${total}), average time: $(formatTime ${average}), fps: ${fps}\n"
+
+		# Print delimiter
+		printf "%s\n" "${delimiter}"
+
+		# Write iteration stats to results file
+		printf "| [+] Iteration $((${i} + 1)) time: $(formatTime ${time}), total time: $(formatTime ${total}), average time: $(formatTime ${average}), fps: ${fps}\n" >> "${result_file}"
+	done
+	printf "%s\n" "${delimiter}" >> "${result_file}"
+}
+
+#  ------
+# | Main |
+#  ------
+
+# Default directory
+directory="${HOME}/Documents/benchmark_ffmpeg"
+
+# Results file
+result_file="results.txt"
+
+# Create default dir
+defaultDir
+
+# Array of video files to benchmark
+declare -rA bench_files=(
+	["320x180"]="https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4"
+	["640x360"]="https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_640x360.m4v"
+	["480p"]="https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_h264.mov"
+	["720p"]="https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_720p_h264.mov"
+	["1080p"]="https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_1080p_h264.mov"
+	["2160p"]="https://download.blender.org/demo/movies/BBB/bbb_sunflower_2160p_60fps_normal.mp4.zip"
+)
+
+# Total duration
+total=0
+
+# Average duration
+average=0
+
+# Number of iterations
+iterations=5
+
+# Print start date for a benchmark
+printf "\n%s\n" ${delimiter} >> "${result_file}"
+printf "| [+] Benchmark started at $(date +%Y-%m-%d_%H-%M-%S)" >> "${result_file}"
+printf "\n%s\n" ${delimiter} >> "${result_file}"
+
+# Print iterations
+printf "%s\n" "${delimiter}" >> "${result_file}"
+printf "| [+] Iterations: ${iterations}" >> "${result_file}"
+printf "\n%s\n" "${delimiter}" >> "${result_file}"
+
+# Get URL for benchmark video
+res="$(selectBenchmark)"
+url="${bench_files[${res}]}"
+
+# Print resolution
+printf "%s\n" "${delimiter}" >> "${result_file}"
+printf "| [+] Resolution: ${res}" >> "${result_file}"
+printf "\n%s\n" "${delimiter}" >> "${result_file}"
+
+# Print system info
+getInfo
+
+# Get filename
+file="${url##*/}"
+
+# Download benchmark
+download
+
+# Unpack downloaded file if it is a zip archive
+file="$(unpack)"
+
+# Start benchmark
+benchmark
+
+# Print end date for a benchmark
+printf "%s\n" "${delimiter}" >> "${result_file}"
+printf "| [+] Benchmark ended at $(date +%Y-%m-%d_%H-%M-%S)\n" >> "${result_file}"
+printf "%s\n" "${delimiter}" >> "${result_file}"
