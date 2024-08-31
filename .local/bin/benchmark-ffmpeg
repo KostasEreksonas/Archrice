@@ -129,32 +129,42 @@ function selectBenchmark {
 	printf "${res}\n"
 }
 
+function checkPreviousRuns {
+	# Count previous runs of this benchmark
+	if ! [[ -f ${default_directory}/${result_file} ]]; then
+		printf "1\n"
+	else
+		count=$(grep "started at" ${default_directory}/${result_file} | wc -l)
+		printf "$((${count} + 1))\n"
+	fi
+}
+
 function defaultDir {
 	# Create default directories for benchmark
-	if ! [[ -d "${directory}" ]]; then
-		mkdir -p "${directory}"
+	if ! [[ -d "${default_directory}" ]]; then
+		mkdir -p "${default_directory}"
 		printf "%s\n" "${delimiter}"
-		printf "| [+] Directory ${directory} created\n"
+		printf "| [+] Directory ${default_directory} created\n"
 		printf "%s\n" "${delimiter}"
 	else
 		printf "%s\n" "${delimiter}"
-		printf "| [+] Directory ${directory} exists\n"
+		printf "| [+] Directory ${default_directory} exists\n"
 		printf "%s\n" "${delimiter}"
 	fi
 
-	if ! [[ -d "${directory}/data/" ]]; then
-		mkdir -p "${directory}/data/"
+	if ! [[ -d "${default_directory}/data/" ]]; then
+		mkdir -p "${default_directory}/data/"
 		printf "%s\n" "${delimiter}"
-		printf "| [+] Directory ${directory}/data/ created\n"
+		printf "| [+] Directory ${default_directory}/data/ created\n"
 		printf "%s\n" "${delimiter}"
 	else
 		printf "%s\n" "${delimiter}"
-		printf "| [+] Directory ${directory}/data/ exists\n"
+		printf "| [+] Directory ${default_directory}/data/ exists\n"
 		printf "%s\n" "${delimiter}"
 	fi
 
 	# Change to default directory
-	cd "${directory}"
+	cd "${default_directory}"
 }
 
 function download {
@@ -722,24 +732,41 @@ function benchmark {
 		fi
 
 		# Total time
-		total="$(echo "${total} + ${time}" | bc -l 2> /dev/null)"
+		total_time="$(echo "${total_time} + ${time}" | bc -l 2> /dev/null)"
 
 		# Average time
-		average="$(echo "${total} / (${i} + 1)" | bc -l 2> /dev/null)"
-		average="$(printf "%.3f" "${average}")"
+		average_time="$(echo "${total_time} / (${i} + 1)" | bc -l 2> /dev/null)"
+		average_time="$(printf "%.3f" "${average_time}")"
+
+		# Average fps
+		total_fps="$(echo "${total_fps} + ${fps}" | bc -l 2> /dev/null)"
+		average_fps="$(echo "${total_fps} / (${i} + 1)" | bc -l 2> /dev/null)"
+		average_fps="$(printf "%.3f" "${average_fps}")"
 
 		# Remove temporary file
 		rm "/tmp/bench_data"
 
 		# Print time
-		printf "| [+] Iteration $((${i} + 1)) time: $(formatTime ${time}), total time: $(formatTime ${total}), average time: $(formatTime ${average}), fps: ${fps}\n"
-
-		# Print delimiter
+		printf "| [+] Iteration $((${i} + 1)) time: $(formatTime ${time}), fps: ${fps}\n"
 		printf "%s\n" "${delimiter}"
 
 		# Write iteration stats to results file
-		printf "| [+] Iteration $((${i} + 1)) time: $(formatTime ${time}), total time: $(formatTime ${total}), average time: $(formatTime ${average}), fps: ${fps}\n" >> "${result_file}"
+		printf "| [+] Iteration $((${i} + 1)) time: $(formatTime ${time}), fps: ${fps}\n" >> "${result_file}"
+		printf "%s\n" "${delimiter}" >> "${result_file}"
 	done
+
+	# Print benchmark stats
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Total time: $(formatTime ${total_time})\n"
+	printf "| [+] Average iteration time: $(formatTime ${average_time})\n"
+	printf "| [+] Average iteration fps: ${average_fps} FPS\n"
+	printf "%s\n" "${delimiter}"
+
+	# Save benchmark stats to a file
+	printf "%s\n" "${delimiter}" >> "${result_file}"
+	printf "| [+] Total time: $(formatTime ${total_time})\n" >> "${result_file}"
+	printf "| [+] Average iteration time: $(formatTime ${average_time})\n" >> "${result_file}"
+	printf "| [+] Average iteration fps: ${average_fps} FPS\n" >> "${result_file}"
 	printf "%s\n" "${delimiter}" >> "${result_file}"
 }
 
@@ -748,7 +775,7 @@ function benchmark {
 #  ------
 
 # Default directory
-directory="${HOME}/Documents/benchmark_ffmpeg"
+default_directory="${HOME}/Documents/benchmark_ffmpeg"
 
 # Results file
 result_file="results.txt"
@@ -767,17 +794,26 @@ declare -rA bench_files=(
 )
 
 # Total duration
-total=0
+total_time=0
+
+# Total fps
+total_fps=0
 
 # Average duration
-average=0
+average_time=0
+
+# Average fps
+average_fps=0
 
 # Number of iterations
 iterations=5
 
 # Print start date for a benchmark
+printf "%s\n" "${delimiter}"
+printf "| [+] Benchmark $(checkPreviousRuns) started at $(date +%Y-%m-%d_%H-%M-%S)"
+printf "\n%s\n" "${delimiter}"
 printf "\n%s\n" ${delimiter} >> "${result_file}"
-printf "| [+] Benchmark started at $(date +%Y-%m-%d_%H-%M-%S)" >> "${result_file}"
+printf "| [+] Benchmark $(checkPreviousRuns) started at $(date +%Y-%m-%d_%H-%M-%S)" >> "${result_file}"
 printf "\n%s\n" ${delimiter} >> "${result_file}"
 
 # Print iterations
@@ -810,6 +846,9 @@ file="$(unpack)"
 benchmark
 
 # Print end date for a benchmark
+printf "%s\n" "${delimiter}"
+printf "| [+] Benchmark $(($(checkPreviousRuns) - 1)) ended at $(date +%Y-%m-%d_%H-%M-%S)\n"
+printf "%s\n" "${delimiter}"
 printf "%s\n" "${delimiter}" >> "${result_file}"
-printf "| [+] Benchmark ended at $(date +%Y-%m-%d_%H-%M-%S)\n" >> "${result_file}"
+printf "| [+] Benchmark $(($(checkPreviousRuns) - 1)) ended at $(date +%Y-%m-%d_%H-%M-%S)\n" >> "${result_file}"
 printf "%s\n" "${delimiter}" >> "${result_file}"
