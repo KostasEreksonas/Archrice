@@ -20,6 +20,14 @@ for dir in "${txt2img}"/*; do
 	# Give name to results file
 	results="$(echo "${dir}" | xargs basename)_params.txt"
 
+	# Delete results file if it already exists
+	for file in *; do
+		if [[ -f "${results}" ]]; then
+			rm "${results}"
+			break
+		fi
+	done
+
 	# Print results file
 	printf "%s\n" "${delimiter}"
 	printf "| [+] Results file: ${results}\n"
