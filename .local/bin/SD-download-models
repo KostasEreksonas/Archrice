@@ -5,7 +5,7 @@
 # Add a CivitAI token
 token="${1}"
 
-# Pretty print
+# Delimiter for pretty print
 delimiter="################################################################"
 
 function downloadModel {
@@ -33,7 +33,7 @@ function downloadModel {
 		# Get names of the files associated with the model
 		files="$(curl -s https://civitai.com/api/v1/models/${modelID} | jq ".modelVersions[]|select(.id==${id}).files[].name")"
 
-		# Get URLs for files of the model
+		# Get all URLs for files of the model
 		urls="$(curl -s https://civitai.com/api/v1/models/${modelID} | jq ".modelVersions[]|select(.id==${id}).files[].downloadUrl")"
 
 		# Create array of filenames
@@ -58,6 +58,7 @@ function downloadModel {
 				printf "[+] File "${name}" already exists\n"
 			else
 				printf "[+] Downloading ${name}\n"
+				# If model requires authorization to download, pass authorization token
 				if [[ $(curl -s "${url}") == "{\"error\":\"Unauthorized\",\"message\":\"The creator of this asset requires you to be logged in to download it\"}" ]]; then
 					curl -o "${name}" -L -H "Content-Type: application/json" -H "Authorization: Bearer ${token}" "${url}"
 				else
@@ -110,6 +111,13 @@ function downloadHuggingface {
 }
 
 # Download Embeddings
+# 82745 - CyberRealistic Negative.pt
+# 509253 - zPDXL2.safetensors, zPDXL2-neg.safetensors
+# 482268 - zPDXLrl.pt, zPDXLrl-neg.pt
+# 5637 - ng_deepnegative_v1_75t.pt
+# 220262 - epicPhoto.pt, epicPhoto-neg.pt
+# 95263 - epicNegative.pt
+# 95256 - epiCRealism.pt
 printf "\n%s\n" "${delimiter}"
 printf "[+] Downloading Embeddings"
 printf "\n%s\n" "${delimiter}"
@@ -117,6 +125,19 @@ embeddings=(82745 509253 482268 5637 220262 95263 95256)
 downloadModel "${PWD}" "embeddings/" "${token}" "${embeddings[@]}"
 
 # Download Lora models
+# 135867 - add-detail-xl.safetensors
+# 319697 - Android 18 - [Dragonball} - XL Version 1.safetensors
+# 116354 - chichi_dbzV2.safetensors, data.zip
+# 33381 - android_18_v110.safetensors
+# 509253 - zPDXL2.safetensors, zPDXL2-neg.safetensors
+# 482268 - zPDXLrl.pt, zPDXLrl-neg.pt
+# 165259 - ziprealism.safetensors
+# 165424 - ziprealism-neg.safetensors
+# 118945 - epiCRealismHelper.safetensors
+# 146600 - breastsizeslideroffset.safetensors
+# 62833 - add_detail.safetensors
+# 87153 - more_details.safetensors
+# 156286 - epiCRealLife.safetensors
 printf "\n%s\n" "${delimiter}"
 printf "[+] Downloading Lora models"
 printf "\n%s\n" "${delimiter}"
@@ -124,6 +145,11 @@ models=(135867 319697 116354 33381 509253 482268 165259 165424 118945 146600 628
 downloadModel "${PWD}" "models/Lora/" "${token}" "${models[@]}"
 
 # Download Checkpoints
+# 429454 - epicphotogasm_ultimateFidelity.safetensors
+# 361593 - realvisxlV50_v40LightningBakedvae.safetensors
+# 627807 - zonkeyRealism_v50.safetensors
+# 495273 - animerge_v50.safetensors, kl-f8-anime2_fp16.pt
+# 720342 - everclearPNYByZovya_v4.safetensors
 printf "\n%s\n" "${delimiter}"
 printf "[+] Downloading Checkpoint models"
 printf "\n%s\n" "${delimiter}"
@@ -131,6 +157,8 @@ models=(429454 361593 627807 495273 720342)
 downloadModel "${PWD}" "models/Stable-diffusion/" "${token}" "${models[@]}"
 
 # Download additional Hires upscalers
+# 125843 - 4xUltrasharp_4xUltrasharpV10.pt
+# 156841 - 4xNMKDSuperscale_4xNMKDSuperscale.pt
 printf "\n%s\n" "${delimiter}"
 printf "[+] Downloading Hires upscalers"
 printf "\n%s\n" "${delimiter}"
