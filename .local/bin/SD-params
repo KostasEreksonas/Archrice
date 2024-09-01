@@ -12,19 +12,23 @@ printf "%s\n" "${delimiter}"
 printf "| [+] txt2img dir: ${txt2img}\n"
 printf "%s\n" "${delimiter}"
 
-# Directory to save parameters file
-results="${HOME}/Documents/backup/Documents/stablediffusion/generation_parameters.txt"
-printf "%s\n" "${delimiter}"
-printf "| [+] Results file: ${results}\n"
-printf "%s\n" "${delimiter}"
-
-printf "%s\n" "${delimiter}"
-printf "| [+] Writing parameter data to ${results}\n"
-printf "%s\n" "${delimiter}"
-
 # Write generation parameters to a file
 for dir in "${txt2img}"/*; do
+	# Change directory
 	cd "${dir}"
+
+	# Give name to results file
+	results="$(echo "${dir}" | xargs basename)_params.txt"
+
+	# Print results file
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Results file: ${results}\n"
+	printf "%s\n" "${delimiter}"
+
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Writing parameter data to ${results}\n"
+	printf "%s\n" "${delimiter}"
+
 	for file in *; do
 		# Print image name
 		printf "%s\n" "${delimiter}" >> "${results}"
