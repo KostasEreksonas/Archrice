@@ -3,22 +3,22 @@
 # Download additional models for Stable Diffusion
 
 # Add a CivitAI token
-token=${1}
+token="${1}"
 
 # Pretty print
 delimiter="################################################################"
 
 function downloadModel {
 	# Downloads Stable Diffusion models to a specified location
-	dir=${1} # Current directory
-	folder=${2} # Download folder for models
-	token=${3} # CivitAI token
+	dir="${1}" # Current directory
+	folder="${2}" # Download folder for models
+	token="${3}" # CivitAI token
 	shift 3 # Delete first 3 values from function's input array
-	versionID=$@ # Array of model version ID's to download
+	versionID="${@}" # Array of model version ID's to download
 
 	# Create a folder to download models, if it doesn't exist
-	if ! [ -d ${folder} ]; then
-		mkdir -p ${folder}
+	if ! [ -d "${folder}" ]; then
+		mkdir -p "${folder}"
         printf "[+] Folder ${folder} created\n"
 	else
         printf "[+] Folder ${folder} exists\n"
@@ -26,43 +26,43 @@ function downloadModel {
 	cd ${folder}
 
 	# Download selected models
-	for id in ${versionID[@]}; do
+	for id in "${versionID[@]}"; do
 		# Get the ID of a base model from it's version ID
-		modelID=$(curl -s https://civitai.com/model-versions/${id} | cut -d "/" -f 3 | cut -d "?" -f 1)
+		modelID="$(curl -s https://civitai.com/model-versions/${id} | cut -d "/" -f 3 | cut -d "?" -f 1)"
 
 		# Get names of the files associated with the model
-		files=$(curl -s https://civitai.com/api/v1/models/${modelID} | jq ".modelVersions[]|select(.id==${id}).files[].name")
+		files="$(curl -s https://civitai.com/api/v1/models/${modelID} | jq ".modelVersions[]|select(.id==${id}).files[].name")"
 
 		# Get URLs for files of the model
-		urls=$(curl -s https://civitai.com/api/v1/models/${modelID} | jq ".modelVersions[]|select(.id==${id}).files[].downloadUrl")
+		urls="$(curl -s https://civitai.com/api/v1/models/${modelID} | jq ".modelVersions[]|select(.id==${id}).files[].downloadUrl")"
 
 		# Create array of filenames
 		while read -r file; do
 			# Remove whitespace
-			file=$(echo ${file} | sed 's/ //g')
-			files_array+=(${file})
-		done <<< ${files}
+			file=$(echo "${file}" | sed 's/ //g')
+			files_array+=("${file}")
+		done <<< "${files}"
 
 		# Create array of urls
 		while read -r url; do
-			urls_array+=(${url})
-		done <<< ${urls}
+			urls_array+=("${url}")
+		done <<< "${urls}"
 
 		# Download models
-		for (( i=0; i<${#urls_array[@]}; i++)); do
-			name=$(echo ${files_array[${i}]} | tr -d "\"")
-			url=$(echo ${urls_array[$i]} | tr -d "\"")
+		for (( i=0; i<"${#urls_array[@]}"; i++)); do
+			name=$(echo "${files_array[${i}]}" | tr -d "\"")
+			url=$(echo "${urls_array[$i]}" | tr -d "\"")
 			printf "\n%s\n" "${delimiter}"
 			# Skip model if it's already downloaded
-			if [ -f ${name} ]; then
-				printf "[+] File ${name} already exists\n"
+			if [ -f "${name}" ]; then
+				printf "[+] File "${name}" already exists\n"
 			else
 				printf "[+] Downloading ${name}\n"
-				if [[ $(curl -s ${url}) == "{\"error\":\"Unauthorized\",\"message\":\"The creator of this asset requires you to be logged in to download it\"}" ]]; then
-					curl -o ${name} -L -H "Content-Type: application/json" -H "Authorization: Bearer ${token}" ${url}
+				if [[ $(curl -s "${url}") == "{\"error\":\"Unauthorized\",\"message\":\"The creator of this asset requires you to be logged in to download it\"}" ]]; then
+					curl -o "${name}" -L -H "Content-Type: application/json" -H "Authorization: Bearer ${token}" "${url}"
 				else
-					url=$(curl -s ${url})
-					curl -o ${name} ${url}
+					url=$(curl -s "${url}")
+					curl -o "${name}" "${url}"
 				fi
 			fi
 		done
@@ -73,13 +73,13 @@ function downloadModel {
 	done
 
 	# Go back to original directory
-	cd ${dir}
+	cd "${dir}"
 }
 
 function downloadHuggingface {
     # Download models from Huggingface
-    dir=$1 # Current directory
-    folder=$2 # Download folder for models
+    dir="${1}" # Current directory
+    folder="${2}" # Download folder for models
 
         printf "\n%s\n" "${delimiter}"
         # Check if folder exists, if not - create it
@@ -91,22 +91,22 @@ function downloadHuggingface {
         fi
 
         # Changed directory to a folder
-        cd ${folder}
+        cd "${folder}"
 
         # Download files
-        for key in ${!urls[@]}; do
+        for key in "${!urls[@]}"; do
                 printf "\n%s\n" "${delimiter}"
                 # Skip files that already exist
-                if [ -f ${key} ]; then
+                if [ -f "${key}" ]; then
                         printf "[+] File ${key} already exists\n"
                 else
                         printf "[+] Downloading ${key}\n"
-                        curl -o ${key} -L ${urls[${key}]}
+                        curl -o "${key}" -L "${urls[${key}]}"
                 fi
         done
 
         # Get back to original directory
-        cd ${dir}
+        cd "${dir}"
 }
 
 # Download Embeddings
@@ -114,32 +114,32 @@ printf "\n%s\n" "${delimiter}"
 printf "[+] Downloading Embeddings"
 printf "\n%s\n" "${delimiter}"
 embeddings=(82745 509253 482268 5637 220262 95263 95256)
-downloadModel ${PWD} "embeddings/" ${token} ${embeddings[@]}
+downloadModel "${PWD}" "embeddings/" "${token}" "${embeddings[@]}"
 
 # Download Lora models
 printf "\n%s\n" "${delimiter}"
 printf "[+] Downloading Lora models"
 printf "\n%s\n" "${delimiter}"
 models=(135867 319697 116354 33381 509253 482268 165259 165424 118945 146600 62833 87153 156286)
-downloadModel ${PWD} "models/Lora/" ${token} ${models[@]}
+downloadModel "${PWD}" "models/Lora/" "${token}" "${models[@]}"
 
 # Download Checkpoints
 printf "\n%s\n" "${delimiter}"
 printf "[+] Downloading Checkpoint models"
 printf "\n%s\n" "${delimiter}"
 models=(429454 361593 627807 495273 720342)
-downloadModel ${PWD} "models/Stable-diffusion/" ${token} ${models[@]}
+downloadModel "${PWD}" "models/Stable-diffusion/" "${token}" "${models[@]}"
 
 # Download additional Hires upscalers
 printf "\n%s\n" "${delimiter}"
 printf "[+] Downloading Hires upscalers"
 printf "\n%s\n" "${delimiter}"
 models=(125843 156841)
-downloadModel ${PWD} "models/ESRGAN" ${token} ${models[@]}
+downloadModel "${PWD}" "models/ESRGAN" "${token}" "${models[@]}"
 
 # Download ControlNet Openpose models from Huggingface
 declare -A urls=(["control_v11p_sd15_openpose.yaml"]="https://huggingface.co/lllyasviel/ControlNet-v1-1/raw/main/control_v11p_sd15_openpose.yaml", ["control_v11p_sd15_openpose.pth"]="https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_openpose.pth?download=true")
 printf "\n%s\n" "${delimiter}"
 printf "[+] Downloading ControlNet models"
 printf "\n%s\n" "${delimiter}"
-downloadHuggingface ${PWD} "models/ControlNet" ${urls[@]}
+downloadHuggingface "${PWD}" "models/ControlNet" "${urls[@]}"
