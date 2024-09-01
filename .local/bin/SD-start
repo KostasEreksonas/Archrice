@@ -5,8 +5,10 @@ delimiter="################################################################"
 
 # Check if jq is installed
 jq --version 2>/dev/null 1>&2
-if [[ ${?} != 0 ]]; then
+if [[ "${?}" != 0 ]]; then
 	printf "[+] jq is not installed. Aborting script...\n" && exit 1
+else
+	printf "[+] jq installed\n"
 fi
 
 # Specify a drive where Stable Diffusion is located
@@ -20,8 +22,8 @@ path="${mountpoint}/Documents/stablediffusion"
 
 printf "\n%s\n" "${delimiter}"
 # Check if mountpoint exists, if not - create it
-if ! [ -d ${mountpoint} ]; then
-	mkdir -p ${mountpoint}
+if ! [ -d "${mountpoint}" ]; then
+	mkdir -p "${mountpoint}"
 	printf "[+] Mountpoint ${mountpoint} created\n"
 else
 	printf "[+] Mountpoint ${mountpoint} exists\n"
@@ -30,10 +32,10 @@ fi
 printf "\n%s\n" "${delimiter}"
 
 # If drive is not mounted, mount it
-if ! grep -qs ${drive} /proc/mounts; then
+if ! grep -qs "${drive}" /proc/mounts; then
 	printf "[+] Mounting drive ${drive}\n"
 	sudo /bin/sh -c "mount ${drive} ${mountpoint}"
-	if [[ ${?} != 0 ]]; then
+	if [[ "${?}" != 0 ]]; then
 		printf "[+] Failed to mount drive ${drive}. Aborting script...\n" && exit 1
 	fi
 fi
@@ -41,8 +43,8 @@ printf "[+] Drive ${drive} mounted\n"
 
 printf "\n%s\n" "${delimiter}"
 # Check if path for SD exists, if not - create it
-if ! [ -d ${path} ]; then
-	mkdir -p ${path}
+if ! [ -d "${path}" ]; then
+	mkdir -p "${path}"
 	printf "[+] Path ${path} created\n"
 else
 	printf "[+] Path ${path} exists\n"
@@ -50,7 +52,7 @@ fi
 
 printf "\n%s\n" "${delimiter}"
 # Change directory to stable diffusion path
-cd ${path}
+cd "${path}"
 printf "[+] Changed directory to ${path}\n"
 
 # Check if python 3.10 is installed, if not - install it
@@ -71,7 +73,7 @@ if [[ ${?} != 0 ]]; then
 fi
 
 # Check if python virtual environment is installed, if not - install it
-if ! [ -d ${path}/bin ]; then
+if ! [ -d "${path}/bin" ]; then
 	printf "\n%s\n" "${delimiter}"
 	printf "[+] Creating virtual environment\n"
 	python3.10 -m venv .
@@ -85,10 +87,10 @@ printf "\n%s\n" "${delimiter}"
 printf "[+] Virtual environment activated\n"
 
 # API token for downloading models from CivitAI (get token from custom shell variable)
-token=${CIVITAI_TOKEN}
+token="${CIVITAI_TOKEN}"
 
 # Check if token is not empty
-if [ -z ${token} ]; then
+if [ -z "${token}" ]; then
 	printf "\n%s\n" "${delimiter}"
 	printf "Civitai authorization token not available. Aborting...\n" && exit 1
 fi
@@ -97,10 +99,10 @@ fi
 export python_cmd="python3.11"
 
 # Check if Automatic1111 webui for stable diffusion is installed
-if ! [ -d ${path}/stable-diffusion-webui ]; then
+if ! [ -d "${path}/stable-diffusion-webui" ]; then
 	wget -q https://raw.githubusercontent.com/KostasEreksonas/stable-diffusion-webui/master/webui.sh
-	chmod +x webui.sh && ./webui.sh ${token} --xformers --lowvram --opt-sdp-attention --opt-split-attention
+	chmod +x webui.sh && ./webui.sh "${token}" --xformers --lowvram --opt-sdp-attention --opt-split-attention
 else
 	# Start Automatic1111 stable diffusion GUI with parameters
-	./webui.sh --xformers --lowvram --opt-sdp-attention --opt-split-attention
+	./webui.sh --xformers --lowvram --opt-sdp-attention --opt-split-attention --no-half-vae
 fi
