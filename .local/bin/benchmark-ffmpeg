@@ -15,7 +15,7 @@ function getInfo {
     max_freq=$(echo "$(lscpu | grep "CPU max" | cut -d ":" -f 2 | cut -d "." -f 1 | tr -d " ")/1000" | bc -l 2>/dev/null)
     memory=$(echo "$(grep MemTotal /proc/meminfo | cut -d " " -f 8)/1024/1024" | bc -l 2>/dev/null)
     uptime=$(formatTime $(cat /proc/uptime | cut -d " " -f 1))
-    gpus=$(lspci | grep VGA | cut -d ":" -f 3 | awk '{$1=$1;print}')
+	gpus=$(lspci | grep VGA | cut -d ":" -f 3 | awk '{$1=$1;print}')
     IFS=$'\n' read -d '' -r -a gpus <<<"$gpus" # Read found GPU's into an array
 
 	# Print system info to screen
@@ -30,9 +30,18 @@ function getInfo {
 	printf "| [+] Max frequency: %0.2f GHz\n" "${max_freq:-NaN}"
     printf "| [+] Memory: %.2f GB\n" "${memory:-NaN}"
     printf "| [+] Uptime: ${uptime}\n"
-    for (( i=0; i<${#gpus[@]}; i++ )); do
-        printf "| [+] GPU: ${gpus[${i}]}\n"
-    done
+	for (( i=0; i<${#gpus[@]}; i++ )); do
+		if [[ "${gpus[${i}]}" =~ "NVIDIA" ]]; then
+			string="${gpus[${i}]}"
+			string="${string##*[}"
+			string="${string%]*}"
+			if [[ "${string}" == "+" ]]; then
+				printf "| [+] GPU: ${gpus[${i}]}\n"
+			else
+				printf "| [+] GPU: ${string}\n"
+			fi
+		fi
+	done
     printf "%s\n" "${delimiter}"
 
 	# Print system info to file
@@ -47,9 +56,18 @@ function getInfo {
 	printf "| [+] Max frequency: %0.2f GHz\n" "${max_freq:-NaN}" >> "${result_file}"
     printf "| [+] Memory: %.2f GB\n" "${memory:-NaN}" >> "${result_file}"
     printf "| [+] Uptime: ${uptime}\n" >> "${result_file}"
-    for (( i=0; i<${#gpus[@]}; i++ )); do
-        printf "| [+] GPU: ${gpus[${i}]}\n" >> "${result_file}"
-    done
+	for (( i=0; i<${#gpus[@]}; i++ )); do
+		if [[ "${gpus[${i}]}" =~ "NVIDIA" ]]; then
+			string="${gpus[${i}]}"
+			string="${string##*[}"
+			string="${string%]*}"
+			if [[ "${string}" == "+" ]]; then
+				printf "| [+] GPU: ${gpus[${i}]}\n" >> "${result_file}"
+			else
+				printf "| [+] GPU: ${string}\n" >> "${result_file}"
+			fi
+		fi
+	done
     printf "%s\n" "${delimiter}" >> "${result_file}"
 }
 
@@ -127,16 +145,6 @@ function selectBenchmark {
 
 	# Return resolution
 	printf "${res}\n"
-}
-
-function checkPreviousRuns {
-	# Count previous runs of this benchmark
-	if ! [[ -f ${default_directory}/${result_file} ]]; then
-		printf "1\n"
-	else
-		count=$(grep "started at" ${default_directory}/${result_file} | wc -l)
-		printf "$((${count} + 1))\n"
-	fi
 }
 
 function defaultDir {
@@ -542,7 +550,6 @@ function gpuBench {
 			-hwaccel "cuda" \
 			-hwaccel_output_format "cuda" \
 			-i "${file}" \
-			-vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" \
 			-c:a "copy" \
 			-c:v "${encoder}" \
 			-preset "${preset}" \
@@ -602,6 +609,14 @@ function gpuBench {
 	exec 3>&-
 
 	cd "../"
+}
+
+function backupResults {
+	# Backup previous results file before a new benchmark run
+	if [[ -f "${result_file}" ]]; then
+		result_file_count=$(find . -type f -name "results*" | wc -l)
+		mv "${result_file}" "${result_file%.*}_${result_file_count}.${result_file#*.}"
+	fi
 }
 
 function benchmark {
@@ -727,8 +742,16 @@ function benchmark {
 		if [[ "${time}" == "0.000" ]]; then
 			time="$(echo "${data}" | cut -d " " -f 5 | tr -d "s")"
 		fi
+
 		if [[ "${fps}" == "encoded" ]]; then
 			fps="$(echo "${data}" | cut -d " " -f 6 | tr -d "(")"
+		fi
+
+		# Get the fastest time
+		if [[ "${fastest}" == 0 ]]; then
+			fastest="${time}"
+		elif [[ $(echo "${fastest} > ${time}" | bc -l) -eq 1 ]]; then
+			fastest="${time}"
 		fi
 
 		# Total time
@@ -760,6 +783,8 @@ function benchmark {
 	printf "| [+] Total time: $(formatTime ${total_time})\n"
 	printf "| [+] Average iteration time: $(formatTime ${average_time})\n"
 	printf "| [+] Average iteration fps: ${average_fps} FPS\n"
+	printf "| [+] Fastest time: $(formatTime ${fastest})\n"
+	printf "| [+] Fastest time (seconds): ${fastest}\n"
 	printf "%s\n" "${delimiter}"
 
 	# Save benchmark stats to a file
@@ -767,6 +792,8 @@ function benchmark {
 	printf "| [+] Total time: $(formatTime ${total_time})\n" >> "${result_file}"
 	printf "| [+] Average iteration time: $(formatTime ${average_time})\n" >> "${result_file}"
 	printf "| [+] Average iteration fps: ${average_fps} FPS\n" >> "${result_file}"
+	printf "| [+] Fastest time: $(formatTime ${fastest})\n" >> "${result_file}"
+	printf "| [+] Fastest time (seconds): ${fastest}\n" >> "${result_file}"
 	printf "%s\n" "${delimiter}" >> "${result_file}"
 }
 
@@ -783,6 +810,9 @@ result_file="results.txt"
 # Create default dir
 defaultDir
 
+# Backup results file
+backupResults
+
 # Array of video files to benchmark
 declare -rA bench_files=(
 	["320x180"]="https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4"
@@ -792,6 +822,9 @@ declare -rA bench_files=(
 	["1080p"]="https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_1080p_h264.mov"
 	["2160p"]="https://download.blender.org/demo/movies/BBB/bbb_sunflower_2160p_60fps_normal.mp4.zip"
 )
+
+# Fastest time
+fastest=0
 
 # Total duration
 total_time=0
@@ -810,16 +843,19 @@ iterations=5
 
 # Print start date for a benchmark
 printf "%s\n" "${delimiter}"
-printf "| [+] Benchmark $(checkPreviousRuns) started at $(date +%Y-%m-%d_%H-%M-%S)"
+printf "| [+] $(checkPreviousRuns) benchmark started at $(date +%Y-%m-%d_%H-%M-%S)"
 printf "\n%s\n" "${delimiter}"
 printf "\n%s\n" ${delimiter} >> "${result_file}"
-printf "| [+] Benchmark $(checkPreviousRuns) started at $(date +%Y-%m-%d_%H-%M-%S)" >> "${result_file}"
+printf "| [+] $(checkPreviousRuns) benchmark started at $(date +%Y-%m-%d_%H-%M-%S)" >> "${result_file}"
 printf "\n%s\n" ${delimiter} >> "${result_file}"
 
 # Print iterations
 printf "%s\n" "${delimiter}" >> "${result_file}"
 printf "| [+] Iterations: ${iterations}" >> "${result_file}"
 printf "\n%s\n" "${delimiter}" >> "${result_file}"
+
+# Print system info
+getInfo
 
 # Get URL for benchmark video
 res="$(selectBenchmark)"
@@ -829,9 +865,6 @@ url="${bench_files[${res}]}"
 printf "%s\n" "${delimiter}" >> "${result_file}"
 printf "| [+] Resolution: ${res}" >> "${result_file}"
 printf "\n%s\n" "${delimiter}" >> "${result_file}"
-
-# Print system info
-getInfo
 
 # Get filename
 file="${url##*/}"
@@ -847,8 +880,9 @@ benchmark
 
 # Print end date for a benchmark
 printf "%s\n" "${delimiter}"
-printf "| [+] Benchmark $(($(checkPreviousRuns) - 1)) ended at $(date +%Y-%m-%d_%H-%M-%S)\n"
+printf "| [+] Benchmark ended at $(date +%Y-%m-%d_%H-%M-%S)\n"
 printf "%s\n" "${delimiter}"
 printf "%s\n" "${delimiter}" >> "${result_file}"
-printf "| [+] Benchmark $(($(checkPreviousRuns) - 1)) ended at $(date +%Y-%m-%d_%H-%M-%S)\n" >> "${result_file}"
+printf "| [+] Benchmark ended at $(date +%Y-%m-%d_%H-%M-%S)\n" >> "${result_file}"
 printf "%s\n" "${delimiter}" >> "${result_file}"
+printf "\r\n" >> "${result_file}"
