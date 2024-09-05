@@ -710,16 +710,16 @@ function benchmark {
 		data=$(sed 's/\r/\n/g' /tmp/bench_data | tail -1)
 
 		# Parse data based on encoder (frames, fps and time)
-		if [[ "${encoder}" == "libx264" ]]; then
-			frames=$(echo "${data}" | cut -d "=" -f 2 | tr -d " fps")
-			fps=$(echo "${data}" | cut -d "=" -f 3 | fr -d " q")
-			time=$(echo "${frames}/${fps}" | bc -l 2> /dev/null)
-			time=$(printf "%.3f" "${time}")
+		if [[ "${encoder}" != "libx265" ]]; then
+			frames="$(echo "${data}" | cut -d "=" -f 2 | tr -d " fps")"
+			fps="$(echo "${data}" | cut -d "=" -f 3 | tr -d " q")"
+			time="$(echo "${frames}/${fps}" | bc -l 2> /dev/null)"
+			time="$(printf "%.3f" "${time}")"
 		elif [[ "${encoder}" == "libx265" ]]; then
-			frames=$(echo "${data}" | cut -d " " -f 2)
-			fps=$(echo "${data}" | cut -d " " -f 6 | tr -d "(")
-			time=$(echo "${data}" | cut -d " " -f 5 | tr -d "s")
-			time=$(printf "%.3f" "${time}")
+			frames="$(echo "${data}" | cut -d " " -f 2)"
+			fps="$(echo "${data}" | cut -d " " -f 6 | tr -d "(")"
+			time="$(echo "${data}" | cut -d " " -f 5 | tr -d "s")"
+			time="$(printf "%.3f" "${time}")"
 		fi
 
 		# Get the fastest time
@@ -818,10 +818,10 @@ iterations=5
 
 # Print start date for a benchmark
 printf "%s\n" "${delimiter}"
-printf "| [+] $(checkPreviousRuns) benchmark started at $(date +%Y-%m-%d_%H-%M-%S)"
+printf "| [+] Benchmark started at $(date +%Y-%m-%d_%H-%M-%S)"
 printf "\n%s\n" "${delimiter}"
 printf "\n%s\n" ${delimiter} >> "${result_file}"
-printf "| [+] $(checkPreviousRuns) benchmark started at $(date +%Y-%m-%d_%H-%M-%S)" >> "${result_file}"
+printf "| [+] Benchmark started at $(date +%Y-%m-%d_%H-%M-%S)" >> "${result_file}"
 printf "\n%s\n" ${delimiter} >> "${result_file}"
 
 # Print iterations
