@@ -182,12 +182,8 @@ function download {
 
 	# Check if file already exists
 	if [[ "${file##*.}" == "zip" ]]; then
-		if [[ -f "${file%.*}" ]]; then
-			c=1
-		fi
-	elif [[ -f "${file}" ]]; then
-		c=1
-	fi
+		if [[ -f "${file%.*}" ]]; then c=1; fi
+	elif [[ -f "${file}" ]]; then c=1; fi
 
 	# Download file if it does not exist
 	if [[ "${c}" == 1 ]]; then
@@ -215,7 +211,7 @@ function unpack {
 
 	# Unpack file
 	if [[ "${files[@]}" =~ "zip" ]]; then
-		7z x "${file}" >/dev/null && rm "${file}"
+		7z x "${file}" 1>/dev/null && rm "${file}"
 		file=$(find . -maxdepth 1 -type f -name "bbb_sunflower_2160p_60fps_normal.mp4" -exec basename {} \;)
 	fi
 
@@ -438,13 +434,9 @@ function gpuPreset {
 function gpuEncoder {
 	# Set encoding for GPU benchmark
 	PS3="[+] Select encoding: "
-	encoders=("cuda" "h264_nvenc" "hevc_nvenc")
+	encoders=("h264_nvenc" "hevc_nvenc")
 	select encoder in "${encoders[@]}"; do
 		case ${encoder} in
-			"cuda")
-				printf "${encoder}\n"
-				break
-				;;
 			"h264_nvenc")
 				printf "${encoder}\n"
 				break
@@ -543,34 +535,19 @@ function gpuBench {
 	exec 3<> /tmp/bench_data
 
 	# Final command
-	if [[ "${encoder}" != "cuda" ]]; then
-		nohup 1>/dev/null ffmpeg -hide_banner \
-			-stats \
-			-loglevel "error" \
-			-hwaccel "cuda" \
-			-hwaccel_output_format "cuda" \
-			-i "${file}" \
-			-c:a "copy" \
-			-c:v "${encoder}" \
-			-preset "${preset}" \
-			-tune "${tune}" \
-			-level "${level}" \
-			-2pass true \
-			-f null - 2>&3 &
-	else
-		nohup 1>/dev/null ffmpeg -hide_banner \
-			-stats \
-			-loglevel "error" \
-			-hwaccel "cuda" \
-			-hwaccel_output_format "cuda" \
-			-i "${file}" \
-			-c:a "copy" \
-			-preset "${preset}" \
-			-tune "${tune}" \
-			-level "${level}" \
-			-2pass true \
-			-f null - 2>&3 &
-	fi
+	nohup 1>/dev/null ffmpeg -hide_banner \
+		-stats \
+		-loglevel "error" \
+		-hwaccel "cuda" \
+		-hwaccel_output_format "cuda" \
+		-i "${file}" \
+		-c:a "copy" \
+		-c:v "${encoder}" \
+		-preset "${preset}" \
+		-tune "${tune}" \
+		-level "${level}" \
+		-2pass true \
+		-f null - 2>&3 &
 
 	# Get pid of the backgrounded ffmpeg process
     pid="${!}"
@@ -729,22 +706,20 @@ function benchmark {
 			gpuBench "${encoder}" "${preset}" "${tune}" "${level}"
 		fi
 
-		# Time of current iteration
+		# Get encoding data of current iteration
 		data=$(sed 's/\r/\n/g' /tmp/bench_data | tail -1)
-		frames=$(echo "${data}" | cut -d "=" -f 2 | cut -d " " -f 1)
-		if [[ -z "${frames}" ]]; then
-			frames=$(echo "${data}" | cut -d "=" -f 2 | cut -d " " -f 3)
-		fi
-		fps=$(echo "${data}" | cut -d "=" -f 3 | cut -d " " -f 1)
-		time=$(echo "${frames}/${fps}" | bc -l 2> /dev/null)
-		time=$(printf "%.3f" "${time}")
 
-		if [[ "${time}" == "0.000" ]]; then
-			time="$(echo "${data}" | cut -d " " -f 5 | tr -d "s")"
-		fi
-
-		if [[ "${fps}" == "encoded" ]]; then
-			fps="$(echo "${data}" | cut -d " " -f 6 | tr -d "(")"
+		# Parse data based on encoder (frames, fps and time)
+		if [[ "${encoder}" == "libx264" ]]; then
+			frames=$(echo "${data}" | cut -d "=" -f 2 | tr -d " fps")
+			fps=$(echo "${data}" | cut -d "=" -f 3 | fr -d " q")
+			time=$(echo "${frames}/${fps}" | bc -l 2> /dev/null)
+			time=$(printf "%.3f" "${time}")
+		elif [[ "${encoder}" == "libx265" ]]; then
+			frames=$(echo "${data}" | cut -d " " -f 2)
+			fps=$(echo "${data}" | cut -d " " -f 6 | tr -d "(")
+			time=$(echo "${data}" | cut -d " " -f 5 | tr -d "s")
+			time=$(printf "%.3f" "${time}")
 		fi
 
 		# Get the fastest time
