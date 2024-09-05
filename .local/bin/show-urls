@@ -77,7 +77,7 @@ function updateName {
 
 	# Remove special characters from a string
 	for (( i=0; i<${#string}; i++ )); do
-		if [[ ${string:${i}:1} =~ [A-Za-z0-9_]+ ]]; then
+		if [[ ${string:${i}:1} =~ [A-Za-zа-яА-Я0-9_]+ ]]; then
 			newString+=${string:${i}:1}
 		fi
 	done
