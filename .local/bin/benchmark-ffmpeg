@@ -13,7 +13,7 @@ function getInfo {
     threads=$(grep processor /proc/cpuinfo | wc -l)
     min_freq=$(echo "$(lscpu | grep "CPU min" | cut -d ":" -f 2 | cut -d "." -f 1 | tr -d " ")/1000" | bc -l 2>/dev/null)
     max_freq=$(echo "$(lscpu | grep "CPU max" | cut -d ":" -f 2 | cut -d "." -f 1 | tr -d " ")/1000" | bc -l 2>/dev/null)
-    memory=$(echo "$(grep MemTotal /proc/meminfo | cut -d " " -f 8)/1024/1024" | bc -l 2>/dev/null)
+    memory=$(echo "$(grep MemTotal /proc/meminfo | cut -d ":" -f 2 | tr -d " kB")/1024/1024" | bc -l 2>/dev/null)
     uptime=$(formatTime $(cat /proc/uptime | cut -d " " -f 1))
 	gpus=$(lspci | grep -E 'VGA|3D' | cut -d ":" -f 3 | awk '{$1=$1;print}')
     IFS=$'\n' read -d '' -r -a gpus <<<"$gpus" # Read found GPU's into an array
