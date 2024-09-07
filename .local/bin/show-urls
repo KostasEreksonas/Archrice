@@ -85,7 +85,7 @@ function updateName {
 	# Return updated string
 	echo ${newString}
 
-	# Clear the ${newString} variable
+	# Clear the newString variable
 	newString=
 }
 
@@ -169,72 +169,75 @@ function downloadAudio {
 	unset file_name
 }
 
+# Root dir
+root_dir="$(pwd)"
+
 # Search for directories
-for dir in *; do
-	# If a directory is found, cd to it
-	if [[ -d "${dir}" ]]; then
-		cd "${dir}"
+find . -type d -print0 | while read -d $'\0' dir; do
+	# Get full path for a dir
+	dir=$(echo "${dir}" | sed "s:\.:${root_dir}:g")
 
-		# Search for "urls" file
-		for dir_file in *; do
-			if [[ "${dir_file}" == "urls" ]]; then
+	# Change to directory
+	cd "${dir}"
 
-				# Print info
+	# Search for "urls" file
+	for dir_file in *; do
+		if [[ "${dir_file}" == "urls" ]]; then
+			# Print info
+			printf "%s\n" "${delimiter}"
+			printf "| [+] Url file detected: ${dir} => ${dir_file}\n"
+			printf "%s\n" "${delimiter}"
+
+			# Get urls from file and read it into an array
+			data=$(cat ${dir_file})
+			read -d '' -r -a urls <<< ${data}
+
+			# Print file url and some of it's metadata
+			printf "%s\n" "${delimiter}"
+			printf "| [+] Urls for ${dir}:\n"
+			for url in ${urls[@]}; do
+				# Open file descriptor 3 and point it to temporary metadata file
+				exec 3<> ${tmp}
+
+				# Dump url's metadata to the temporary file
+				yt-dlp --dump-json ${url} 1>&3
+
+				# Get title
+				title=$(cat "${tmp}" | jq '.title' | tr -d "\"")
+
+				# Update title
+				title=$(updateName "${title}")
+
+				# Get duration
+				duration=$(cat "${tmp}" | jq '.formats[].fragments[].duration' 2>/dev/null | head -1)
+				duration=$(formatTime ${duration})
+
+				# Get filesize
+				file_size=$(cat "${tmp}" | jq '.filesize_approx')
+				file_size_pretty=$(prettyPrint ${file_size})
+
+				# Print metadata
 				printf "%s\n" "${delimiter}"
-				printf "| [+] Url file detected: ${dir} => ${dir_file}\n"
+				printf "| [+] URL: ${url}\n"
+				printf "%s\n" "${delimiter}"
+				printf "%s\n" "${delimiter}"
+				printf "| [+] Title: ${title}\n"
+				printf "| [+] Duration: ${duration}\n"
+				printf "| [+] File size (approx.): ${file_size_pretty}\n"
+				downloadAudio "${title}" "${url}" "${file_size}" "${file_size_pretty}"
 				printf "%s\n" "${delimiter}"
 
-				# Get urls from file and read it into an array
-				data=$(cat ${dir_file})
-				read -d '' -r -a urls <<< ${data}
+				# Close file descriptor 3
+				exec 3>&-
 
-				# Print file url and some of it's metadata
-				printf "%s\n" "${delimiter}"
-				printf "| [+] Urls for ${dir}:\n"
-				for url in ${urls[@]}; do
-					# Open file descriptor 3 and point it to temporary metadata file
-					exec 3<> ${tmp}
+				# Remove temporary metadata file
+				rm ${tmp}
+			done
+		fi
+	done
 
-					# Dump url's metadata to the temporary file
-					yt-dlp --dump-json ${url} 1>&3
-
-					# Get title
-					title=$(cat "${tmp}" | jq '.title' | tr -d "\"")
-
-					# Update title
-					title=$(updateName "${title}")
-
-					# Get duration
-					duration=$(cat "${tmp}" | jq '.formats[].fragments[].duration' 2>/dev/null | head -1)
-					duration=$(formatTime ${duration})
-
-					# Get filesize
-					file_size=$(cat "${tmp}" | jq '.filesize_approx')
-					file_size_pretty=$(prettyPrint ${file_size})
-
-					# Print metadata
-					printf "%s\n" "${delimiter}"
-					printf "| [+] URL: ${url}\n"
-					printf "%s\n" "${delimiter}"
-					printf "%s\n" "${delimiter}"
-					printf "| [+] Title: ${title}\n"
-					printf "| [+] Duration: ${duration}\n"
-					printf "| [+] File size (approx.): ${file_size_pretty}\n"
-					downloadAudio "${title}" "${url}" "${file_size}" "${file_size_pretty}"
-					printf "%s\n" "${delimiter}"
-
-					# Close file descriptor 3
-					exec 3>&-
-
-					# Remove temporary metadata file
-					rm ${tmp}
-				done
-			fi
-		done
-
-		# Change to original directory
-		cd ../
-	fi
+	# Change to original directory
+	cd "${root_dir}"
 done
 
 # Format total size
