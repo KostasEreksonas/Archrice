@@ -168,7 +168,7 @@ models=(125843 156841)
 downloadModel "${PWD}" "models/ESRGAN" "${token}" "${models[@]}"
 
 # Download ControlNet Openpose models from Huggingface
-declare -A urls=(["control_v11p_sd15_openpose.yaml"]="https://huggingface.co/lllyasviel/ControlNet-v1-1/raw/main/control_v11p_sd15_openpose.yaml", ["control_v11p_sd15_openpose.pth"]="https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_openpose.pth?download=true")
+declare -A urls=(["control_v11p_sd15_openpose.yaml"]="https://huggingface.co/lllyasviel/ControlNet-v1-1/raw/main/control_v11p_sd15_openpose.yaml", ["control_v11p_sd15_openpose.pth"]="https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_openpose.pth?download=true", ["control_v11f1e_sd15_tile.pth"]="https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11f1e_sd15_tile.pth?download=true")
 printf "\n%s\n" "${delimiter}"
 printf "[+] Downloading ControlNet models"
 printf "\n%s\n" "${delimiter}"
