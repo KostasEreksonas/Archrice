@@ -52,7 +52,7 @@ find . -type d -print0 | while read -d $'\0' dir; do
 				exec 3<> /tmp/audio_data
 
 				# Start ffmpeg encoding process and move it to background, save encoding data to temporary file
-				nohup 1>/dev/null ffmpeg -hide_banner -stats -loglevel error -i "${key}" -acodec libmp3lame ${files[${key}]} 2>&3 &
+				nohup 1>/dev/null </dev/null ffmpeg -hide_banner -stats -loglevel error -i "${key}" -acodec libmp3lame ${files[${key}]} 2>&3 &
 
 				# Get pid of the backgrounded ffmpeg process
 				pid="${!}"
