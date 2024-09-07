@@ -118,10 +118,11 @@ function downloadHuggingface {
 # 220262 - epicPhoto.pt, epicPhoto-neg.pt
 # 95263 - epicNegative.pt
 # 95256 - epiCRealism.pt
+# 86553 - JuggernautNegative-neg.pt
 printf "\n%s\n" "${delimiter}"
 printf "[+] Downloading Embeddings"
 printf "\n%s\n" "${delimiter}"
-embeddings=(82745 509253 482268 5637 220262 95263 95256)
+embeddings=(82745 509253 482268 5637 220262 95263 95256 86553)
 downloadModel "${PWD}" "embeddings/" "${token}" "${embeddings[@]}"
 
 # Download Lora models
@@ -138,10 +139,11 @@ downloadModel "${PWD}" "embeddings/" "${token}" "${embeddings[@]}"
 # 62833 - add_detail.safetensors
 # 87153 - more_details.safetensors
 # 156286 - epiCRealLife.safetensors
+# 236130 - SDXLrender_v2.0.safetensors
 printf "\n%s\n" "${delimiter}"
 printf "[+] Downloading Lora models"
 printf "\n%s\n" "${delimiter}"
-models=(135867 319697 116354 33381 509253 482268 165259 165424 118945 146600 62833 87153 156286)
+models=(135867 319697 116354 33381 509253 482268 165259 165424 118945 146600 62833 87153 156286 236130)
 downloadModel "${PWD}" "models/Lora/" "${token}" "${models[@]}"
 
 # Download Checkpoints
