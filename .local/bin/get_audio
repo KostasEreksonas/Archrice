@@ -10,78 +10,143 @@ function showProgress {
 	printf "${text}"
 }
 
+function updateName {
+	# Strip whitespaces and special symbols
+	local file="${1}"
+	file="${file//\'/}"
+	file="${file//,/}"
+	file="${file//🇫🇷/}"
+	file="${file//🇫🇮/}"
+	file="${file//🇮🇸/}"
+	file="${file//🇧🇪/}"
+	file="${file//🇵🇹/}"
+	file="${file//🇺🇦/}"
+	file="${file//!/}"
+	file="${file//(*)/}"
+	file="${file//\[*\]/}"
+	file="${file// /_}"
+	printf "${file}\n"
+}
+
+function prepare {
+	# Prepare to extract audio streams from video files
+	# -d -- delimiter
+	# -u -- file descriptor
+	while read -d $'\0' -u 3 dir; do
+		# Full path of selected directory
+		dir=${dir//./${root_dir}}
+
+		# Change to selected directory
+		cd "${dir}"
+
+		# Create file to store video file names
+		if ! [[ -f  "names" ]]; then touch "names"; fi
+
+		# Loop through all files to find videos
+		# Strip whitespaces and special symbols from filenames
+		# Put a new filename to names file
+		# Prompt the user to choose filename for extracted audio stream
+		# Echo video filename and audio filename to names file in the following format:
+		# <video-filename>.<video-extension>,<audio-filename>.mp3
+		# Repeat for every video file in the current working directory
+		for file in *; do
+			if ! [[ -d "${file}" ]]; then
+				if [[ "${extensions[*]}" =~ "${file##*.}" ]]; then
+					newfile="$(updateName "${file}")"
+					printf "| [+] ${dir} => ${newfile}\n"
+					read -p "Choose name of audio stream for ${newfile}: " output
+					echo "${newfile},${output}.mp3" >> "names"
+			#		mv "${file}" "${newfile}"
+					newfile=
+				fi
+			fi
+		done
+	done 3< <(find . -type d -print0)
+}
+
+function extract {
+	# Extract audio streams from video files
+	# Search for directories
+	find . -type d -print0 | while read -d $'\0' dir; do
+		# Get full path for a dir
+		dir="${dir//./${root_dir}}"
+
+		# Change to directory
+		cd "${dir}"
+
+		declare -A files
+
+		# Print info
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Names file detected: ${dir} => ${dir_file}\n"
+		printf "%s\n" "${delimiter}"
+
+		IFS_BAK="${IFS}"
+		IFS=$'\n'
+
+		for line in $(cat names); do
+			key=$(echo "${line}" | cut -d "," -f 1)
+			value=$(echo "${line}" | cut -d "," -f 2)
+			files+=(["${key}"]="${value}")
+		done
+
+		IFS="${IFS_BAK}"
+
+		for key in "${!files[@]}"; do
+			printf "%s\n" "${delimiter}"
+			printf "| [+] ${key} => ${files[${key}]}\n"
+
+			# Create a new file descriptor and point it to temporary metadata file
+			exec 3<> /tmp/audio_data
+
+			# Start ffmpeg encoding process and move it to background, save encoding data to temporary file
+			nohup 1>/dev/null </dev/null ffmpeg -hide_banner -stats -loglevel error -i "${key}" -acodec libmp3lame ${files[${key}]} 2>&3 &
+
+			# Get pid of the backgrounded ffmpeg process
+			pid="${!}"
+
+			# If the script is killed, kill ffmpeg process also
+			trap "kill ${pid} 2>/dev/null" EXIT
+
+			# While ffmpeg encoding process is running, rewrite terminal output with latest encoding data every half a second
+			while kill -0 "${pid}" 2>/dev/null; do
+				showProgress && printf "\r"
+			done
+
+			# Last progress message
+			showProgress && printf "\n"
+
+			# Print info
+			printf "| [+] Deleting ${key}\n"
+			rm "${key}"
+			printf "%s\n" "${delimiter}"
+
+			# Disable the trap on a normal exit.
+			trap - EXIT
+
+			# Delete file descriptor 3
+			exec 3>&-
+
+			# Remove temporary file for encoding data
+			rm /tmp/audio_data
+
+			# Remove names file
+			rm "names"
+		done
+	done
+}
+
 # Root dir
 root_dir="$(pwd)"
 
+# Delimiter
 delimiter="----------------------------------------------------------------"
 
-# Search for directories
-find . -type d -print0 | while read -d $'\0' dir; do
-	# Get full path for a dir
-	dir=$(echo "${dir}" | sed "s:\.:${root_dir}:g")
+# Extensions array
+extensions=("mkv" "mp4" "webm")
 
-	# Change to directory
-	cd "${dir}"
+# Prepare files for audio stream extraction
+prepare
 
-	# Search for "urls" file
-	for dir_file in *; do
-		if [[ "${dir_file}" == "names" ]]; then
-			declare -A files
-
-			# Print info
-			printf "%s\n" "${delimiter}"
-			printf "| [+] Names file detected: ${dir} => ${dir_file}\n"
-			printf "%s\n" "${delimiter}"
-
-			IFS_BAK="${IFS}"
-			IFS=$'\n'
-
-			for line in $(cat names); do
-				key=$(echo "${line}" | cut -d "," -f 1)
-				value=$(echo "${line}" | cut -d "," -f 2)
-				files+=(["${key}"]="${value}")
-			done
-
-			IFS="${IFS_BAK}"
-
-			for key in "${!files[@]}"; do
-				printf "%s\n" "${delimiter}"
-				printf "| [+] ${key} => ${files[${key}]}\n"
-
-				# Create a new file descriptor and point it to temporary metadata file
-				exec 3<> /tmp/audio_data
-
-				# Start ffmpeg encoding process and move it to background, save encoding data to temporary file
-				nohup 1>/dev/null </dev/null ffmpeg -hide_banner -stats -loglevel error -i "${key}" -acodec libmp3lame ${files[${key}]} 2>&3 &
-
-				# Get pid of the backgrounded ffmpeg process
-				pid="${!}"
-
-				# If the script is killed, kill ffmpeg process also
-				trap "kill ${pid} 2>/dev/null" EXIT
-
-				# While ffmpeg encoding process is running, rewrite terminal output with latest encoding data every half a second
-				while kill -0 "${pid}" 2>/dev/null; do
-					showProgress && printf "\r"
-				done
-
-				# Last progress message
-				showProgress && printf "\n"
-
-				# Print info
-				printf "| [+] Deleting ${key}\n"
-				rm "${key}"
-				printf "%s\n" "${delimiter}"
-
-				# Disable the trap on a normal exit.
-				trap - EXIT
-
-				# Delete file descriptor 3
-				exec 3>&-
-
-				# Remove temporary file for encoding data
-				rm /tmp/audio_data
-			done
-		fi
-	done
-done
+# Extract audio
+extract
