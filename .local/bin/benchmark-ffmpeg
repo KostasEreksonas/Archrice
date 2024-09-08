@@ -74,20 +74,32 @@ function getInfo {
     printf "%s\n" "${delimiter}" >> "${result_file}"
 }
 
+function showProgress {
+	# Show progress of benchmark iteration
+	# Get last line of tmp file
+    line=$(sed 's/\r/\n/g' /tmp/bench_data | tail -1)
+
+	# Update text
+    text=$(echo "${line}" | awk '{print "| [+] " $0}')
+
+	# Print newline at the end of an encode
+	printf "${text}"
+}
+
 function formatTime {
     # Format time to <xx>h <xx>m <xx.xxx>s
     time="${1}"
     seconds="${time%%.*}"
-    if [[ -z "${seconds}" ]]; then seconds=0; fi # Seconds = 0 if variable is empty
+    if [[ -z "${seconds}" ]]; then seconds=0; fi
     miliseconds="${time##*.}"
-    if [[ -z "${miliseconds}" ]]; then miliseconds=0; fi # Miliseconds = 0 if variable is empty
-    if [[ "${seconds}" -lt 60 ]]; then
+    if [[ -z "${miliseconds}" ]]; then miliseconds=0; fi
+	if [[ "${seconds}" -lt 60 ]]; then
         printf "${seconds}.${miliseconds} seconds\n"
     elif [[ "${seconds}" -ge 60 && "${seconds}" -lt 3600 ]]; then
         minutes=$(echo "${seconds}/60" | bc -l | cut -d "." -f 1)
-        if [[ -z "${minutes}" ]]; then minutes=0; fi # Minutes = 0 if variable is empty
+        if [[ -z "${minutes}" ]]; then minutes=0; fi
 		seconds=$((${seconds}-60*${minutes}))
-        if [[ -z "${seconds}" ]]; then seconds=0; fi # Seconds = 0 if variable is empty
+        if [[ -z "${seconds}" ]]; then seconds=0; fi
 		if [[ "${minutes}" == 1 ]]; then
 			printf "${minutes} minute ${seconds}.${miliseconds} seconds\n"
 		else
@@ -95,12 +107,12 @@ function formatTime {
 		fi
 	elif [[ "${seconds}" -ge 3600 ]]; then
         hours=$(echo "${seconds}/3600" | bc -l | cut -d "." -f 1)
-        if [[ -z "${hours}" ]]; then hours=0; fi # Hours = 0 if variable is empty
+        if [[ -z "${hours}" ]]; then hours=0; fi
         seconds=$((${seconds}-3600*${hours}))
         minutes=$(echo "${seconds}/60" | bc -l | cut -d "." -f 1)
-        if [[ -z "${minutes}" ]]; then minutes=0; fi # Minutes = 0 if variable is empty
+        if [[ -z "${minutes}" ]]; then minutes=0; fi
         seconds=$((${seconds}-60*${minutes}))
-        if [[ -z "${seconds}" ]]; then seconds=0; fi # Seconds = 0 if variable is empty
+        if [[ -z "${seconds}" ]]; then seconds=0; fi
 		if [[ "${hours}" == 1 ]] && [[ "${minutes}" == 1 ]]; then
 			printf "${hours} hour ${minutes} minute ${seconds}.${miliseconds} seconds\n"
 		elif [[ "${hours}" == 1 ]] && [[ "${minutes}" > 1 ]]; then
@@ -362,27 +374,15 @@ function cpuBench {
 
     # While ffmpeg encoding process is running, rewrite terminal output with latest encoding data every half a second
     while kill -0 "${pid}" 2> /dev/null; do
-		# Get last line of tmp file
-        line=$(sed 's/\r/\n/g' /tmp/bench_data | tail -1)
-
-		# Update text
-        text=$(echo "${line}" | awk '{print "| [+] " $0}')
-
-		# Rewrite text
-		printf "${text}\r"
+		# Show progress
+		showProgress && printf "\r"
 
 		# Re-check condition after .5 seconds
 		sleep .5
     done
 
-	# Get last line of tmp file
-    line=$(sed 's/\r/\n/g' /tmp/bench_data | tail -1)
-
-	# Update text
-    text=$(echo "${line}" | awk '{print "| [+] " $0}')
-
-	# Print newline at the end of an encode
-	printf "${text}\n"
+	# Last update of progress after finishing benchmark iteration
+	showProgress && printf "\n"
 
     # Disable the trap on a normal exit.
     trap - EXIT
