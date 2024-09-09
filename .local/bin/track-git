@@ -44,7 +44,7 @@ while read -d $'\0' -u 3 repo; do
 				printf "| [+] No files added in ${repo}\n"
 				printf "%s\n" "${delimiter}"
 			else
-				printf "| [+] $(echo "${added}" | wc -l) added files in ${dir}\n"
+				printf "| [+] $(echo "${added}" | wc -l) added files in ${repo}\n"
 				printf "%s\n" "${delimiter}"
 
 				# Print modified file list
@@ -65,7 +65,7 @@ while read -d $'\0' -u 3 repo; do
 				printf "| [+] No files modified in ${repo}\n"
 				printf "%s\n" "${delimiter}"
 			else
-				printf "| [+] $(echo "${modified}" | wc -l) modified files in ${dir}\n"
+				printf "| [+] $(echo "${modified}" | wc -l) modified files in ${repo}\n"
 				printf "%s\n" "${delimiter}"
 
 				# Print modified file list
