@@ -9,6 +9,7 @@ function getInfo {
     # Get system info
 	arch=$(uname -m)
     os=$(grep -w ID /etc/os-release | cut -d "=" -f 2)
+	os="${os//\"/}"
 	cpu=$(lscpu | grep "Model name" | cut -d ":" -f 2 | xargs)
     cores=$(grep "cpu cores" /proc/cpuinfo | head -1 | cut -d ":" -f 2 | tr -d " ")
     threads=$(grep processor /proc/cpuinfo | wc -l)
