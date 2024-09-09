@@ -1,0 +1,110 @@
+#!/bin/sh
+
+# Track my personal git repos
+# Add, commit and push changes to the repos
+
+# Delimiter
+delimiter="----------------------------------------------------------------"
+
+# Git username
+username="KostasEreksonas"
+
+# Directory for git repos
+repos_dir="${HOME}/Documents/git"
+
+# Loop through git repositories
+while read -d $'\0' -u 3 repo; do
+	if [[ "${repo}" != "${repos_dir}" ]]; then
+		# Change to repo directory
+		cd "${repo}"
+
+		# Get name of git repo owner from .git/config file
+		name=$(grep url .git/config)
+		name="${name#*=}"
+		name="${name#* }"
+		name="${name%/*}"
+		if [[ "${name}" =~ "/" ]]; then
+			name="${name##*/}"
+		elif [[ "${name}" =~ ":" ]]; then
+			name="${name##*:}"
+		fi
+
+		# If git repo owner name matches my git username, treat it as my git repo
+		if [[ "${name}" == "${username}" ]]; then
+			# Print Repo name
+			printf "%s\n" "${delimiter}"
+			printf "| [+] Repo: ${repo}\n"
+			printf "%s\n" "${delimiter}"
+
+			# Get added file list in a repo
+			added=$(git ls-files --other --exclude-standard 2>/dev/null)
+
+			# Print stats of added files
+			if [[ -z "${added}" ]]; then
+				printf "| [+] No files added in ${repo}\n"
+				printf "%s\n" "${delimiter}"
+			else
+				printf "| [+] $(echo "${added}" | wc -l) added files in ${dir}\n"
+				printf "%s\n" "${delimiter}"
+
+				# Print modified file list
+				printf "%s\n" "${delimiter}"
+				printf "| [+] Added files list:\n"
+				echo "${added}" | while read -d $'\n' add; do
+					printf "| [+]\t${add}\n"
+				done
+				printf "%s\n" "${delimiter}"
+			fi
+
+			# Get modified file list in a repo
+			modified=$(git diff --name-only --diff-filter=M 2>/dev/null)
+
+			# Print stats of modified files
+			printf "%s\n" "${delimiter}"
+			if [[ -z "${modified}" ]]; then
+				printf "| [+] No files modified in ${repo}\n"
+				printf "%s\n" "${delimiter}"
+			else
+				printf "| [+] $(echo "${modified}" | wc -l) modified files in ${dir}\n"
+				printf "%s\n" "${delimiter}"
+
+				# Print modified file list
+				printf "%s\n" "${delimiter}"
+				printf "| [+] Modified files list:\n"
+				echo "${modified}" | while read -d $'\n' mod; do
+					printf "| [+]\t${mod}\n"
+				done
+				printf "%s\n" "${delimiter}"
+			fi
+
+			# Push to git repo if there are added or modified files
+			if ! [[ -z "${added}" ]] || ! [[ -z "${modified}" ]]; then
+				# Add files to repo
+				printf "%s\n" "${delimiter}"
+				printf "| [+] Adding files to ${repo}\n"
+				printf "%s\n" "${delimiter}"
+				git add .
+
+				# Commit to git repo
+				printf "%s\n" "${delimiter}"
+				read -p "| [+] Commit message for ${repo}: " commit_msg
+				printf "| [+] Commiting to ${repo}\n"
+				printf "%s\n" "${delimiter}"
+				git commit -m "${commit_msg}"
+
+				# Push to repo
+				printf "%s\n" "${delimiter}"
+				printf "| [+] Pushing to ${repo}\n"
+				printf "%s\n" "${delimiter}"
+				git push
+			fi
+		fi
+
+		# Get back to root directory
+		cd "${repos_dir}"
+	fi
+
+	# Unset variables
+	unset added
+	unset modified
+done 3< <(find "${repos_dir}" -maxdepth 1 -type d -print0)
