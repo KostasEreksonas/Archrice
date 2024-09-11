@@ -1,15 +1,22 @@
-#!/bin/sh
+#!/bin/bash
 
 # Benchmark ffmpeg performance
 
 # Delimiter
 delimiter="------------------------------------------------------------------------------------------------------------"
 
+checkDependencies() {
+	# Check if all dependencies for the benchmark are installed
+	if ! which bc 2>/dev/null 1>&2; then missing+=("bc"); fi
+	if ! which curl 2>/dev/null 1>&2; then missing+=("curl"); fi
+	if ! which ffmpeg 2>/dev/null 1>&2; then missing+=("ffmpeg"); fi
+}
+
 getInfo() {
     # Get system info
 	arch="$(uname -m)"
     os="$(grep -w ID /etc/os-release | cut -d "=" -f 2)"
-	os="${os//\"/}"
+	os="$(echo "${os}" | sed 's/\"//g')"
 	cpu="$(lscpu | grep "Model name" | cut -d ":" -f 2 | xargs)"
     cores="$(grep "cpu cores" /proc/cpuinfo | head -1 | cut -d ":" -f 2 | tr -d " ")"
     threads="$(grep -c processor /proc/cpuinfo)"
@@ -17,8 +24,10 @@ getInfo() {
     max_freq="$(echo "$(lscpu | grep "CPU max" | cut -d ":" -f 2 | cut -d "." -f 1 | tr -d " ")/1000" | bc -l 2>/dev/null)"
     memory="$(echo "$(grep MemTotal /proc/meminfo | cut -d ":" -f 2 | tr -d " kB")/1024/1024" | bc -l 2>/dev/null)"
     uptime="$(formatTime "$(cut -d " " -f 1 < /proc/uptime)")"
-	gpus="$(lspci | grep -E 'VGA|3D' | cut -d ":" -f 3 | awk '{$1=$1;print}')"
-    IFS=$'\n' read -d '' -r -a gpus <<<"$gpus" # Read found GPU's into an array
+    gpu=$(lspci | grep -E 'VGA|3D')
+	gpu="${gpu//$'\n'/ }"
+	gpu="${gpu#*[}"
+	gpu="${gpu%]*}"
 
 	# Print system info to screen
     printf "%s\n" "${delimiter}"
@@ -33,14 +42,7 @@ getInfo() {
 	printf "| [+] Max frequency: %0.2f GHz\n" "${max_freq:-NaN}"
     printf "| [+] Memory: %.2f GB\n" "${memory:-NaN}"
     printf "| [+] Uptime: %s\n" "${uptime}"
-	for (( i=0; i<"${#gpus[@]}"; i++ )); do
-		if [[ "${gpus[${i}]}" =~ "NVIDIA" ]]; then
-			string="${gpus[${i}]}"
-			string="${string##*[}"
-			string="${string%]*}"
-			printf "| [+] GPU: %s\n" "${string}"
-		fi
-	done
+	printf "| [+] GPU: %s\n" "${gpu}"
     printf "%s\n" "${delimiter}"
 
 	# Write system info to file
@@ -57,18 +59,7 @@ getInfo() {
 		printf "| [+] Max frequency: %0.2f GHz\n" "${max_freq:-NaN}";
 		printf "| [+] Memory: %.2f GB\n" "${memory:-NaN}";
 		printf "| [+] Uptime: %s\n" "${uptime}";
-		for (( i=0; i<"${#gpus[@]}"; i++ )); do
-			if [[ "${gpus[${i}]}" =~ "NVIDIA" ]]; then
-				string="${gpus[${i}]}"
-				string="${string##*[}"
-				string="${string%]*}"
-				if [[ "${string}" == "+" ]]; then
-					printf "| [+] GPU: %s\n" "${gpus[${i}]}";
-				else
-					printf "| [+] GPU: %s\n" "${string}";
-				fi
-			fi
-		done
+		printf "| [+] GPU: %s\n" "${gpu}";
 		printf "%s\n" "${delimiter}";
 	} >> "${result_file}"
 }
@@ -99,9 +90,9 @@ formatTime() {
 	if [[ "${seconds}" -lt 60 ]]; then
         printf "%s.%s seconds\n" "${seconds}" "${miliseconds}"
     elif [[ "${seconds}" -ge 60 && "${seconds}" -lt 3600 ]]; then
-        minutes=$(echo "${seconds}/60" | bc -l | cut -d "." -f 1)
+        minutes="$(echo "${seconds}/60" | bc -l | cut -d "." -f 1)"
         if [[ -z "${minutes}" ]]; then minutes=0; fi
-		seconds=$((${seconds}-60*${minutes}))
+		seconds="$((${seconds}-60*${minutes}))"
         if [[ -z "${seconds}" ]]; then seconds=0; fi
 		if [[ "${minutes}" == 1 ]]; then
 			printf "%s minute %s.%s seconds\n" "${minutes}" "${seconds}" "${miliseconds}"
@@ -109,12 +100,12 @@ formatTime() {
 			printf "%s minutes %s.%s seconds\n" "${minutes}" "${seconds}" "${miliseconds}"
 		fi
 	elif [[ "${seconds}" -ge 3600 ]]; then
-        hours=$(echo "${seconds}/3600" | bc -l | cut -d "." -f 1)
+        hours="$(echo "${seconds}/3600" | bc -l | cut -d "." -f 1)"
         if [[ -z "${hours}" ]]; then hours=0; fi
-        seconds=$((${seconds}-3600*${hours}))
-        minutes=$(echo "${seconds}/60" | bc -l | cut -d "." -f 1)
+        seconds="$((${seconds}-3600*${hours}))"
+        minutes="$(echo "${seconds}/60" | bc -l | cut -d "." -f 1)"
         if [[ -z "${minutes}" ]]; then minutes=0; fi
-        seconds=$((${seconds}-60*${minutes}))
+        seconds="$((${seconds}-60*${minutes}))"
         if [[ -z "${seconds}" ]]; then seconds=0; fi
 		if [[ "${hours}" == 1 ]] && [[ "${minutes}" == 1 ]]; then
 			printf "%s hour %s minute %s.%s seconds\n" "${hours}" "${minutes}" "${seconds}" "${miliseconds}"
@@ -346,7 +337,7 @@ cpuBench() {
 	local crf="${3}"
 
 	# Open file descriptor 3 and point it to temporary file
-	tmp_file="/tmp/bench_data"
+	tmp_file="/tmp/bench_file"
 	exec 3<> "${tmp_file}"
 
 	# Final command
@@ -591,19 +582,40 @@ benchmark() {
 				encoder="$(cpuEncoder)"
 				printf "%s\n" "${delimiter}"
 				printf "| [+] Selected encoder: %s\n" "${encoder}"
-				printf "%s\n" "${delimiter}"
+				if [[ "${encoder}" == "libx264" ]]; then
+					printf "| [+] Defaults for %s: preset - veryslow, crf - 17\n" "${encoder}"
+				elif [[ "${encoder}" == "libx265" ]]; then
+					printf "| [+] Defaults for %s: preset - medium, crf - 18\n" "${encoder}"
+				fi
+				read -p "| [+] Do you want to use defaults for ${encoder}? [Y/N] " choice
+				while true; do
+					if [[ "${choice}" == "Y" ]] || [[ "${choice}" == "y" ]]; then
+						if [[ "${encoder}" == "libx264" ]]; then
+							preset="veryslow"
+							crf=17
+						elif [[ "${encoder}" == "libx265" ]]; then
+							preset="medium"
+							crf=18
+						fi
+						printf "| [+] Defaults set\n"
+						printf "%s\n" "${delimiter}"
+						break
+					elif [[ "${choice}" == "N" ]] || [[ "${choice}" == "n" ]]; then
+						printf "%s\n" "${delimiter}"
+						# Set preset
+						preset="$(cpuPreset)"
+						printf "%s\n" "${delimiter}"
+						printf "| [+] Selected preset: %s\n" "${preset}"
+						printf "%s\n" "${delimiter}"
 
-				# Set preset
-				preset="$(cpuPreset)"
-				printf "%s\n" "${delimiter}"
-				printf "| [+] Selected preset: %s\n" "${preset}"
-				printf "%s\n" "${delimiter}"
-
-				# Set CRF value
-				crf="$(setCRF "${encoder}")"
-				printf "%s\n" "${delimiter}"
-				printf "| [+] Selected CRF: %s\n" "${crf}"
-				printf "%s\n" "${delimiter}"
+						# Set CRF value
+						crf="$(setCRF "${encoder}")"
+						printf "%s\n" "${delimiter}"
+						printf "| [+] Selected CRF: %s\n" "${crf}"
+						printf "%s\n" "${delimiter}"
+						break
+					fi
+				done
 
 				# Write parameters to results file
 				{
@@ -631,24 +643,39 @@ benchmark() {
 				printf "%s\n" "${delimiter}"
 				printf "| [+] Selected encoder: %s\n" "${encoder}"
 				printf "%s\n" "${delimiter}"
+				printf "| [+] Defaults for %s: preset - p7, tune - lossless level - 5.2\n" "${encoder}"
+				read -p "| [+] Do you want to use defaults for ${encoder}? [Y/N] " choice
+				while true; do
+					if [[ "${choice}" == "Y" ]] || [[ "${choice}" == "y" ]]; then
+						preset="p7"
+						tune="lossless"
+						level="5.2"
+						printf "| [+] Defaults set\n"
+						printf "%s\n" "${delimiter}"
+						break
+					elif [[ "${choice}" == "N" ]] || [[ "${choice}" == "n" ]]; then
+						printf "%s\n" "${delimiter}"
 
-				# Get preset
-				preset="$(gpuPreset)"
-				printf "%s\n" "${delimiter}"
-				printf "| [+] Selected preset: %s\n" "${preset}"
-				printf "%s\n" "${delimiter}"
+						# Get preset
+						preset="$(gpuPreset)"
+						printf "%s\n" "${delimiter}"
+						printf "| [+] Selected preset: %s\n" "${preset}"
+						printf "%s\n" "${delimiter}"
 
-				# Get tune
-				tune="$(gpuTune)"
-				printf "%s\n" "${delimiter}"
-				printf "| [+] Selected tune: %s\n" "${tune}"
-				printf "%s\n" "${delimiter}"
+						# Get tune
+						tune="$(gpuTune)"
+						printf "%s\n" "${delimiter}"
+						printf "| [+] Selected tune: %s\n" "${tune}"
+						printf "%s\n" "${delimiter}"
 
-				# Get level
-				level="$(gpuLevel)"
-				printf "%s\n" "${delimiter}"
-				printf "| [+] Selected level: %s\n" "${level}"
-				printf "%s\n" "${delimiter}"
+						# Get level
+						level="$(gpuLevel)"
+						printf "%s\n" "${delimiter}"
+						printf "| [+] Selected level: %s\n" "${level}"
+						printf "%s\n" "${delimiter}"
+						break
+					fi
+				done
 
 				# Write parameters to results file
 				{
@@ -691,7 +718,7 @@ benchmark() {
 		fi
 
 		# Get encoding data of current iteration
-		data=$(sed 's/\r/\n/g' /tmp/bench_data | tail -1)
+		data=$(sed 's/\r/\n/g' /tmp/bench_file | tail -1)
 
 		# Parse data based on encoder (frames, fps and time)
 		if [[ "${encoder}" != "libx265" ]]; then
@@ -726,7 +753,7 @@ benchmark() {
 		average_fps="$(printf "%.3f" "${average_fps}")"
 
 		# Remove temporary file
-		rm "/tmp/bench_data"
+		rm "/tmp/bench_file"
 
 		# Print time
 		printf "| [+] Iteration %s time: %s, fps: %s\n" "$((i + 1))" "$(formatTime "${time}")" "${fps}"
@@ -764,100 +791,112 @@ benchmark() {
 # | Main |
 #  ------
 
-# Default directory
-default_directory="${HOME}/Documents/benchmark_ffmpeg"
+# Array to store missing dependencies
+missing=()
 
-# Results file
-result_file="results.txt"
+# Check dependencies
+checkDependencies
 
-# Create default dir
-defaultDir
+if [[ -z "${missing[*]}" ]]; then
+	# Default directory
+	default_directory="${HOME}/Documents/benchmark_ffmpeg"
 
-# Backup results file
-backupResults
+	# Results file
+	result_file="results.txt"
 
-# Array of video files to benchmark
-declare -rA bench_files=(
-	["320x180"]="https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4"
-	["640x360"]="https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_640x360.m4v"
-	["480p"]="https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_h264.mov"
-	["720p"]="https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_720p_h264.mov"
-	["1080p"]="https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_1080p_h264.mov"
-	["2160p"]="https://download.blender.org/demo/movies/BBB/bbb_sunflower_2160p_60fps_normal.mp4.zip"
-)
+	# Create default dir
+	defaultDir
 
-# Fastest time
-fastest=0
+	# Backup results file
+	backupResults
 
-# Total duration
-total_time=0
+	# Array of video files to benchmark
+	declare -rA bench_files=(
+		["320x180"]="https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4"
+		["640x360"]="https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_640x360.m4v"
+		["480p"]="https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_h264.mov"
+		["720p"]="https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_720p_h264.mov"
+		["1080p"]="https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_1080p_h264.mov"
+		["2160p"]="https://download.blender.org/demo/movies/BBB/bbb_sunflower_2160p_60fps_normal.mp4.zip"
+	)
 
-# Total fps
-total_fps=0
+	# Fastest time
+	fastest=0
 
-# Average duration
-average_time=0
+	# Total duration
+	total_time=0
 
-# Average fps
-average_fps=0
+	# Total fps
+	total_fps=0
 
-# Number of iterations
-iterations=5
+	# Average duration
+	average_time=0
 
-# Print start date for a benchmark
-printf "%s\n" "${delimiter}"
-printf "| [+] Benchmark started at %s\n" "$(date +%Y-%m-%d_%H-%M-%S)"
-printf "%s\n" "${delimiter}"
+	# Average fps
+	average_fps=0
 
-# Write a start date to file
-{
-	printf "%s\n" ${delimiter};
-	printf "| [+] Benchmark started at %s\n" "$(date +%Y-%m-%d_%H-%M-%S)";
-	printf "%s\n" ${delimiter};
-} >> "${result_file}"
+	# Number of iterations
+	iterations=5
 
-# Write iterations to file
-{
+	# Print start date for a benchmark
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Benchmark started at %s\n" "$(date +%Y-%m-%d_%H-%M-%S)"
+	printf "%s\n" "${delimiter}"
+
+	# Write a start date to file
+	{
+		printf "%s\n" ${delimiter};
+		printf "| [+] Benchmark started at %s\n" "$(date +%Y-%m-%d_%H-%M-%S)";
+		printf "%s\n" ${delimiter};
+	} >> "${result_file}"
+
+	# Write iterations to file
+	{
+		printf "%s\n" "${delimiter}";
+		printf "| [+] Iterations: %s\n" "${iterations}";
+		printf "%s\n" "${delimiter}";
+	} >> "${result_file}"
+
+	# Print system info
+	getInfo
+
+	# Get URL for benchmark video
+	res="$(selectBenchmark)"
+	url="${bench_files[${res}]}"
+
+	# Write resolution to a file
+	{
+		printf "%s\n" "${delimiter}";
+		printf "| [+] Resolution: %s\n" "${res}";
+		printf "%s\n" "${delimiter}";
+	} >> "${result_file}"
+
+	# Get filename
+	file="${url##*/}"
+
+	# Download benchmark
+	download
+
+	# Unpack downloaded file if it is a zip archive
+	file="$(unpack)"
+
+	# Start benchmark
+	benchmark
+
+	# Print end date for a benchmark
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Benchmark ended at %s\n" "$(date +%Y-%m-%d_%H-%M-%S)"
+	printf "%s\n" "${delimiter}"
+
+	# Write end date to a file
+	{
+		printf "%s\n" "${delimiter}";
+		printf "| [+] Benchmark ended at %s\n" "$(date +%Y-%m-%d_%H-%M-%S)";
+		printf "%s\n" "${delimiter}";
+		printf "\r\n";
+	} >> "${result_file}"
+else
 	printf "%s\n" "${delimiter}";
-	printf "| [+] Iterations: %s\n" "${iterations}";
+	printf "| [+] Missing dependencies: ${missing[*]} | OS: %s | Consult distribution docs on how to install required dependencies and try again\n" "$(grep -w ID /etc/os-release | cut -d "=" -f 2)"
 	printf "%s\n" "${delimiter}";
-} >> "${result_file}"
-
-# Print system info
-getInfo
-
-# Get URL for benchmark video
-res="$(selectBenchmark)"
-url="${bench_files[${res}]}"
-
-# Write resolution to a file
-{
-	printf "%s\n" "${delimiter}";
-	printf "| [+] Resolution: %s\n" "${res}";
-	printf "%s\n" "${delimiter}";
-} >> "${result_file}"
-
-# Get filename
-file="${url##*/}"
-
-# Download benchmark
-download
-
-# Unpack downloaded file if it is a zip archive
-file="$(unpack)"
-
-# Start benchmark
-benchmark
-
-# Print end date for a benchmark
-printf "%s\n" "${delimiter}"
-printf "| [+] Benchmark ended at %s\n" "$(date +%Y-%m-%d_%H-%M-%S)"
-printf "%s\n" "${delimiter}"
-
-# Write end date to a file
-{
-	printf "%s\n" "${delimiter}";
-	printf "| [+] Benchmark ended at %s\n" "$(date +%Y-%m-%d_%H-%M-%S)";
-	printf "%s\n" "${delimiter}";
-	printf "\r\n";
-} >> "${result_file}"
+fi
