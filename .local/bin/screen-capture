@@ -9,7 +9,7 @@ delimiter="----------------------------------------------------------------"
 loglevel="error"
 name="$(date +'%Y-%m-%d_%H-%M-%S')"
 ext="mkv"
-directory="${HOME}/Videos/OBS/"
+directory="${HOME}/Videos/Recordings/"
 size="1920x1080"
 method="x11grab"
 crf="17"
@@ -17,12 +17,13 @@ hwaccel="cuda"
 video="h264_nvenc"
 audio="pulse"
 sink="$(pacmd list-sources | grep -PB 1 "analog.*monitor" | head -n 1 | sed 's/.* //g')"
-preset="slow"
+preset="p7"
+pix_fmt="yuv420p10le"
 bitrate="120M"
 maxrate="120M"
 buffer="240M"
-profile="high"
-tune="hq"
+tune="lossless"
+level="5.2"
 rc="vbr"
 lookahead="8"
 bframes="4"
@@ -48,7 +49,7 @@ function encode {
 	exec 3<> /tmp/encoding_data
 
 	# Start ffmpeg encoding process and move it to background, save encoding data to temporary file
-    nohup 1>/dev/null ffmpeg -stats -loglevel "error" -i "${input}" -c:a "copy" -c:v libx265 -x265-params log-level=none -preset "medium" -crf "18" ${output} 2>&3 &
+    nohup 1>/dev/null ffmpeg -stats -loglevel "error" -i "${input}" -pix_fmt "${pix_fmt}" -c:a "copy" -c:v libx265 -x265-params log-level=none -x265-params profile=main10 -preset "medium" -crf "18" "${output}" 2>&3 &
 
     # Get pid of the backgrounded ffmpeg process
     pid="${!}"
@@ -98,8 +99,8 @@ function record {
 
     # Start ffmpeg recording process and background it
     nohup 1>/dev/null ffmpeg -stats \
-                -loglevel "${loglevel}" \
-                -video_size "${size}" \
+				-loglevel "${loglevel}" \
+				-video_size "${size}" \
                 -f "${method}" \
                 -i :0.0+1920,0 \
                 -hwaccel "${hwaccel}" \
@@ -107,8 +108,8 @@ function record {
                 -f "${audio}" \
                 -i "${sink}" \
                 -preset "${preset}" \
-                -profile:v "${profile}" \
                 -tune "${tune}" \
+				-level "${level}" \
                 -rc-lookahead "${lookahead}" \
                 -bf "${bframes}" \
                 -rc "${rc}" \
