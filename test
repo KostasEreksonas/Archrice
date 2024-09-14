@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Delimiter
+delimiter="----------------------------------------------------------------"
+
+createUser() {
+	# Create an user with a password and groups
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Create user\n"
+	printf "%s\n" "${delimiter}"
+	printf "%s\n" "${delimiter}"
+	read -p "| [+] Create an username: " username
+	useradd -m "${username}"
+
+	printf "| [+] User \"%s\" created\n" "${username}"
+	printf "%s\n" "${delimiter}"
+
+	# Create password
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Create password for %s\n" "${username}"
+	passwd ${username}
+	printf "| [+] Password for %s created\n" "${username}"
+	printf "%s\n" "${delimiter}"
+
+	# Add user to groups specified
+	printf "%s\n" "${delimiter}"
+	read -p "| [+] Select groups to add user ${username} to: " groups
+	usermod -aG "${groups}" ${username}
+	printf "| [+] User %s added to groups: %s\n" "${username}" "${groups}"
+	printf "%s\n" "${delimiter}"
+
+	# Switch to the newly created user
+	sudo -i -u "${username}" bash
+}
+
+#  ------
+# | Main |
+#  ------
+
+# Create an user
+createUser
+
+whoami
