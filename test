@@ -5,7 +5,7 @@ delimiter="----------------------------------------------------------------"
 
 installDependencies() {
 	# Install dependencies for this script
-	pacman --no-confirm -S git p7zip wget
+	pacman --noconfirm -S git p7zip wget
 }
 
 createUser() {
@@ -74,7 +74,7 @@ installPackages() {
 	# Install packages
 	cd "${root_dir}/Documents/git/dotfiles/package_lists/"
 	while read line; do
-		pacman --no-confirm -S < "${line}"
+		pacman --noconfirm -S - < "${line}"
 	done < <(find . -type f -name "*.txt" -exec basename {} \;)
 }
 
