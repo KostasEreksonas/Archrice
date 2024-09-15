@@ -3,6 +3,11 @@
 # Delimiter
 delimiter="----------------------------------------------------------------"
 
+installDependencies() {
+	# Install dependencies for this script
+	pacman --no-confirm -S git p7zip wget
+}
+
 createUser() {
 	# Create an user with a password and groups
 	printf "%s\n" "${delimiter}"
@@ -27,9 +32,6 @@ createUser() {
 	printf "%s\n" "${delimiter}"
 	printf "| [+] User %s created\n" "${username}"
 	printf "%s\n" "${delimiter}"
-
-	# Switch to the newly created user
-	sudo -u "${username}" "$(testing)"
 }
 
 createDirectories() {
@@ -72,13 +74,16 @@ installPackages() {
 	# Install packages
 	cd "${root_dir}/Documents/git/dotfiles/package_lists/"
 	while read line; do
-		pacman -S < "${line}"
+		pacman --no-confirm -S < "${line}"
 	done < <(find . -type f -name "*.txt" -exec basename {} \;)
 }
 
 #  ------
 # | Main |
 #  ------
+
+# Install dependencies
+installDependencies
 
 # Create an user
 createUser
