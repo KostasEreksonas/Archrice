@@ -8,29 +8,72 @@ createUser() {
 	printf "%s\n" "${delimiter}"
 	printf "| [+] Create user\n"
 	printf "%s\n" "${delimiter}"
+
 	printf "%s\n" "${delimiter}"
 	read -p "| [+] Create an username: " username
+	# Create user with home directory
 	useradd -m "${username}"
-
 	printf "| [+] User \"%s\" created\n" "${username}"
-	printf "%s\n" "${delimiter}"
-
-	# Create password
-	printf "%s\n" "${delimiter}"
 	printf "| [+] Create password for %s\n" "${username}"
+	# Create password
 	passwd ${username}
 	printf "| [+] Password for %s created\n" "${username}"
-	printf "%s\n" "${delimiter}"
-
-	# Add user to groups specified
-	printf "%s\n" "${delimiter}"
 	read -p "| [+] Select groups to add user ${username} to: " groups
+	# Add user to groups specified
 	usermod -aG "${groups}" ${username}
 	printf "| [+] User %s added to groups: %s\n" "${username}" "${groups}"
 	printf "%s\n" "${delimiter}"
 
+	printf "%s\n" "${delimiter}"
+	printf "| [+] User %s created\n" "${username}"
+	printf "%s\n" "${delimiter}"
+
 	# Switch to the newly created user
-	sudo -i -u "${username}" bash
+	sudo -u "${username}" "$(testing)"
+}
+
+createDirectories() {
+	# Create directories in HOME directory
+	directories=(
+		Desktop/
+		Downloads/
+		Videos/Recordings/
+		Pictures/Screenshots/
+		Music/
+		Documents/aur/
+		Documents/git/
+		Wine/
+	)
+
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Create directories for user %s\n" "${username}"
+	printf "%s\n" "${delimiter}"
+
+	printf "%s\n" "${delimiter}"
+	# Loop through directory list
+	for dir in "${directories[@]}"; do
+		printf "| [+] Creating directory %s\n" "${dir}"
+		sudo -u "${username}" mkdir -p "${dir}"
+	done
+	printf "%s\n" "${delimiter}"
+
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Directories for user %s created\n" "${username}"
+	printf "%s\n" "${delimiter}"
+}
+
+cloneDotfiles() {
+	# Clone dotfiles from my git repo
+	cd "${root_dir}/Documents/git/"
+	git clone https://github.com/KostasEreksonas/dotfiles.git
+}
+
+installPackages() {
+	# Install packages
+	cd "${root_dir}/Documents/git/dotfiles/package_lists/"
+	while read line; do
+		pacman -S < "${line}"
+	done < <(find . -type f -name "*.txt" -exec basename {} \;)
 }
 
 #  ------
@@ -40,4 +83,15 @@ createUser() {
 # Create an user
 createUser
 
-whoami
+# Change to the new home directory
+root_dir="/home/${username}"
+cd "${root_dir}"
+
+# Create directories
+createDirectories
+
+# Clone dotfiles
+cloneDotfiles
+
+# Install packages
+installPackages
