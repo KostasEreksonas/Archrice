@@ -37,6 +37,8 @@ createUser() {
 createDirectories() {
 	# Create directories in HOME directory
 	directories=(
+		/.local/bin/
+		/.local/share/fonts/
 		Desktop/
 		Downloads/
 		Videos/Recordings/
@@ -67,15 +69,46 @@ createDirectories() {
 cloneDotfiles() {
 	# Clone dotfiles from my git repo
 	cd "${root_dir}/Documents/git/"
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Cloning dotfiles\n"
+	printf "%s\n" "${delimiter}"
+
 	git clone https://github.com/KostasEreksonas/dotfiles.git
 }
 
 installPackages() {
 	# Install packages
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Installing packages\n"
+	printf "%s\n" "${delimiter}"
 	cd "${root_dir}/Documents/git/dotfiles/package_lists/"
 	while read line; do
 		pacman --noconfirm -S - < "${line}"
 	done < <(find . -type f -name "*.txt" -exec basename {} \;)
+}
+
+installYAY() {
+	# Install yay aur manager
+	# Edit MAKEFLAGS to use all available threads for compiling AUR packages
+	sed -i 's/#MAKEFLAGS="-j2"/MAKEFLAGS="-j$(nproc)"/' /etc/makepkg.conf
+	cd "${root_dir}/Documents/aur/"
+	git clone https://aur.archlinux.org/yay.git
+	cd "yay/"
+	makepkg -si
+}
+
+installAUR() {
+	# Install AUR packages
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Installing packages\n"
+	printf "%s\n" "${delimiter}"
+	cd "${root_dir}/Documents/git/dotfiles/package_lists/aur"
+	printf "%s\n" "${delimiter}"
+	while read line; do
+		printf "| [+] Installing %s\n" "${line}"
+		sudo -u "${username}" yay -S "${line}"
+	done < <(find . -type f -name "*.txt" -exec basename {} \;)
+	printf "%s\n" "${delimiter}"
 }
 
 #  ------
@@ -100,3 +133,9 @@ cloneDotfiles
 
 # Install packages
 installPackages
+
+# Install YAY
+installYAY
+
+# Install AUR packages
+installAUR
