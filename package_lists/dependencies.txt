@@ -1,5 +1,0 @@
-dialog
-git
-wget
-p7zip
-networkmanager

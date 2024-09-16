@@ -1,6 +1,0 @@
-# vim: filetype=muttrc
-
-macro index,pager <f2> '<sync-mailbox><enter-command>source ~/.config/mutt/accounts/1<enter><change-folder>!<enter>'
-macro index,pager <f3> '<sync-mailbox><enter-command>source ~/.config/mutt/accounts/2<enter><change-folder>!<enter>'
-macro index,pager <f4> '<sync-mailbox><enter-command>source ~/.config/mutt/accounts/3<enter><change-folder>!<enter>'
-macro index,pager <f5> '<sync-mailbox><enter-command>source ~/.config/mutt/accounts/4<enter><change-folder>!<enter>'
