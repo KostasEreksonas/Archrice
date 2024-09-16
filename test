@@ -65,7 +65,7 @@ createDirectories() {
 	# Loop through directory list
 	for dir in "${directories[@]}"; do
 		printf "| [+] Creating directory %s\n" "${dir}"
-		sudo -u "${username}" mkdir -p "${dir}"
+		sudo -u "${username}" mkdir -p "/home/${username}/${dir}"
 	done
 	printf "%s\n" "${delimiter}"
 
@@ -100,9 +100,9 @@ installYAY() {
 	# Edit MAKEFLAGS to use all available threads for compiling AUR packages
 	sed -i 's/#MAKEFLAGS="-j2"/MAKEFLAGS="-j$(nproc)"/' /etc/makepkg.conf
 	cd "${root_dir}/Documents/aur/"
-	git clone https://aur.archlinux.org/yay.git
+	sudo -u "${username}" git clone https://aur.archlinux.org/yay.git
 	cd "yay/"
-	makepkg -si
+	sudo -u "${username}" makepkg -si
 }
 
 installAUR() {
@@ -128,8 +128,9 @@ installFonts() {
 	printf "| [+] Downloading fonts\n"
 	printf "%s\n" "${delimiter}"
 
-	wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/Hack.zip
-	7z x Hack.zip && rm Hack.zip
+	sudo -u "${username}" wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/Hack.zip
+	sudo -u "${username}" 7z x Hack.zip
+	sudo -u "${username}" rm Hack.zip
 }
 
 configureVim() {
@@ -152,7 +153,7 @@ configureVim() {
 	printf "%s\n" "${delimiter}"
 	printf "| [+] Installing pathogen\n"
 	printf "%s\n" "${delimiter}"
-	curl -LSso "${root_dir}/.config/nvim/autoload/pathogen.vim" https://tpo.pe/pathogen.vim
+	sudo -u "${username}" curl -LSso "${root_dir}/.config/nvim/autoload/pathogen.vim" https://tpo.pe/pathogen.vim
 
 	# Install plugins
 	declare -A plugins=(
@@ -167,43 +168,123 @@ configureVim() {
 		printf "%s\n" "${delimiter}"
 		printf "| [+] Installing %s\n" "${plugin}"
 		printf "%s\n" "${delimiter}"
-		git clone "https://github.com/${plugins[${plugin}]}/${plugin}.git" "${root_dir}/.config/nvim/bundle/${plugin}/"
+		sudo -u "${username}" git clone "https://github.com/${plugins[${plugin}]}/${plugin}.git" "${root_dir}/.config/nvim/bundle/${plugin}/"
 	done
+
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Plugins installed\n"
+	printf "%s\n" "${delimiter}"
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Installing color schemes\n"
+	printf "%s\n" "${delimiter}"
 
 	# Install colors
 	# Solarized
+	printf "%s\n" "${delimiter}"
 	themes_solarized=(solarized8 solarized8_flat solarized8_high solarized8_low)
 	for theme in "${themes_solarized[@]}"; do
-        wget https://raw.githubusercontent.com/lifepillar/vim-solarized8/master/colors/${theme}.vim -P "${root_dir}/.config/nvim/colors/"
+		printf "| [+] Installing %s\n" "${theme}"
+        sudo -u "${username}" wget https://raw.githubusercontent.com/lifepillar/vim-solarized8/master/colors/${theme}.vim -P "${root_dir}/.config/nvim/colors/"
     done
 
 	# Gruvbox
     themes_gruvbox=(gruvbox8 gruvbox8_hard gruvbox8_soft)
     for theme in "${themes_gruvbox[@]}"; do
-        wget https://raw.githubusercontent.com/lifepillar/vim-gruvbox8/master/colors/${theme}.vim -P "${root_dir}/.config/nvim/colors/"
+		printf "| [+] Installing %s\n" "${theme}"
+        sudo -u "${username}" wget https://raw.githubusercontent.com/lifepillar/vim-gruvbox8/master/colors/${theme}.vim -P "${root_dir}/.config/nvim/colors/"
 	done
+	printf "%s\n" "${delimiter}"
+
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Neovim configured\n"
+	printf "%s\n" "${delimiter}"
 }
 
 copyConfigs() {
 	# Copy configuration files
+	# Create .config directory if it does not exist
 	if [[ -z "${root_dir}/.config/" ]]; then
-		mkdir -p "${root_dir}/.config/"
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Creating directory %s/.config/\n" "${root_dir}"
+		printf "%s\n" "${delimiter}"
+		sudo -u "${username}" mkdir -p "${root_dir}/.config/"
 	fi
 
-	# Copy package configs
-	sudo -u "${username}" cp -r "${root_dir}/Documents/git/dotfiles/package_configs/*" "${root_dir}/.config/"
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Copying configuration files\n"
+	printf "%s\n" "${delimiter}"
 
-	# Copy Xorg configs
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Copying package configs\n"
+	sudo -u "${username}" cp -r "${root_dir}/Documents/git/dotfiles/package_configs/*" "${root_dir}/.config/"
+	sudo -u "${username}" cp "${root_dir}/.config/mutt/.mbsyncrc" "${root_dir}/"
+	sudo -u "${username}" cp "${root_dir}/.config/mutt/.msmtprc" "${root_dir}/"
+
+	printf "| [+] Copying .bashrc\n"
+	sudo -u "${username}" cp "${root_dir}/Documents/git/dotfiles/.bashrc" "${root_dir}/.bashrc"
+
+	printf "| [+] Copying Xorg configs\n"
 	cp -r "${root_dir}/Documents/git/dotfiles/xorg.conf.d/" "/etc/X11/"
 
-	# Copy system scripts
+	printf "| [+] Copying system script configs\n"
 	cp -r "${root_dir}/Documents/git/dotfiles/system_scripts/*" "/usr/local/bin/"
 
-	# Copy pixmaps
+	printf "| [+] Copying pixmaps\n"
 	cp -r "${root_dir}/Documents/git/dotfiles/pixmaps/*" "/usr/share/pixmaps/"
+	printf "%s\n" "${delimiter}"
 
 	# Configure vim
 	configureVim
+}
+
+configurePass() {
+	# Configure password manager to store passwords
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Configuring password manager\n"
+	printf "%s\n" "${delimiter}"
+
+	# Generate gpg key
+	gpg --full-gen-key
+
+	# Initialize password store
+	pass init k.ereksonas@gmail.com
+
+	# Add password for email
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Add password for email\n"
+	printf "%s\n" "${delimiter}"
+	pass add email
+
+	# Add password for email_main
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Add password for email_main\n"
+	printf "%s\n" "${delimiter}"
+	pass add email_main
+
+	# Organize gpg keys to directories
+	mkdir -p "${root_dir}/.password_store/mail/"
+	mv "${root_dir}/.password_store/*.gpg" "${root_dir}/.password_store/mail/"
+
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Configuring password manager - done\n"
+	printf "%s\n" "${delimiter}"
+}
+
+configurePureline() {
+	# Configure a pureline PS1 command prompt for bash
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Configuring pureline\n"
+	printf "%s\n" "${delimiter}"
+
+	sudo -u "${username}" git clone https://github.com/chris-marsh/pureline.git "${root_dir}/Documents/git/pureline/"
+	mkdir "${root_dir}/pureline/"
+	sudo -u "${username}" cp -r "${root_dir}/Documents/git/pureline/segments/" "${root_dir}/pureline/"
+	sudo -u "${username}" cp "${root_dir}/Documents/git/pureline/pureline/" "${root_dir}/pureline/"
+	sudo -u "${username}" cp "${root_dir}/Documents/git/pureline/configs/powerline_full_256col.conf" "${root_dir}/.pureline.conf"
+
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Configuring pureline - done\n"
+	printf "%s\n" "${delimiter}"
 }
 
 #  ------
@@ -221,7 +302,6 @@ createUser
 
 # Change to the new home directory
 root_dir="/home/${username}"
-cd "${root_dir}"
 
 # Create directories
 createDirectories
@@ -243,3 +323,6 @@ installFonts
 
 # Copy configs
 copyConfigs
+
+# Configure password manager
+configurePass
