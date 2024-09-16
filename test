@@ -3,6 +3,14 @@
 # Delimiter
 delimiter="----------------------------------------------------------------"
 
+updatePacman() {
+	# Update pacman config file
+	lines=(33 37 92 93)
+	for line in "${lines[@]}"; do
+		sed -i "${line}s/^#//" /etc/pacman.conf
+	done
+}
+
 installDependencies() {
 	# Install dependencies for this script
 	pacman --noconfirm -S git p7zip wget
@@ -37,8 +45,8 @@ createUser() {
 createDirectories() {
 	# Create directories in HOME directory
 	directories=(
-		/.local/bin/
-		/.local/share/fonts/
+		.local/bin/
+		.local/share/fonts/
 		Desktop/
 		Downloads/
 		Videos/Recordings/
@@ -111,9 +119,99 @@ installAUR() {
 	printf "%s\n" "${delimiter}"
 }
 
+installFonts() {
+	# Install custom fonts
+	cd "${root_dir}/.local/share/fonts/"
+
+	# Info
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Downloading fonts\n"
+	printf "%s\n" "${delimiter}"
+
+	wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/Hack.zip
+	7z x Hack.zip && rm Hack.zip
+}
+
+configureVim() {
+	# Configure vim
+	# Info
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Configure neovim\n"
+	printf "%s\n" "${delimiter}"
+
+	# Create directories
+	dirs=("autoload" "bundle" "colors")
+	printf "%s\n" "${delimiter}"
+	for dir in "${dirs[@]}"; do
+		printf "| [+] Creating %s\n" "${dir}"
+		sudo -u "${username}" mkdir "${root_dir}/.config/nvim/${dir}"
+	done
+	printf "%s\n" "${delimiter}"
+
+	# Install Pathogen plugin manager
+	printf "%s\n" "${delimiter}"
+	printf "| [+] Installing pathogen\n"
+	printf "%s\n" "${delimiter}"
+	curl -LSso "${root_dir}/.config/nvim/autoload/pathogen.vim" https://tpo.pe/pathogen.vim
+
+	# Install plugins
+	declare -A plugins=(
+		["nerdtree"]="preservim" \
+		["vim-airline"]="vim-airline" \
+		["vim-airline-themes"]="vim-airline" \
+		["vim-colors-solarized"]="altercation" \
+		["pear-tree"]="tmsvg"
+	)
+
+	for plugin in "${!plugins[@]}"; do
+		printf "%s\n" "${delimiter}"
+		printf "| [+] Installing %s\n" "${plugin}"
+		printf "%s\n" "${delimiter}"
+		git clone "https://github.com/${plugins[${plugin}]}/${plugin}.git" "${root_dir}/.config/nvim/bundle/${plugin}/"
+	done
+
+	# Install colors
+	# Solarized
+	themes_solarized=(solarized8 solarized8_flat solarized8_high solarized8_low)
+	for theme in "${themes_solarized[@]}"; do
+        wget https://raw.githubusercontent.com/lifepillar/vim-solarized8/master/colors/${theme}.vim -P "${root_dir}/.config/nvim/colors/"
+    done
+
+	# Gruvbox
+    themes_gruvbox=(gruvbox8 gruvbox8_hard gruvbox8_soft)
+    for theme in "${themes_gruvbox[@]}"; do
+        wget https://raw.githubusercontent.com/lifepillar/vim-gruvbox8/master/colors/${theme}.vim -P "${root_dir}/.config/nvim/colors/"
+	done
+}
+
+copyConfigs() {
+	# Copy configuration files
+	if [[ -z "${root_dir}/.config/" ]]; then
+		mkdir -p "${root_dir}/.config/"
+	fi
+
+	# Copy package configs
+	sudo -u "${username}" cp -r "${root_dir}/Documents/git/dotfiles/package_configs/*" "${root_dir}/.config/"
+
+	# Copy Xorg configs
+	cp -r "${root_dir}/Documents/git/dotfiles/xorg.conf.d/" "/etc/X11/"
+
+	# Copy system scripts
+	cp -r "${root_dir}/Documents/git/dotfiles/system_scripts/*" "/usr/local/bin/"
+
+	# Copy pixmaps
+	cp -r "${root_dir}/Documents/git/dotfiles/pixmaps/*" "/usr/share/pixmaps/"
+
+	# Configure vim
+	configureVim
+}
+
 #  ------
 # | Main |
 #  ------
+
+# Update pacman config file
+updatePacman
 
 # Install dependencies
 installDependencies
@@ -139,3 +237,9 @@ installYAY
 
 # Install AUR packages
 installAUR
+
+# Install custom fonts
+installFonts
+
+# Copy configs
+copyConfigs
