@@ -14,7 +14,7 @@ updatePacman() {
 
 installDependencies() {
 	# Install dependencies for this script
-	pacman --noconfirm --needed -S git p7zip wget
+	pacman --needed -S git p7zip wget
 }
 
 createUser() {
@@ -92,7 +92,7 @@ installPackages() {
 	printf "%s\n" "${delimiter}"
 	cd "${root_dir}/Documents/git/dotfiles/package_lists/"
 	while read line; do
-		yes|pacman --noconfirm --needed -S - < "${line}"
+		pacman --needed -S - < "${line}"
 	done < <(find . -type f -name "*.txt" -exec basename {} \;)
 	# Add user to docker and libvirt groups
 	usermod -aG docker,libvirt "${username}"
@@ -307,9 +307,6 @@ createUser
 # Change to the new home directory
 root_dir="/home/${username}"
 
-# Create directories
-createDirectories
-
 # Clone dotfiles
 cloneDotfiles
 
@@ -318,6 +315,9 @@ installPackages
 
 # Install AUR packages
 installAUR
+
+# Create directories
+createDirectories
 
 # Install custom fonts
 installFonts
