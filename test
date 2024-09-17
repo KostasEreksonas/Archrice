@@ -14,7 +14,7 @@ updatePacman() {
 
 installDependencies() {
 	# Install dependencies for this script
-	pacman --noconfirm -S git p7zip wget
+	pacman --noconfirm --needed -S git p7zip wget
 }
 
 createUser() {
@@ -92,7 +92,7 @@ installPackages() {
 	printf "%s\n" "${delimiter}"
 	cd "${root_dir}/Documents/git/dotfiles/package_lists/"
 	while read line; do
-		pacman --noconfirm -S - < "${line}"
+		yes|pacman --noconfirm --needed -S - < "${line}"
 	done < <(find . -type f -name "*.txt" -exec basename {} \;)
 	# Add user to docker and libvirt groups
 	usermod -aG docker,libvirt "${username}"
