@@ -82,7 +82,7 @@ cloneDotfiles() {
 	printf "| [+] Cloning dotfiles\n"
 	printf "%s\n" "${delimiter}"
 
-	sudo -u "${username}" git clone https://github.com/KostasEreksonas/dotfiles.git
+	sudo -u "${username}" git clone https://github.com/KostasEreksonas/dotfiles.git "dotfiles/"
 }
 
 installPackages() {
@@ -112,14 +112,14 @@ installAUR() {
 	cd "${root_dir}/Documents/aur/"
 
 	printf "%s\n" "${delimiter}"
-	while read package; do
+	while read -u 3 package; do
 		printf "| [+] Cloning %s\n" "${package}"
 		sudo -u "${username}" git clone https://aur.archlinux.org/${package}.git
 		cd "${package}/"
 		printf "| [+] Installing %s\n" "${package}"
 		sudo -u "${username}" makepkg -si
 		cd "../"
-	done < <(cat "${root_dir}/Documents/git/dotfiles/package_lists/aur/aur_packages.txt")
+	done 3< <(cat "${root_dir}/Documents/git/dotfiles/package_lists/aur/aur_packages.txt")
 	printf "%s\n" "${delimiter}"
 }
 
@@ -247,6 +247,9 @@ configurePass() {
 	printf "| [+] Configuring password manager\n"
 	printf "%s\n" "${delimiter}"
 
+	# Change to home directory for the new user
+	cd "${root_dir}"
+
 	# Generate gpg key
 	sudo -u "${username}" gpg --full-gen-key
 
@@ -324,6 +327,9 @@ installFonts
 
 # Copy configs
 copyConfigs
+
+# Configure pureline
+configurePureline
 
 # Configure password manager
 configurePass
