@@ -9,6 +9,7 @@ updatePacman() {
 	for line in "${lines[@]}"; do
 		sed -i "${line}s/^#//" /etc/pacman.conf
 	done
+	pacman -Syyu
 }
 
 installDependencies() {
@@ -81,7 +82,7 @@ cloneDotfiles() {
 	printf "| [+] Cloning dotfiles\n"
 	printf "%s\n" "${delimiter}"
 
-	git clone https://github.com/KostasEreksonas/dotfiles.git
+	sudo -u "${username}" git clone https://github.com/KostasEreksonas/dotfiles.git
 }
 
 installPackages() {
@@ -93,29 +94,32 @@ installPackages() {
 	while read line; do
 		pacman --noconfirm -S - < "${line}"
 	done < <(find . -type f -name "*.txt" -exec basename {} \;)
-}
-
-installYAY() {
-	# Install yay aur manager
-	# Edit MAKEFLAGS to use all available threads for compiling AUR packages
-	sed -i 's/#MAKEFLAGS="-j2"/MAKEFLAGS="-j$(nproc)"/' /etc/makepkg.conf
-	cd "${root_dir}/Documents/aur/"
-	sudo -u "${username}" git clone https://aur.archlinux.org/yay.git
-	cd "yay/"
-	sudo -u "${username}" makepkg -si
+	# Add user to docker and libvirt groups
+	usermod -aG docker,libvirt "${username}"
 }
 
 installAUR() {
-	# Install AUR packages
+	# Install yay aur manager
+	# Edit MAKEFLAGS to use all available threads for compiling AUR packages
+	sed -i 's/#MAKEFLAGS="-j2"/MAKEFLAGS="-j$(nproc)"/' /etc/makepkg.conf
+
+	# Info
 	printf "%s\n" "${delimiter}"
-	printf "| [+] Installing packages\n"
+	printf "| [+] Installing AUR packages\n"
 	printf "%s\n" "${delimiter}"
-	cd "${root_dir}/Documents/git/dotfiles/package_lists/aur"
+
+	# Change to aur directory
+	cd "${root_dir}/Documents/aur/"
+
 	printf "%s\n" "${delimiter}"
-	while read line; do
-		printf "| [+] Installing %s\n" "${line}"
-		sudo -u "${username}" yay -S "${line}"
-	done < <(find . -type f -name "*.txt" -exec basename {} \;)
+	while read package; do
+		printf "| [+] Cloning %s\n" "${package}"
+		sudo -u "${username}" git clone https://aur.archlinux.org/${package}.git
+		cd "${package}/"
+		printf "| [+] Installing %s\n" "${package}"
+		sudo -u "${username}" makepkg -si
+		cd "../"
+	done < <(cat "${root_dir}/Documents/git/dotfiles/package_lists/aur/aur_packages.txt")
 	printf "%s\n" "${delimiter}"
 }
 
@@ -244,26 +248,26 @@ configurePass() {
 	printf "%s\n" "${delimiter}"
 
 	# Generate gpg key
-	gpg --full-gen-key
+	sudo -u "${username}" gpg --full-gen-key
 
 	# Initialize password store
-	pass init k.ereksonas@gmail.com
+	sudo -u "${username}" pass init k.ereksonas@gmail.com
 
 	# Add password for email
 	printf "%s\n" "${delimiter}"
 	printf "| [+] Add password for email\n"
 	printf "%s\n" "${delimiter}"
-	pass add email
+	sudo -u "${username}" pass add email
 
 	# Add password for email_main
 	printf "%s\n" "${delimiter}"
 	printf "| [+] Add password for email_main\n"
 	printf "%s\n" "${delimiter}"
-	pass add email_main
+	sudo -u "${username}" pass add email_main
 
 	# Organize gpg keys to directories
 	mkdir -p "${root_dir}/.password_store/mail/"
-	mv "${root_dir}/.password_store/*.gpg" "${root_dir}/.password_store/mail/"
+	sudo -u "${username}" mv "${root_dir}/.password_store/*.gpg" "${root_dir}/.password_store/mail/"
 
 	printf "%s\n" "${delimiter}"
 	printf "| [+] Configuring password manager - done\n"
@@ -277,7 +281,7 @@ configurePureline() {
 	printf "%s\n" "${delimiter}"
 
 	sudo -u "${username}" git clone https://github.com/chris-marsh/pureline.git "${root_dir}/Documents/git/pureline/"
-	mkdir "${root_dir}/pureline/"
+	sudo -u "${username}" mkdir "${root_dir}/pureline/"
 	sudo -u "${username}" cp -r "${root_dir}/Documents/git/pureline/segments/" "${root_dir}/pureline/"
 	sudo -u "${username}" cp "${root_dir}/Documents/git/pureline/pureline/" "${root_dir}/pureline/"
 	sudo -u "${username}" cp "${root_dir}/Documents/git/pureline/configs/powerline_full_256col.conf" "${root_dir}/.pureline.conf"
@@ -311,9 +315,6 @@ cloneDotfiles
 
 # Install packages
 installPackages
-
-# Install YAY
-installYAY
 
 # Install AUR packages
 installAUR
