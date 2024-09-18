@@ -251,7 +251,7 @@ configurePass() {
 	cd "${root_dir}"
 
 	# Generate gpg key
-	sudo -u "${username}" $(gpg --full-gen-key)
+	sudo -u "${username}" gpg --full-gen-key
 
 	# Initialize password store
 	sudo -u "${username}" pass init k.ereksonas@gmail.com
@@ -270,7 +270,9 @@ configurePass() {
 
 	# Organize gpg keys to directories
 	mkdir -p "${root_dir}/.password_store/mail/"
-	sudo -u "${username}" mv "${root_dir}/.password_store/*.gpg" "${root_dir}/.password_store/mail/"
+	while read key; do
+		sudo -u "${username}" mv "${key}" "${root_dir}/.password_store/mail/"
+	done < <(find "${root_dir}/.password-store/" -type f -name "*.gpg")
 
 	printf "%s\n" "${delimiter}"
 	printf "| [+] Configuring password manager - done\n"
@@ -286,7 +288,7 @@ configurePureline() {
 	sudo -u "${username}" git clone https://github.com/chris-marsh/pureline.git "${root_dir}/Documents/git/pureline/"
 	sudo -u "${username}" mkdir "${root_dir}/pureline/"
 	sudo -u "${username}" cp -r "${root_dir}/Documents/git/pureline/segments/" "${root_dir}/pureline/"
-	sudo -u "${username}" cp "${root_dir}/Documents/git/pureline/pureline/" "${root_dir}/pureline/"
+	sudo -u "${username}" cp "${root_dir}/Documents/git/pureline/pureline" "${root_dir}/pureline/"
 	sudo -u "${username}" cp "${root_dir}/Documents/git/pureline/configs/powerline_full_256col.conf" "${root_dir}/.pureline.conf"
 
 	printf "%s\n" "${delimiter}"
