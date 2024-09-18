@@ -269,7 +269,7 @@ configurePass() {
 	sudo -u "${username}" pass add email_main
 
 	# Organize gpg keys to directories
-	mkdir -p "${root_dir}/.password_store/mail/"
+	sudo -u "${username}" mkdir -p "${root_dir}/.password_store/mail/"
 	while read key; do
 		sudo -u "${username}" mv "${key}" "${root_dir}/.password_store/mail/"
 	done < <(find "${root_dir}/.password-store/" -type f -name "*.gpg")
@@ -300,7 +300,7 @@ installWM() {
 	# Install suckless window manager utils
 	cd "${root_dir}/Documents/git/"
 
-	utils=()
+	utils=(dmenu-kostas dwm-kostas dwmblocks-kostas st-kostas slock-kostas)
 	for util in "${utils[@]}"; do
 		git clone https://github.com/KostasEreksonas/${util}.git "${util}"
 		cd "${util}/"
