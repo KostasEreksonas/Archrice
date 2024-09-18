@@ -251,7 +251,7 @@ configurePass() {
 	cd "${root_dir}"
 
 	# Generate gpg key
-	sudo -u "${username}" gpg --full-gen-key
+	sudo -u "${username}" $(gpg --full-gen-key)
 
 	# Initialize password store
 	sudo -u "${username}" pass init k.ereksonas@gmail.com
