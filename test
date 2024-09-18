@@ -296,6 +296,20 @@ configurePureline() {
 	printf "%s\n" "${delimiter}"
 }
 
+installWM() {
+	# Install suckless window manager utils
+	cd "${root_dir}/Documents/git/"
+
+	utils=()
+	for util in "${utils[@]}"; do
+		git clone https://github.com/KostasEreksonas/${util}.git "${util}"
+		cd "${util}/"
+		sudo -u "${username}" make
+		make clean install
+		cd "../"
+	done
+}
+
 #  ------
 # | Main |
 #  ------
@@ -335,3 +349,6 @@ configurePureline
 
 # Configure password manager
 configurePass
+
+# Install suckless utils
+installWM
