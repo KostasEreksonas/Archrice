@@ -1,94 +1,99 @@
 # Archrice
 
-Archrice is a shell script used for installing a window manager based graphical environment with some of the most needed software on a base Arch Linux installation.
+Install Arch Linux and use the archrice configuration script to install programs and load configs.
 
 Table of Contents
 =================
 * [Installation](#Installation)
-* [Features](#Features)
-	* [Window Manager](#Window-Manager)
-	* [System Scripts](#System-Scripts)
-	* [Statusbar](#Statusbar)
-	* [Aliases](#Aliases)
-	* [Neovim](#Neovim)
-	* [Other Software](#Other-Software)
 
 # Installation
 
-Download the script from this repo with `curl`, make the script executable and run it.
-The instructions are given below:
+1. Download Arch iso from https://archlinux.org/download/ .
 
-```
-curl -LJO https://raw.githubusercontent.com/KostasEreksonas/Archrice/main/archrice.sh
-chmod +x archrice.sh
-./archrice.sh
-```
+2. Write Arch iso to usb drive:
+    - `dd if=<arch-iso> of=/dev/<usb-device> bs=4M status=progress conv=fdatasync`
 
-# Features
+3. Reboot into Arch live usb.
 
-Main system features are presented below.
+4. Get name if network interface:
+    - `ip a`
 
-## Window Manager
+5. Connect to the internet:
+    - `iwctl station <network-interface> connect <SSID>`
 
-For a graphical environment, Archrice script installs a suckless dynamic window manager and it's supplementary utilities. For more information about installed utilities and their configurations (i.e. applied patches and keybinds), click on the name of the utility.
+6. Get name of the disk to install Arch to:
+    - `lsblk`
 
-* [dwm](https://github.com/KostasEreksonas/dwm-kostas) - custom build of dynamic window manager.
-* [dwmblocks](https://github.com/KostasEreksonas/dwmblocks-kostas) - modular status bar for dwm.
-* [st](https://github.com/KostasEreksonas/st-kostas) - custom build of suckless simple terminal.
-* [slock](https://github.com/KostasEreksonas/slock-kostas) - custom build of screen locker utility.
-* [dmenu](https://github.com/KostasEreksonas/dmenu-kostas) - custom build of suckless menu utility.
+7. Partition the disk:
+    - `fdisk /dev/<disk-to-partition>`
 
-## System Scripts
+8. Partitions to create:
+    - /dev/<disk-to-partition>1 - Boot partition, size: 500M
+    - /dev/<disk-to-partition>2 - Swap partition, size: 8G
+    - /dev/<disk-to-partition>3 - Home partiiton, size: rest of the drive
 
-For my custom build of dwm, I made a few scripts to enhance it's functionality.
+9. Create filesystems:
+    - `mkfs.ext4 -T small /dev/<disk-to-install>1`
+    - `mkswap /dev/<disk-to-install>2`
+    - `swapon /dev/<disk-to-install>2`
+    - `mkfs.ext4 /dev/<disk-to-install>3`
 
-* [locker](system_scripts/locker) -	terminal based menu with power management options.
-![Locker script](/images/locker_script.png)
-* [screenshot](system_scripts/screenshot) - a simple script for taking a screenshot of an active window.
-* [screenshot clipboard](system_scripts/screenshot_clipboard) - a script to choose a part of the screen and save it to clipboard.
-* [paste clipboard](system_scripts/paste_clipboard) - paste the clipboard contents to an image file at ~/Photos/Screenshots.
-* [piper](system_scripts/piper) - a script I got from [a paste in arza[.]us](http://arza.us/paste/piper) and is used to open links from dmenu with predefined software.
+10. Mount filesystems:
+    - `mount /dev/<disk-to-install>3 /mnt`
+    - `mkdir /mnt/boot`
+    - `mount /dev/<disk-to-install>1 /mnt/boot`
 
-## Statusbar
+11. Install base system:
+    - `pacstrap -K /mnt base base-devel linux linux-firmware vim texinfo man-db man-pages`
 
-For dwmblocks statusbar I made several scripts that are used for system monitoring.
+12. Generate fstab:
+    - `gensftab -U /mnt >> /mnt/etc/fstab`
 
-* [extendDisplays](.local/bin/extendDisplays) - a script to extend multi-displays and make it permanent.
-* [openmutt](.local/bin/openmutt) - a script to open mutt with a dwm shortcut.
-* [openranger](.local/bin/openranger) - a script to open ranger with a dwm shortcut.
-* [openvim](.local/bin/openvim) - a script to open vim with a dwm shortcut.
-* [sb-battery](.local/bin/sb-battery) - display battery status and charge level.
-* [sb-brightness](.local/bin/sb-brightness) - display screen brightness percentage.
-* [sb-clock](.local/bin/sb-clock) - show current date and time.
-* [sb-cpu_freq](.local/bin/sb-cpu_freq) - show current CPU frequency.
-* [sb-cpu_temp](.local/bin/sb-cpu_temp) - show current CPU temperature.
-* [sb-cpu_usage](.local/bin/sb-cpu_usage) - show current CPU usage.
-* [sb-kernel](.local/bin/sb-kernel) - show current kernel version.
-* [sb-memory](.local/bin/sb-memory) - show memory usage.
-* [sb-network](.local/bin/sb-network) - show SSID and IP address of last connected wireless network.
-* [sb-shutdown](.local/bin/sb-shutdown) - open a terminal with a locker script terminal-based menu with power options.
-* [sb-volume](.local/bin/sb-volume) - show volume level.
+13. Chroot into the new environment:
+    - `arch-chroot /mnt`
 
-## Aliases
+14. Set timezone:
+    - `ln -sf /usr/share/zoneinfo/Region/City /etc/localtime`
+    - `hwclock --systohc`
 
-During the installation of archrice script the user is prompted to create aliases for Wireless and Bluetooth network connections.
+15. Set localization:
+    - Run `vim /etc/locale.gen` and uncomment locale: en_US.UTF-8 UTF-8
+    - `locale-gen`
+    - `echo "LANG=en_US.UTF-8" | tee -a /etc/locale.conf`
 
-## Neovim
+16. Set hostname:
+    - `echo "Arch" | tee -a /etc/hostname`
 
-Archrice script installs either Vim or Neovim terminal based text editor and `Pathogen` plugin manager with some plugins.
+17. Set root password:
+    - `passwd`
 
-* [Nerd Tree](https://github.com/preservim/nerdtree) - file system explorer for Vim.
-* [Pear Tree](https://github.com/tmsvg/pear-tree) - auto-pair plugin for Vim.
-* [Vim Airline](https://github.com/vim-airline/vim-airline) - status/tabline for Vim.
-* [Vim Airline Themes](https://github.com/vim-airline/vim-airline-themes) - collection of color themes for airline statusline.
-* [Vim Solarized Theme](https://github.com/lifepillar/vim-solarized8) - solarized themes collection for Vim.
-* [Vim Gruvbox Theme](https://github.com/lifepillar/vim-gruvbox8) - gruvbox themes collection for Vim.
-* [Vim Fugitive](https://github.com/tpope/vim-fugitive) - Git plugin for Vim.
-* [You Complete Me](https://github.com/ycm-core/YouCompleteMe) - code completion engine for Vim.
+18. Enable sudo for other users:
+    - `visudo`
+    - Uncomment line: `# %wheel ALL=(ALL:ALL) ALL`
 
-## Other Software
-Other software installed with archrice script include:
-* `Firefox` - web browser
-* `Mpv` - media player
-* `Virtualbox / QEMU` - a hypervisor for x86 virtualization
-* [Optional Installation] `Wine` - compatibility layer for Windows applications
+19. Install and configure bootloader and network manager:
+    - `pacman -S grub networkmanager`
+    - `grub-install --target=i386-pc /dev/<drive-to-install>`
+    - `grub-mkconfig -o /boot/grub/grub.cfg`
+    - `systemctl enable NetworkManager.service`
+
+20. Exit chrooted environment:
+    - `exit`
+
+21. Unmount partitions:
+    - `umount -R /mnt`
+
+22. Reboot:
+    - `reboot`
+
+23. Login to the new install and start wifi network:
+    - `nmcli device wifi connect <SSID> password <password>`
+
+24. Download configuration script:
+    - `curl -LJO https://raw.githubusercontent.com/KostasEreksonas/Archrice/main/archrice`
+
+25. Make the configuration script executable:
+    - `chmod +x archrice`
+
+26. Run the configuration script:
+    - `./archrice`
