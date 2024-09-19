@@ -261,24 +261,6 @@ configurePass() {
 	# Initialize password store
 	sudo -u "${username}" pass init k.ereksonas@gmail.com
 
-	# Add password for email
-	printf "%s\n" "${delimiter}"
-	printf "| [+] Add password for email\n"
-	printf "%s\n" "${delimiter}"
-	sudo -u "${username}" pass add email
-
-	# Add password for email_main
-	printf "%s\n" "${delimiter}"
-	printf "| [+] Add password for email_main\n"
-	printf "%s\n" "${delimiter}"
-	sudo -u "${username}" pass add email_main
-
-	# Organize gpg keys to directories
-	sudo -u "${username}" mkdir -p "${root_dir}/.password_store/mail/"
-	while read key; do
-		sudo -u "${username}" mv "${key}" "${root_dir}/.password_store/mail/"
-	done < <(find "${root_dir}/.password-store/" -type f -name "*.gpg")
-
 	printf "%s\n" "${delimiter}"
 	printf "| [+] Configuring password manager - done\n"
 	printf "%s\n" "${delimiter}"
