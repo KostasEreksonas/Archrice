@@ -116,7 +116,9 @@ installAUR() {
 		printf "| [+] Cloning %s\n" "${package}"
 		sudo -u "${username}" git clone https://aur.archlinux.org/${package}.git
 		cd "${package}/"
+		printf "%s\n" "${delimiter}"
 		printf "| [+] Installing %s\n" "${package}"
+		printf "%s\n" "${delimiter}"
 		sudo -u "${username}" makepkg -si
 		cd "../"
 	done 3< <(cat "${root_dir}/Documents/git/dotfiles/package_lists/aur/aur_packages.txt")
@@ -220,7 +222,10 @@ copyConfigs() {
 
 	printf "%s\n" "${delimiter}"
 	printf "| [+] Copying package configs\n"
-	sudo -u "${username}" cp -r "${root_dir}/Documents/git/dotfiles/package_configs/*" "${root_dir}/.config/"
+	sudo -u "${username}" cp -r "${root_dir}/Documents/git/dotfiles/package_configs/"* "${root_dir}/.config/"
+	sudo -u "${username}" cp -r "${root_dir}/Documents/git/dotfiles/.xprofile" "${root_dir}/"
+	sudo -u "${username}" cp -r "${root_dir}/Documents/git/dotfiles/.xinitrc" "${root_dir}/"
+	sudo -u "${username}" cp "${root_dir}/.config/mutt/.msmtprc" "${root_dir}/"
 	sudo -u "${username}" cp "${root_dir}/.config/mutt/.mbsyncrc" "${root_dir}/"
 	sudo -u "${username}" cp "${root_dir}/.config/mutt/.msmtprc" "${root_dir}/"
 
@@ -231,10 +236,10 @@ copyConfigs() {
 	cp -r "${root_dir}/Documents/git/dotfiles/xorg.conf.d/" "/etc/X11/"
 
 	printf "| [+] Copying system script configs\n"
-	cp -r "${root_dir}/Documents/git/dotfiles/system_scripts/*" "/usr/local/bin/"
+	cp -r "${root_dir}/Documents/git/dotfiles/system_scripts/"* "/usr/local/bin/"
 
 	printf "| [+] Copying pixmaps\n"
-	cp -r "${root_dir}/Documents/git/dotfiles/pixmaps/*" "/usr/share/pixmaps/"
+	cp -r "${root_dir}/Documents/git/dotfiles/pixmaps/"* "/usr/share/pixmaps/"
 	printf "%s\n" "${delimiter}"
 
 	# Configure vim
